@@ -6,6 +6,9 @@
 #ifdef __ANDROID__
 #include <android/log.h>
 #endif
+//#include <JCallback.h>
+#include <glog/logging.h>
+#include <react/jni/JCallback.h>
 //
 //#ifdef __ANDROID__
 //#define VANILLAJNI_LOG_ERROR(tag, format, ...) \
@@ -69,6 +72,25 @@
 //
 
 namespace facebook::react {
+    auto createJavaCallback(
+            jsi::Runtime& rt,
+            jsi::Function&& function,
+            std::shared_ptr<CallInvoker> jsInvoker) {
+        AsyncCallback<> callback(
+                {rt, std::move(function), std::move(jsInvoker)});
+        return JCxxCallbackImpl::newObjectCxxArgs(
+                [callback = std::move(callback)](folly::dynamic args) mutable {
+                    callback.call([args = std::move(args)](
+                            jsi::Runtime& rt, jsi::Function& jsFunction) {
+                        std::vector<jsi::Value> jsArgs;
+                        jsArgs.reserve(args.size());
+                        for (const auto& val : args) {
+                            jsArgs.emplace_back(jsi::valueFromDynamic(rt, val));
+                        }
+                        jsFunction.call(rt, (const jsi::Value*)jsArgs.data(), jsArgs.size());
+                    });
+                });
+    }
     class JMainActivity : public facebook::jni::JavaClass<JMainActivity> {
     public:
         static constexpr auto kJavaDescriptor =
@@ -81,8 +103,34 @@ namespace facebook::react {
             static auto cls = javaClassStatic();
             static auto meth =
                     cls->getStaticMethod<jstring ()>("returnString");
+
             return meth(cls)->toStdString();
         }
+        static void  jniCallback(jsi::Runtime &rt, jsi::Function&& f, std::shared_ptr<CallInvoker> jsInvoker){
+            static auto cls = javaClassStatic();
+            static auto meth =
+                    cls->getStaticMethod<void()>("callbackTest", "(Lcom/facebook/react/bridge/Callback;)V");
+             jobject jobj = cls.get();
+             jmethodID jmeth =meth.getId();
+             JNIEnv* env = jni::Environment::current();
+             jvalue arg;
+             arg.l=createJavaCallback(rt,std::move(f), jsInvoker).release();
+             env->CallStaticVoidMethod((jclass)jobj, jmeth, arg);
+//            static jmethodID cachedMethodId = nullptr;
+//            if (cachedMethodId == nullptr) {
+//                JNIEnv* env = jni::Environment::current();
+//                //jclass cls = env->FindClass(kJavaDescriptor);
+//                //cachedMethodId =  env->GetStaticMethodID( cls->self(), "callbackTest", "(Lcom/facebook/react/bridge/CxxCallbackImpl;)V");
+//            }
+            //static auto meth =
+            //        cls->getStaticMethod<jstring (std::string)>("sendTextFromUIThread");
+            //return meth(cls)->toStdString();
+            //jsi::Function f = std::move( Bridging<std::string()>::toJs(callback) )
+            //AsyncCallback<> callback(move(callback.callback_->function_.getFunction(rt);cSallback.);
+                    //{rt, std::move(function), std::move(jsInvoker)});
+            //auto javacb = createJavaCallback(std::move(callback2));
+        }
+
     };
 
 
@@ -94,23 +142,43 @@ namespace facebook::react {
         if(env){
             return JMainActivity::ttt();
         }
+
+
+
         return std::string(input.rbegin(), input.rend());
     }
 
-    void NativeNPSyncModule::echoFromCpp(jsi::Runtime &rt, std::string id, AsyncCallback<std::string> callback) {
-        std::thread t([callback = std::move(callback)]() {
-            int counter = 0;
-            while (counter<100)
-            {
-                /* code */
-                callback.call("echoFromCpp " + std::to_string(counter++));
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            }
+    void NativeNPSyncModule::echoFromCpp(jsi::Runtime &rt, std::string id, jsi::Function f) {
+        JMainActivity::jniCallback(rt,std::move(f),jsInvoker_);
+//        AsyncCallback<std::string> callback(rt, std::move(f), jsInvoker_);
+//        std::thread t([callback = std::move(callback)]() {
+//            int counter = 0;
+//            while (counter<100)
+//            {
+//                /* code */
+//                callback.call("echoFromCpp " + std::to_string(counter++));
+//                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+//            }
+//
+//        });
+//        t.detach();
 
-        });
-        t.detach();
 
     }
+    //void NativeNPSyncModule::echoFromCpp(jsi::Runtime &rt, std::string id, AsyncCallback<std::string> callback) {
+//        std::thread t([callback = std::move(callback)]() {
+//            int counter = 0;
+//            while (counter<100)
+//            {
+//                /* code */
+//                callback.call("echoFromCpp " + std::to_string(counter++));
+//                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+//            }
+//
+//        });
+//        t.detach();
+
+    //}
 
     AsyncPromise<std::string> NativeNPSyncModule::callPromise(jsi::Runtime &rt, std::string id){
         auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);

@@ -7,10 +7,7 @@ import {
   Button,
 } from 'react-native';
 
-//import NPSyncSpec from './NPSyncHelper'
-import Spec from './specs/NativeNPSync'
-//import {Spec} from './NPSyncHelper'
-//import {myText} from './NPSyncHelper'
+import NPSyncSpec from './specs/NativeNPSync'
 
 const EMPTY = '<empty>';
 
@@ -39,19 +36,18 @@ function App(): React.JSX.Element {
   //   setValue('');
   // }
   function reverseValue() {
-    //let x=myText();
-    let r = Spec.reverseString(editingValue??EMPTY)
+    let r = NPSyncSpec.reverseString(editingValue??EMPTY)
     setValue(r);
   }
 
   function callBackTest() {
-    Spec.echoFromCpp(editingValue??EMPTY, (text:string)=>{ setValue(text) } );
+    NPSyncSpec.echoFromCpp(editingValue??EMPTY, (text:string)=>{ setValue(text) } );
  
   }
 
   async  function testPromise() {
-    //Spec.echoFromCpp(editingValue??EMPTY, (text:string)=>{ setValue(text) } );
-    let text = await Spec.callPromise("ha ha");
+    //NPSyncSpec.echoFromCpp(editingValue??EMPTY, (text:string)=>{ setValue(text) } );
+    let text = await NPSyncSpec.callPromise("ha ha");
     setValue(text);  
   }
 return (
