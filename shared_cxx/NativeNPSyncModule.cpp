@@ -91,7 +91,7 @@ namespace facebook::react {
                     });
                 });
     }
-    class JMainActivity : public facebook::jni::JavaClass<JMainActivity> {
+    class JNativeHelper : public facebook::jni::JavaClass<JNativeHelper> {
     public:
         static constexpr auto kJavaDescriptor =
                 "Lcom/npsync/NativeHelper;";
@@ -132,24 +132,40 @@ namespace facebook::react {
         }
 
     };
-
+//    static jsi::Value __hostFunction_NativeNPSyncCxxSpecJSI_SendHttpRequest_np(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+//
+////        static_cast<NativeNPSyncCxxSpecJSI *>(&turboModule)->SendHttpRequest(
+////                rt,
+////                count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asObject(rt).asFunction(rt),
+////                count <= 1 ? throw jsi::JSError(rt, "Expected argument in position 1 to be passed") : args[1].asString(rt),
+////                count <= 2 ? throw jsi::JSError(rt, "Expected argument in position 2 to be passed") : args[2].asString(rt),
+////                count <= 3 ? throw jsi::JSError(rt, "Expected argument in position 3 to be passed") : args[3].asString(rt),
+////                count <= 4 ? throw jsi::JSError(rt, "Expected argument in position 4 to be passed") : args[4].asString(rt),
+////                count <= 5 ? throw jsi::JSError(rt, "Expected argument in position 5 to be passed") : args[5],
+////                count <= 6 ? throw jsi::JSError(rt, "Expected argument in position 6 to be passed") : args[6].asObject(rt),
+////                count <= 7 || args[7].isUndefined() ? std::nullopt : std::make_optional(args[7].asNumber())
+////        );
+//        return jsi::Value::undefined();
+//    }
 
     NativeNPSyncModule::NativeNPSyncModule(std::shared_ptr<CallInvoker> jsInvoker)
-        : NativeNPSyncCxxSpec(std::move(jsInvoker)) {}
+        : NativeNPSyncCxxSpec(std::move(jsInvoker)) {
+        //auto * ptr = (NativeNPSyncCxxSpec<NativeNPSyncModule>*) this;
+
+        //size_t offset = ((size_t) (&(((NativeNPSyncModule *) 0)->delegate_)));
+
+    }
 
     std::string NativeNPSyncModule::reverseString(jsi::Runtime& rt, std::string input) {
         JNIEnv* env = jni::Environment::current();
         if(env){
-            return JMainActivity::ttt();
+            return JNativeHelper::ttt();
         }
-
-
-
         return std::string(input.rbegin(), input.rend());
     }
 
     void NativeNPSyncModule::echoFromCpp(jsi::Runtime &rt, std::string id, jsi::Function f) {
-        JMainActivity::jniCallback(rt,std::move(f),jsInvoker_);
+        JNativeHelper::jniCallback(rt,std::move(f),jsInvoker_);
 //        AsyncCallback<std::string> callback(rt, std::move(f), jsInvoker_);
 //        std::thread t([callback = std::move(callback)]() {
 //            int counter = 0;
@@ -188,7 +204,55 @@ namespace facebook::react {
         t.detach();
         return *promise;
     }
+    void NativeNPSyncModule::SendHttpRequestBlob(jsi::Runtime &rt, jsi::Function f, std::string reqId,
+                                             std::string method, std::string url, std::string header,
+                                             jsi::Object content, bool bSaveToFile, std::optional<double> nTimeoutMs) {
 
+    }
+
+    void NativeNPSyncModule::SendHttpRequest(jsi::Runtime &rt, jsi::Function f, std::string reqId,
+                                 std::string method, std::string url, std::string header,
+                                 std::string content, bool bSaveToFile, std::optional<double> nTimeoutMs) {
+
+
+        static auto cls = JNativeHelper::javaClassStatic();
+        static auto meth =
+                cls->getStaticMethod<void()>("SendHttpRequest",
+                 "(Lcom/facebook/react/bridge/Callback;[Ljava/lang/String;Ljava/nio/ByteBuffer;I)V");
+        jmethodID jmeth =meth.getId();
+        JNIEnv* env = jni::Environment::current();
+        jvalue jcb;
+        //cb.l=createJavaCallback(rt,std::move(f), jsInvoker_).release();
+
+        AsyncCallback<> callback( {rt, std::move(f), std::move(jsInvoker_)});
+        jcb.l = JCxxCallbackImpl::newObjectCxxArgs(
+                [callback = std::move(callback)](folly::dynamic args) mutable {
+                    callback.call([args = std::move(args)](
+                            jsi::Runtime& rt, jsi::Function& jsFunction) {
+                        std::vector<jsi::Value> jsArgs;
+                        jsArgs.reserve(args.size());
+                        for (const auto& val : args) {
+                            jsArgs.emplace_back(jsi::valueFromDynamic(rt, val));
+                        }
+                        jsFunction.call(rt, (const jsi::Value*)jsArgs.data(), jsArgs.size());
+                    });
+                }).release();
+
+
+        int argc= 7;
+        auto argArray= jni::JArrayClass<jni::JString>::newArray(argc);
+        double timeout = nTimeoutMs.value_or(-1);
+        argArray->setElement(0, *jni::make_jstring(reqId));
+        argArray->setElement(1, *jni::make_jstring(method));
+        argArray->setElement(2, *jni::make_jstring(url));
+        argArray->setElement(3, *jni::make_jstring(header));
+        argArray->setElement(4, *jni::make_jstring(content));
+        argArray->setElement(5, *jni::make_jstring(bSaveToFile?"true":"false"));
+        argArray->setElement(6, * jni::make_jstring(std::to_string(timeout)));
+
+        env->CallStaticVoidMethod(cls.get(), jmeth, jcb, argArray.get(),  nullptr, 0);
+
+    }
 
 
 } // namespace facebook::react

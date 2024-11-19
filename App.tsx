@@ -7,7 +7,7 @@ import {
   Button,
 } from 'react-native';
 
-import NPSyncSpec from './specs/NativeNPSync'
+import NPSyncSpec, { IHttpResponse } from './specs/NativeNPSync'
 
 const EMPTY = '<empty>';
 
@@ -50,6 +50,13 @@ function App(): React.JSX.Element {
     let text = await NPSyncSpec.callPromise("ha ha");
     setValue(text);  
   }
+  function sendhttp() {
+    NPSyncSpec.SendHttpRequest((rsp:IHttpResponse)=>{
+      setValue(JSON.stringify(rsp));
+
+    },"reqid","POST", "https://www.google.com","","", false, 100);
+ 
+  }
 return (
     <SafeAreaView style={{flex: 1}}>
       <Text style={styles.text}>
@@ -63,7 +70,7 @@ return (
       <Button title="reverse" onPress={reverseValue} />
       <Button title="callback" onPress={callBackTest} />
       <Button title="promise" onPress={testPromise} />
-      {/* <Button title="Clear" onPress={clearAll} /> */}
+      <Button title="sendhttpreq" onPress={sendhttp} /> 
     </SafeAreaView>
   );
 }

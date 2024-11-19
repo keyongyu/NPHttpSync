@@ -1,5 +1,6 @@
 package com.npsync
 
+import android.net.ConnectivityManager
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -23,5 +24,11 @@ class MainActivity : ReactActivity() {
 
     init{
         NativeHelper.mainActivityWeakReference = WeakReference<MainActivity>(this)
+    }
+
+    fun isOnline(): Boolean {
+        val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        val netInfo = cm.activeNetworkInfo
+        return netInfo != null && netInfo.isConnected
     }
 }
