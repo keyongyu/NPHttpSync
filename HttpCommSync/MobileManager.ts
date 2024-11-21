@@ -15,53 +15,7 @@ import {gAuth} from "./OAuth"
 import NativeNPSync, {IHttpResponse} from '../specs/NativeNPSync.ts';
 import {gStorageConfig} from './Storage.ts';
 import {gS3} from './S3DownloadUpload.ts';
-const IDS_CANCEL                                =  2501
-const IDS_HTTPCOMM_PROMPT_URL                   =  2700
-const IDS_HTTPCOMM_PROMPT_USER                  =  2701
-const IDS_HTTPCOMM_PROMPT_PASSWD                =  2702
-const IDS_HTTPCOMM_SETUP_URL                    =  2703
-const IDS_HTTPCOMM_SETUP_USER                   =  2704
-const IDS_HTTPCOMM_SETUP_PASSWD                 =  2705
-const IDS_HTTPCOMM_SETUP_LOGIN                  =  2706
-const IDS_HTTPCOMM_FAIL_TO_SUBMIT_TXN_IN_7DAYS  =  2707
-const IDS_HTTPCOMM_FAIL_TO_LOGIN                =  2708
-const IDS_HTTPCOMM_SYSTEM_ERROR                 =  2709
-const IDS_HTTPCOMM_NO_NETWORK                   =  2710
-const IDS_HTTPCOMM_AUTH_DIALOG_TITLE            =  2711
-const IDS_HTTPCOMM_AUTHENTICATION               =  2712
-const IDS_HTTPCOMM_DEFAULT_BUTTON               =  2713
-const IDS_HTTPCOMM_NO_RESPONSE                  =  2714
-const IDS_HTTPCOMM_BAD_QRCODE                   =  2715
-const IDS_HTTPCOMM_BAD_SERVER_URL               =  2716
-const IDS_HTTPCOMM_FIRSTCHECK                   =  2717
-const IDS_HTTPCOMM_CHANGE_PASSWORD              =  2718
-const IDS_HTTPCOMM_FORGET_PASSWORD              =  2719
-const IDS_HTTPCOMM_CHANGE_PASSWORD_NEW          =  2720
-const IDS_HTTPCOMM_NEW_PASSWORD_MISMATCH        =  2721
-const IDS_HTTPCOMM_NEW_PASSWORD_CANNOT_BE_EMPTY =  2722
-const IDS_HTTPCOMM_PASSWORD_EXPIRED             =  2723
-const IDS_HTTPCOMM_TOKEN_EXPIRED                =  2724
-const IDS_HTTPCOMM_FORGET_PASSWORD_SENT         =  2725
-const IDS_HTTPCOMM_FAIL_TO_FORGET_PASSWORD      =  2726
-const IDS_HTTPCOMM_DIFFERENT_USER               =  2727
 
-//const IDS_MM_RESTART_APP                        = 4024
-const IDS_MM_DIALOG_TITLE                       = 4025
-const IDS_MM_DEVICE_WIPEOUT                     = 4026
-const IDS_MM_DOWNLOADING_INSTRUCTIONS           = 4027
-const IDS_MM_PROCESSING_INSTRUCTIONS            = 4028
-const IDS_MM_DOWNLOADING_COMMS_SETTINGS         = 4029
-const IDS_MM_DOWNLOADING_DEVICE_SETTINGS        = 4030
-const IDS_MM_DOWNLOADING_ENGINE_SETTINGS        = 4031
-const IDS_MM_DOWNLOADING_APP_SETTINGS           = 4032
-const IDS_MM_DOWNLOADING_APPLICATION            = 4033
-const IDS_MM_DOWNLOADING_NEW_ENG_IOS            = 4034
-const IDS_MM_DOWNLOADING_NEW_ENG_AND            = 4035
-const IDS_MM_USER_VALIDATION_FAIL               = 4036
-const IDS_MM_ENGINE_RESTART                     = 4037
-const IDS_MM_SAFETYNET_EXCEPTION                = 4038
-
-const IDS_PRN_SETUP_DONE                        = 5310
 export type resolve_t = (aaa:any)=>void;
 export type RunAt= "ENG_START" | "COMM_START";
 type PIAction={
@@ -338,7 +292,7 @@ export let gHttpMobileManager = new (class {
           if(!dataInToken){
               //deferExit(false,"")
               //await WaitForPromiseT('cannot got , `error: ${tokenReply.error}`, gAuth.delay(20000));
-              return ;
+              return;
           }
 
           this.MMLog({ cat: 'MMSvcs', subCat: 'FirstCheck', name: '', status: 'start' });
@@ -350,7 +304,7 @@ export let gHttpMobileManager = new (class {
 
               if (!validation || !validation.success || !validation.data) {
                   //deferExit(true, validation.detail??"" )
-                  await WaitForPromiseT('first check' , `error: ${validation.detail??""}`, gAuth.delay(5000));
+                  await WaitForPromiseT('first check' , `error: ${validation.detail??""}`, gAuth.delay(3000));
                   return;
               }
               fcData = validation.data;
@@ -414,7 +368,7 @@ export let gHttpMobileManager = new (class {
           let desc:string;
           if (result.success) {
               this.MMLog({ cat: 'MMSvcs', subCat: 'FirstCheck', name: '', status: 'completed' });
-              desc = '(IDS_PRN_SETUP_DONE)';
+              desc = '(IDS_HTTPCOMM_FIRST_CHECK_COMPLETE)';
               //ChangeCommPrompt('MMSvcs', '(IDS_PRN_SETUP_DONE)',true); // Done
           } else {
               this.MMLog({ cat: 'MMSvcs', subCat: 'FirstCheck', name: '', status: 'failed'});

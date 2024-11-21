@@ -8,59 +8,9 @@ import {
     toJson,
     WaitForPromiseT,
 } from './Common';
-import {gHttpMobileManager} from './MobileManager.ts';
-import {ConnectionError, gHttpAsync, isTimeoutResponse, NoNetwork} from './HttpAsync.ts';
+import {gHttpMobileManager} from './MobileManager';
+import {ConnectionError, gHttpAsync, isTimeoutResponse, NoNetwork} from './HttpAsync';
 import NativeNPSync, {IHttpResponse} from '../specs/NativeNPSync.ts';
-import FileSystem from "react-native-fs";
-//import {ConnectionError, gHttpAsync, isTimeoutResponse, NoNetwork} from "./HttpAsync";
-const IDS_CANCEL                                =  2501
-const IDS_HTTPCOMM_PROMPT_URL                   =  2700
-const IDS_HTTPCOMM_PROMPT_USER                  =  2701
-const IDS_HTTPCOMM_PROMPT_PASSWD                =  2702
-const IDS_HTTPCOMM_SETUP_URL                    =  2703
-const IDS_HTTPCOMM_SETUP_USER                   =  2704
-const IDS_HTTPCOMM_SETUP_PASSWD                 =  2705
-const IDS_HTTPCOMM_SETUP_LOGIN                  =  2706
-const IDS_HTTPCOMM_FAIL_TO_SUBMIT_TXN_IN_7DAYS  =  2707
-const IDS_HTTPCOMM_FAIL_TO_LOGIN                =  2708
-const IDS_HTTPCOMM_SYSTEM_ERROR                 =  2709
-const IDS_HTTPCOMM_NO_NETWORK                   =  2710
-const IDS_HTTPCOMM_AUTH_DIALOG_TITLE            =  2711
-const IDS_HTTPCOMM_AUTHENTICATION               =  2712
-const IDS_HTTPCOMM_DEFAULT_BUTTON               =  2713
-const IDS_HTTPCOMM_NO_RESPONSE                  =  2714
-const IDS_HTTPCOMM_BAD_QRCODE                   =  2715
-const IDS_HTTPCOMM_BAD_SERVER_URL               =  2716
-const IDS_HTTPCOMM_FIRSTCHECK                   =  2717
-const IDS_HTTPCOMM_CHANGE_PASSWORD              =  2718
-const IDS_HTTPCOMM_FORGET_PASSWORD              =  2719
-const IDS_HTTPCOMM_CHANGE_PASSWORD_NEW          =  2720
-const IDS_HTTPCOMM_NEW_PASSWORD_MISMATCH        =  2721
-const IDS_HTTPCOMM_NEW_PASSWORD_CANNOT_BE_EMPTY =  2722
-const IDS_HTTPCOMM_PASSWORD_EXPIRED             =  2723
-const IDS_HTTPCOMM_TOKEN_EXPIRED                =  2724
-const IDS_HTTPCOMM_FORGET_PASSWORD_SENT         =  2725
-const IDS_HTTPCOMM_FAIL_TO_FORGET_PASSWORD      =  2726
-const IDS_HTTPCOMM_DIFFERENT_USER               =  2727
-
-//const IDS_MM_RESTART_APP                        = 4024
-const IDS_MM_DIALOG_TITLE                       = 4025
-const IDS_MM_DEVICE_WIPEOUT                     = 4026
-const IDS_MM_DOWNLOADING_INSTRUCTIONS           = 4027
-const IDS_MM_PROCESSING_INSTRUCTIONS            = 4028
-const IDS_MM_DOWNLOADING_COMMS_SETTINGS         = 4029
-const IDS_MM_DOWNLOADING_DEVICE_SETTINGS        = 4030
-const IDS_MM_DOWNLOADING_ENGINE_SETTINGS        = 4031
-const IDS_MM_DOWNLOADING_APP_SETTINGS           = 4032
-const IDS_MM_DOWNLOADING_APPLICATION            = 4033
-const IDS_MM_DOWNLOADING_NEW_ENG_IOS            = 4034
-const IDS_MM_DOWNLOADING_NEW_ENG_AND            = 4035
-const IDS_MM_USER_VALIDATION_FAIL               = 4036
-const IDS_MM_ENGINE_RESTART                     = 4037
-const IDS_MM_SAFETYNET_EXCEPTION                = 4038
-
-const IDS_PRN_SETUP_DONE                        = 5310
-
 
 type TokenFromServerResult = {
     success: boolean,
@@ -178,8 +128,8 @@ export let gAuth = new class {
     GetAPIVersion() { return this.APIVersion; }
     LoadUserInfo() {
         try {
-            Logger.Debug(`loading file ${USER_INFO_FILEPATH}`);
-            Logger.Debug(`data is  ${NativeNPSync.LoadFile(USER_INFO_FILEPATH)}`);
+            //Logger.Debug(`loading file ${USER_INFO_FILEPATH}`);
+            //Logger.Debug(`data is  ${NativeNPSync.LoadFile(USER_INFO_FILEPATH)}`);
             this.UserInfoJSON = JSON.parse(NativeNPSync.LoadFile(USER_INFO_FILEPATH));
             if (!this.UserInfoJSON?.access_token) {
                 this.UserInfoJSON = null;
@@ -353,47 +303,6 @@ export let gAuth = new class {
                 error_info: strError
             }
         }
-        // if (this.UserInfoJSON?.login_mode==="SSO_MOBILE" || this.UserInfoJSON?.login_mode==="SSO_IDP") {
-        //
-        //     let ret:SSOLoginRet;
-        //     //Dont need to provide user/password for access token refresh
-        //     //the saved refresh token will be used for regeneration of access_token
-        //
-        //     //if(this.UserInfoJSON?.login_mode=== "SSO_IDP")
-        //     //    ret = SSOLogin(48,true);
-        //     //else
-        //     ret = SSOLogin(48,true );
-        //
-        //     if(ret.result){
-        //         let rsp = SSOGetValidToken();
-        //         if(rsp.result) {
-        //             this.UpdateUserInfo(rsp.data);
-        //             // let errStr=this.UpdateUserInfo(rsp.data);
-        //             // if(errStr)
-        //             //    return {
-        //             //        success: false,
-        //             //        error_info: errStr,
-        //             //        error_code: 109 //
-        //             //    };
-        //
-        //             this.SaveUserInfo();
-        //             Logger.Event('Refresh SSO token success');
-        //             return {
-        //                 success: true
-        //             };
-        //         }
-        //     }
-        //
-        //     let str = JSON.stringify(ret);
-        //     Logger.Event('Fail to refresh SSO token: ' + str);
-        //     return {
-        //         success: false,
-        //         error_info: str,
-        //         error_code: ret.data.failCode
-        //     };
-        //
-        // }
-
         let refreshToken = this.UserInfoJSON?.refresh_token;
         let baseURL = this.UserInfoJSON?.base_url;
 
@@ -411,9 +320,7 @@ export let gAuth = new class {
             this.UpdateUserInfo(userInfo);
             this.SaveUserInfo();
             Logger.Event('Refresh token success');
-            return {
-                success: true
-            };
+            return { success: true };
         } else {
             let str = JSON.stringify(tokenRsp);
             Logger.Event('Fail to refresh token: ' + str);
@@ -438,21 +345,21 @@ export let gAuth = new class {
          let tokenReply= await WaitForPromiseT('OAuth', 'getting jwt token',
                           this.getTokenFromServerAsync(url, userCredential, progress_report));
          if (tokenReply?.success) {
-             await CommAlert("reload", JSON.stringify(gAuth.GetCachedTokenInfo()));
+             //await CommAlert("reload", JSON.stringify(gAuth.GetCachedTokenInfo()));
              return gAuth.GetCachedTokenInfo();
          }else {
-             await WaitForPromiseT('OAuth', `error: ${tokenReply.error}`, this.delay(3000));
+             //await WaitForPromiseT('OAuth', `error: ${tokenReply.error}`, this.delay(3000));
              return undefined;
          }
      }
 
 
 
-    RefreshTokenUI(baseUrl: string, refreshToken: string) {
+    async RefreshTokenUI(baseUrl: string, refreshToken: string) {
         type RefreshTokenResult = {
             success: boolean
         };
-        let finalResult = { success: false, restart: false };
+        let finalResultX = { success: false, restart: false };
 
         async function onRefreshTokenPostInit(finalResult: RefreshTokenResult) {
             Logger.Event('Refresh token');
@@ -474,12 +381,12 @@ export let gAuth = new class {
             }
         }
         if(!refreshToken)
-           return finalResult;
+           return finalResultX;
         // 2711: Authentication, 2712: Performing Server Authentication
         let title = 'IDS_HTTPCOMM_AUTH_DIALOG_TITLE';
         let desc = 'IDS_HTTPCOMM_AUTHENTICATION';
-        WaitForPromiseT(title, desc, onRefreshTokenPostInit(finalResult));
-        return finalResult;
+        await WaitForPromiseT(title, desc, onRefreshTokenPostInit(finalResultX));
+        return finalResultX;
     }
 
     // async forgetPasswordAsync(baseUrl: string, user_id: string, progress_report?: ProgressReportFunc ): Promise<IHttpResponse> {
@@ -570,7 +477,7 @@ export let gAuth = new class {
                 return;
             }
             this.UserInfoJSON = this.CompleteUserInfo(tokenResponseData, baseUrl, credential.loginMode);
-            await CommAlert('userinfo',JSON.stringify(this.UserInfoJSON));
+            //await CommAlert('userinfo',JSON.stringify(this.UserInfoJSON));
             this.SaveUserInfo();
             Logger.Event("Got token");
             progress_report({ cat: 'Authenticate', subCat: '', name: '', status: 'completed' });

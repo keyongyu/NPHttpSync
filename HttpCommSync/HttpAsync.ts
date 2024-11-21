@@ -1,14 +1,14 @@
-import {DataInToken, Logger, NetProgressReportNativeFunc} from "./Common";
+import {DataInToken, Logger, NetProgressReportNativeFunc} from './Common';
 import NPSyncSpec, {HttpMethod, IHttpResponse} from '../specs/NativeNPSync';
-import {gAuth} from "./OAuth";
+import {gAuth} from './OAuth';
 import RNFS from 'react-native-fs';
 export const NoNetwork = 92;
-export const ConnectionError=91;
+export const ConnectionError = 91;
 export function isTimeoutResponse(rsp:IHttpResponse):boolean
 {
    //{"req_id":"15","type":"RESULT_ERR","error_code":91,"error_desc":"Code(-1001): Time out"}
-  if(rsp.error_code===ConnectionError && rsp.error_desc)
-      return rsp.error_desc.indexOf("-1001")>=0;
+  if(rsp.error_code === ConnectionError && rsp.error_desc)
+      {return rsp.error_desc.indexOf('-1001') >= 0;}
   return false;
 }
 export var gHttpAsync = new class{
@@ -20,7 +20,7 @@ export var gHttpAsync = new class{
         return 'Accept:application/json;\nContent-Type:application/json; charset=utf-8\nAuthorization:Bearer ' + token;
     }
     async SendWebReqWithTokenAsync(url:string, method:HttpMethod, dataInToken:DataInToken,
-                          content:string/*|Uint8Array*/, progress_reporter?:NetProgressReportNativeFunc, timeoutInSec=-1):Promise<IHttpResponse> {
+                          content:string/*|Uint8Array*/, progress_reporter?:NetProgressReportNativeFunc, timeoutInSec = -1):Promise<IHttpResponse> {
         /*if(this.HttpReqID%3==2) {
             Logger.Error("Refreshing Access token");
             dataInToken.AcessToken = await gAuth.RegenerateAccessTokenAsync() ?? dataInToken.AcessToken;
@@ -36,11 +36,11 @@ export var gHttpAsync = new class{
         return reply;
     }
     async SendWebReqAsync(url:string, method:HttpMethod, header:string,
-                          content:string/*|Uint8Array*/, progress_reporter?:NetProgressReportNativeFunc, timeoutInSec=-1):Promise<IHttpResponse> {
+                          content:string/*|Uint8Array*/, progress_reporter?:NetProgressReportNativeFunc, timeoutInSec = -1):Promise<IHttpResponse> {
         return new Promise<IHttpResponse>((resolve) => {
             const new_header = header.replace(/Authorization:Bearer .*/, 'Authorization:Bearer ****');
             if (typeof content === 'string')
-                Logger.Data('SendWebReqAsync url: ' + url + '\nHEADER: ' + new_header + '\nBODY: ' + content);
+                {Logger.Data('SendWebReqAsync url: ' + url + '\nHEADER: ' + new_header + '\nBODY: ' + content);}
             else {
                 Logger.Data('SendWebReqAsync url: ' + url + '\nHEADER: ' + new_header);
                 Logger.Data(content);
@@ -50,7 +50,7 @@ export var gHttpAsync = new class{
                 result => {
                     if (/*result.type == "RECEIVING" || */result.type === 'SENDING') {
                         if (progress_reporter)
-                            progress_reporter({total:result.total??1,done:result.done??1});
+                            {progress_reporter({total:result.total ?? 1,done:result.done ?? 1});}
                         return;
                     } else if (result.type === 'RESULT_RSP') {
                         Logger.Data('Got reply for url: ' + url + '\nRsp: ' + JSON.stringify(result));
@@ -181,11 +181,11 @@ export var gHttpAsync = new class{
         }
         return reply;
     }
-    tmpFileIndex=0;
+    tmpFileIndex = 0;
     async DownloadFileAsync(url: string, method: HttpMethod, header: string, content: string,
         progress_reporter?: NetProgressReportNativeFunc, remark = {}): Promise<IHttpResponse> {
 
-        let fileName = RNFS.TemporaryDirectoryPath+"/dn_"+(this.tmpFileIndex++);
+        let fileName = RNFS.TemporaryDirectoryPath + '/dn_' + (this.tmpFileIndex++);
         return new Promise<IHttpResponse>((resolve) => {
             //Logger.Data("DownloadFileAsync url: " + url + "\nHEADER: " + header + "\nBODY: " + content);
             const new_header = header.replace(/Authorization:Bearer .*/, 'Authorization:Bearer ****');
@@ -194,11 +194,11 @@ export var gHttpAsync = new class{
                 result => {
                     if (result.type === 'RECEIVING') {
                         if (progress_reporter) {
-                            progress_reporter({total: result.total??1, done: result.done??1});
+                            progress_reporter({total: result.total ?? 1, done: result.done ?? 1});
                         }
                     } else  if ( /*|| result.type == "SENDING" ||*/ result.type === 'HEADER_READY') {
                         if (progress_reporter)
-                            progress_reporter({total: result.total??1, done: result.done??1, rsp_header: result.rsp_header});
+                            {progress_reporter({total: result.total ?? 1, done: result.done ?? 1, rsp_header: result.rsp_header});}
                     } else if (result.type === 'RESULT_RSP') {
                         //result.rsp_data_dump = this.GetFileContent(result);
                         //Logger.Data(`\nReceived DownloadFileAsync url: ${url} \nRsp: ${JSON.stringify(result)}\nAdditional Info: ${JSON.stringify(remark)}\n`);
@@ -226,7 +226,7 @@ Additional Info: ${JSON.stringify(remark)}`);
 //             }
 
         });
-    };
+    }
 
     async UploadFileAsync(url: string, header: string, method: HttpMethod, fileName: string,
         progress_reporter?: NetProgressReportNativeFunc): Promise<IHttpResponse> {
@@ -236,7 +236,7 @@ Additional Info: ${JSON.stringify(remark)}`);
             NPSyncSpec.SendHttpRequest(result => {
                 if (/*result.type == "RECEIVING" || */result.type === 'SENDING') {
                     if (progress_reporter)
-                        progress_reporter({ total: result.total ?? 1, done: result.done ?? 1 });
+                        {progress_reporter({ total: result.total ?? 1, done: result.done ?? 1 });}
                 } else if (result.type === 'RESULT_RSP') {
                     Logger.Data('Received UploadFileAsync url: ' + url + '\nRsp: ' + JSON.stringify(result));
                     resolve(result);

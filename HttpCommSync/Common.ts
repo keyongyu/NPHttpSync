@@ -1,6 +1,5 @@
-//import { GetEngineVersion ,NPLogger} from "./global";
 import {consoleTransport, fileAsyncTransport, logger} from 'react-native-logs';
-import FileSystem from "react-native-fs";
+import FileSystem from 'react-native-fs';
 import {Alert} from 'react-native';
 
 export const FirstCheckDir=FileSystem.DocumentDirectoryPath+'/FirstCheck';
@@ -428,6 +427,7 @@ export async function WaitForPromiseT<T>(title:string, desc:string , p:Promise<T
 //     });
 //
 // }
+
 export function GetHardwareId()
 {
     return "KY_TEST_111_222"
