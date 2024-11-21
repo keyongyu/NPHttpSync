@@ -2,7 +2,7 @@
 #include <fbjni/fbjni.h>
 #include <chrono>
 #include <thread>
-
+#include <sys/stat.h>
 #ifdef __ANDROID__
 #include <android/log.h>
 #endif
@@ -206,13 +206,13 @@ namespace facebook::react {
     }
     void NativeNPSyncModule::SendHttpRequestBlob(jsi::Runtime &rt, jsi::Function f, std::string reqId,
                                              std::string method, std::string url, std::string header,
-                                             jsi::Object content, bool bSaveToFile, std::optional<double> nTimeoutMs) {
+                                             jsi::Object content, std::string fileToBeSaved, std::optional<double> nTimeoutMs) {
 
     }
 
     void NativeNPSyncModule::SendHttpRequest(jsi::Runtime &rt, jsi::Function f, std::string reqId,
                                  std::string method, std::string url, std::string header,
-                                 std::string content, bool bSaveToFile, std::optional<double> nTimeoutMs) {
+                                 std::string content, std::string fileToBeSaved, std::optional<double> nTimeoutMs) {
 
 
         static auto cls = JNativeHelper::javaClassStatic();
@@ -224,7 +224,7 @@ namespace facebook::react {
         jvalue jcb;
         //cb.l=createJavaCallback(rt,std::move(f), jsInvoker_).release();
 
-        AsyncCallback<> callback( {rt, std::move(f), std::move(jsInvoker_)});
+        AsyncCallback<> callback( {rt, std::move(f), jsInvoker_});
         jcb.l = JCxxCallbackImpl::newObjectCxxArgs(
                 [callback = std::move(callback)](folly::dynamic args) mutable {
                     callback.call([args = std::move(args)](
@@ -247,12 +247,139 @@ namespace facebook::react {
         argArray->setElement(2, *jni::make_jstring(url));
         argArray->setElement(3, *jni::make_jstring(header));
         argArray->setElement(4, *jni::make_jstring(content));
-        argArray->setElement(5, *jni::make_jstring(bSaveToFile?"true":"false"));
+        argArray->setElement(5, *jni::make_jstring(fileToBeSaved));
         argArray->setElement(6, * jni::make_jstring(std::to_string(timeout)));
 
         env->CallStaticVoidMethod(cls.get(), jmeth, jcb, argArray.get(),  nullptr, 0);
 
     }
 
+    std::string NativeNPSyncModule::LoadFile(jsi::Runtime &rt, std::string fileName, std::optional<int> maxBytes){
+        FILE * hFile=NULL ;
+        if(!fileName.empty())
+            hFile = fopen(fileName.c_str(), "rb") ;
 
+        if (!hFile){
+            return "" ;
+        }
+        fseek(hFile, 0, SEEK_END) ;
+        int dwLen = (int)ftell(hFile) ;
+        int n=std::min(dwLen,maxBytes.value_or(dwLen));
+        std::string content(n,'\0');
+        fseek(hFile, 0, SEEK_SET) ;
+        if(fread(content.data(), 1, n, hFile) !=n)
+            content="";
+        fclose(hFile);
+        return content;
+    }
+    inline bool is_slash(char ch)
+    {
+#ifdef WINAPI_FAMILY  //WIN_PHONE
+        return  (ch == '/' || ch == '\\');
+#else
+        return  ch == '/';
+#endif
+    }
+    int mkdir_p(const char *path1, int32_t mode)
+    {
+        char * path = (char*) path1;
+        int32_t numask, oumask;
+        int first, last, retval;
+        char *p;
+
+        p = path;
+        oumask = 0;
+        retval = 0;
+        if (is_slash(p[0]))       /* Skip leading '/'. */
+            ++p;
+        for (first = 1, last = 0; !last ; ++p) {
+            if (p[0] == '\0')
+                last = 1;
+            else if (!is_slash(p[0]))
+                continue;
+            char c=*p; //save current slash
+            *p = '\0';
+            if (!last && p[1] == '\0')
+                last = 1;
+            if (first) {
+                oumask = umask(0);
+                /* Ensure intermediate dirs are wx */
+                numask = oumask & ~(S_IWUSR | S_IXUSR);
+                (void)umask(numask);
+                first = 0;
+            }
+            if (last)
+                (void)umask(oumask);
+#ifdef WINAPI_FAMILY  //WIN_PHONE
+            if (_mkdir(path) < 0) {
+#else
+            struct stat sb;
+            if (mkdir(path, last ? mode : S_IRWXU | S_IRWXG | S_IRWXO) < 0) {
+#endif
+                if (errno == EEXIST || errno == EISDIR) {
+#ifndef WINAPI_FAMILY
+                    if (stat(path, &sb) < 0) {
+                        *p = c; //restore current slash
+                        retval = errno;
+                        break;
+                    } else if (!S_ISDIR(sb.st_mode)) {
+                        if (last)
+                            retval = EEXIST;
+                        else
+                            retval = ENOTDIR;
+                        *p = c; //restore current slash
+                        break;
+                    }
+#endif
+                    //folder already exists, don't think it is an error.
+
+                } else {
+                    //other error
+                    *p = c; //restore current slash
+                    retval = errno;
+#ifdef PREVIEWER_EXPORTS
+                    if (_mkdir(path) >= 0)
+					return 0;
+#endif
+                    break;
+                }
+            }
+            *p = c; //restore current slash
+        }
+        if (!first && !last)
+            (void)umask(oumask);
+        return (retval);
+    }
+    bool NativeNPSyncModule::WriteFile(jsi::Runtime &rt, std::string fileName,
+                                       std::string content, std::string mode) {
+        if(fileName.empty())
+            return false;
+        FILE * hFile= fopen(fileName.c_str(), mode.c_str()) ;
+        if (!hFile) {
+            auto pos = fileName.rfind('/');
+            if (pos == std::string::npos)
+                return false;
+            auto dir = fileName.substr(0, pos);
+            mkdir_p(dir.c_str(), 0700);
+
+            hFile = fopen(fileName.c_str(), mode.c_str());
+        }
+        if(!hFile)
+            return false;
+        bool ret = fwrite(content.data(), 1, content.length(), hFile) !=content.length();
+        fclose(hFile);
+        return ret;
+    }
+    bool NativeNPSyncModule::DeleteFile(jsi::Runtime &rt, std::string fileName) {
+        if(fileName.empty())
+            return false;
+        return 0==unlink(fileName.c_str());
+    }
+    bool NativeNPSyncModule::MoveFile(jsi::Runtime &rt, std::string srcFileName, std::string dstFileName, std::optional<bool> overwrite) {
+        if(srcFileName.empty() || dstFileName.empty())
+            return false;
+        //bool rewrite= overwrite.value_or(true);
+
+        return 0==rename(srcFileName.c_str(), dstFileName.c_str());
+    }
 } // namespace facebook::react

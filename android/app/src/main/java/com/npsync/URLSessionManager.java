@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -313,35 +314,19 @@ public class URLSessionManager {
 				boolean gzipped= false;
 				if(valueList!=null)
 					gzipped = valueList.get(0).equals("gzip");
+				Map<String, String > myHeaderMap = new HashMap<>(map.size());
+				for (Map.Entry<String, List<String>> entry : map.entrySet())
+				{
+					if (entry.getKey() == null)
+						continue;
+					List<String> headerValues = entry.getValue();
 
-//				for (Map.Entry<String, List<String>> entry : map.entrySet())
-//				{
-//					if (entry.getKey() == null)
-//						continue;
-//					if (bFirst) {
-//						builder.append("\n");
-//						bFirst = false;
-//					}
-//					else
-//						builder.append(",\n");
-//					builder.append("\"").append( entry.getKey())
-//							.append("\":\"");
-//
-//					List<String> headerValues = entry.getValue();
-//					Iterator<String> it = headerValues.iterator();
-//					if (it.hasNext()) {
-//						builder.append(forJSON(it.next()));
-//
-//						while (it.hasNext()) {
-//							builder.append(", ")
-//									.append(forJSON(it.next()));
-//						}
-//					}
-//
-//					builder.append("\"");
-//				}
-//				// Add in the requested uri protocol & host into the header items list.
-//				// It can be used to compose full absolute uri for a relative redirect uri.
+					myHeaderMap.put(entry.getKey(),String.join(",", headerValues));
+
+
+				}
+				// Add in the requested uri protocol & host into the header items list.
+				// It can be used to compose full absolute uri for a relative redirect uri.
 //				URL rspURL = myConnection.getURL();
 //				builder.append (",\n\"request_base_uri\":\"").append(rspURL.getProtocol()).append("://").
 //						append( rspURL.getHost()).append("\"");
@@ -349,7 +334,7 @@ public class URLSessionManager {
 //				builder.append("\n}");
 
 
-				SendHttpHeaderReadyEvent(strRequestID, iRspCode, map);
+				SendHttpHeaderReadyEvent(strRequestID, iRspCode, myHeaderMap);
 
 				// Get the http body
 				// Try to read from error stream first
@@ -358,16 +343,14 @@ public class URLSessionManager {
 					if (gzipped)
 						in = new GZIPInputStream(in);
 					result = convertStreamToString(in,charsetName);
-					SendHttpResultEvent(strRequestID, iRspCode, map, result, false);
+					SendHttpResultEvent(strRequestID, iRspCode, myHeaderMap, result, false);
 				}
 				else if (bReceiveInfile) {
 					in = myConnection.getInputStream();
 					if (gzipped)
 						in = new GZIPInputStream(in);
 					final boolean appendMode = offset > 0;
-					String[] rcvNamePath = rcvFilePath.split("\\|");
-					result = rcvNamePath[0];
-					FileOutputStream out = new FileOutputStream(rcvNamePath[1], appendMode);
+					FileOutputStream out = new FileOutputStream(rcvFilePath, appendMode);
 					final int blk_size = 1024 * 64;
 					byte[] buff = new byte[blk_size];
 					int iLen, iReceived = offset;
@@ -378,13 +361,14 @@ public class URLSessionManager {
 						SendHttpStatusEvent(strRequestID, HTTP_RECEIVING, iReceived, iTotalSize);
 					}
 					out.close();
-					SendHttpResultEvent(strRequestID, iRspCode, map, result, true);
+					result = rcvFilePath;
+					SendHttpResultEvent(strRequestID, iRspCode, myHeaderMap, result, true);
 				} else {
 					in = myConnection.getInputStream();
 					if (gzipped)
 						in = new GZIPInputStream(in);
 					result = convertStreamToString(in, charsetName);
-					SendHttpResultEvent(strRequestID, iRspCode, map, result, false);
+					SendHttpResultEvent(strRequestID, iRspCode, myHeaderMap, result, false);
 				}
 				if (in != null)
 					in.close();

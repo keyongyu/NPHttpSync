@@ -21,11 +21,14 @@ namespace facebook::react {
 
         void SendHttpRequest(jsi::Runtime &rt, jsi::Function f, std::string reqId,
                              std::string method, std::string url, std::string header,
-                             std::string content, bool bSaveToFile, std::optional<double> nTimeoutMs);
+                             std::string content, std::string fileToBeSaved, std::optional<double> nTimeoutMs);
         void SendHttpRequestBlob(jsi::Runtime &rt, jsi::Function f, std::string reqId,
                              std::string method, std::string url, std::string header,
-                              jsi::Object content, bool bSaveToFile, std::optional<double> nTimeoutMs);
-
+                              jsi::Object content, std::string fileToBeSaved, std::optional<double> nTimeoutMs);
+        std::string LoadFile(jsi::Runtime &rt, std::string fileName, std::optional<int> maxBytemaxBytes) ;
+        bool WriteFile(jsi::Runtime &rt, std::string fileName, std::string content, std::string mode) ;
+        bool DeleteFile(jsi::Runtime &rt, std::string fileName) ;
+        bool MoveFile(jsi::Runtime &rt, std::string srcFileName, std::string dstFileName, std::optional<bool> overwrite) ;
     };
 
 }// namespace facebook::react

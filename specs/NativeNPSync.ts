@@ -27,11 +27,14 @@ export interface Spec extends TurboModule {
 
   readonly SendHttpRequest: (cb: SendHttpRequestCB_t, reqId: string,
       method: HttpMethod, url: string, header: string,
-      content: string, bSaveToFile: boolean, nTimeoutMs?:number)=>void;
+      content: string, savedFileName: string, nTimeoutMs?:number)=>void;
   readonly SendHttpRequestBlob: (cb: SendHttpRequestCB_t, reqId: string,
       method: HttpMethod, url: string, header: string,
-      content: Object, bSaveToFile: boolean, nTimeoutMs?:number)=>void;
-
+      content: Object, savedFileName: string, nTimeoutMs?:number)=>void;
+  readonly LoadFile:(fileName:string, maxBytes?:number)=>string;
+  readonly WriteFile:(file: string, content: string, mode: string)=>boolean;
+  readonly DeleteFile:(file: string)=>boolean;
+  readonly MoveFile:(srcFile: string, dstFile:string, overwrite?:boolean )=>boolean;
 
 }
 
