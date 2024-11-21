@@ -1,5 +1,5 @@
 import {
-    CommAlert,
+    CommAlertAsync,
     DataInToken, FirstCheckDir, GetHardwareId,
     Logger,
     LoginModeResult,
@@ -42,9 +42,11 @@ type UserCredentialUPW = {
     loginMode:"MOBILE",
     user:string,
     password : string
+    url:string
     newPassword?:string
+    error?:string
 }
-type UserCredential = UserCredentialUPW;
+export type UserCredential = UserCredentialUPW;
 const REDIRECT_URI="com.acnnp.htmlengine://oauth2";
 
 const USER_INFO_FILEPATH = FirstCheckDir + '/FirstLogin.json';
@@ -202,21 +204,22 @@ export let gAuth = new class {
 
     }
     private async RegenerateAccessTokenAsync(): Promise<string |undefined> {
+        //await CommAlert('', 'RegenerateAccessTokenAsync');
         let result = await this.RefreshTokenAsync();
         if (/*true*/!result.success) {
-            // //alert("Oauth 146:"+ JSON.stringify(result));
+            //alert("Oauth 146:"+ JSON.stringify(result));
             // if(result.error_code!==undefined){
             //     return this.UserInfoJSON?.access_token;
             // }
             // if(this.UserInfoJSON?.login_mode==="MOBILE") {
-            //     this.CommLoginUI(this.UserInfoJSON?.login_mode);
+            //     //this.CommLogUI(this.UserInfoJSON?.login_mode);
             //     return this.UserInfoJSON?.access_token;
             //
             // }else {
-            //     let tokenInfo = this.GetTokenInfoWithUI(make_progress_reporter());
-            //     return tokenInfo?.AcessToken;
+            let tokenInfo = await this.GetTokenInfoWithUIAsync(make_progress_reporter());
+            return tokenInfo?.AcessToken;
             // }
-            return undefined;
+            //return undefined;
         } else {
             return this.UserInfoJSON?.access_token;
         }
@@ -234,6 +237,7 @@ export let gAuth = new class {
      */
     private async GetValidAccessTokenAsync(progress_report?: ProgressReportFunc): Promise<string |undefined> {
         this.LoadUserInfo();
+        //await CommAlert('', 'GetValidAccessTokenAsync');
         if (this.UserInfoJSON !== null) {
             let expiryDate = new Date(this.UserInfoJSON.token_expiry_date);
             if (this.willExpireIn30Minutes(expiryDate) /*|| true*/) {
@@ -246,14 +250,14 @@ export let gAuth = new class {
                     }
                     //             let baseURL = gAuth.UserInfoJSON.base_url;
                     //             if (baseURL) this.logoutUser(baseURL,null);
-                    if(this.UserInfoJSON.login_mode==="MOBILE"/*|| this.UserInfoJSON.login_mode==="SSO_MOBILE"*/ ) {
-                        //this.CommLoginUI(this.UserInfoJSON.login_mode, progress_report);
-                        return await this.GetValidAccessTokenAsync(progress_report);
-
-                    }else {
-                        let tokenInfo = this.GetTokenInfoWithUI(progress_report);
+                    // if(this.UserInfoJSON.login_mode==="MOBILE"/*|| this.UserInfoJSON.login_mode==="SSO_MOBILE"*/ ) {
+                    //     //this.CommLoginUI(this.UserInfoJSON.login_mode, progress_report);
+                    //     return await this.GetValidAccessTokenAsync(progress_report);
+                    //
+                    // }else {
+                        let tokenInfo = await this.GetTokenInfoWithUIAsync(progress_report);
                         return tokenInfo?.AcessToken;
-                    }
+                    // }
                 } else {
                     return this.UserInfoJSON.access_token;
                 }
@@ -262,7 +266,7 @@ export let gAuth = new class {
                 return this.UserInfoJSON.access_token;
             }
         } else {
-            let tokenInfo = this.GetTokenInfoWithUI(progress_report);
+            let tokenInfo = await this.GetTokenInfoWithUIAsync(progress_report);
             return tokenInfo?.AcessToken;
         }
     };
@@ -273,7 +277,7 @@ export let gAuth = new class {
         let tokenInfo;
         this.LoadUserInfo();
         if (this.UserInfoJSON === null) {
-            tokenInfo = this.GetTokenInfoWithUI(progress_report);
+            tokenInfo = await this.GetTokenInfoWithUIAsync(progress_report);
         } else {
             tokenInfo = await this.InternalGetTokenInfoAsync(progress_report);
         }
@@ -293,7 +297,7 @@ export let gAuth = new class {
     //     return strLogoutResult;
     // }
 
-    async RefreshTokenAsync() {
+    private async RefreshTokenAsync() {
         Logger.Event('Refresh token');
         if (!this.UserInfoJSON?.refresh_token) {
             let strError = "No refresh token";
@@ -335,22 +339,42 @@ export let gAuth = new class {
      delay(ms: number) {
         return new Promise( resolve => setTimeout(resolve, ms) );
      }
-     async GetTokenInfoWithUI(progress_report?: ProgressReportFunc): Promise<DataInToken | undefined> {
-         let defaultUrl = gHttpMobileManager.GetBaseURL('https://unza-my-qa.npa.accenture.com/mobile');
-         let userId = gHttpMobileManager.GetUserId() || 'D13GT09';
-         let password = gHttpMobileManager.GetUserPassword() || 'Unza@123';
-         let url = defaultUrl;
-         let userCredential:UserCredential = { loginMode:'MOBILE',user:userId,password:password};
-         progress_report = progress_report || ((_x) => { });
-         let tokenReply= await WaitForPromiseT('OAuth', 'getting jwt token',
-                          this.getTokenFromServerAsync(url, userCredential, progress_report));
-         if (tokenReply?.success) {
-             //await CommAlert("reload", JSON.stringify(gAuth.GetCachedTokenInfo()));
-             return gAuth.GetCachedTokenInfo();
-         }else {
-             //await WaitForPromiseT('OAuth', `error: ${tokenReply.error}`, this.delay(3000));
-             return undefined;
+
+     async GetTokenInfoWithUIAsync(progress_report?: ProgressReportFunc): Promise<DataInToken | undefined> {
+         let defaultUrl = gHttpMobileManager.GetBaseURL();
+         let userId = gHttpMobileManager.GetUserId() ;
+         let password = gHttpMobileManager.GetUserPassword() ;
+         let userCredential:UserCredential|null = { url:defaultUrl, loginMode:'MOBILE',user:userId,password:password};
+         if(!defaultUrl || !userId || !password) {
+             userCredential = await gHttpMobileManager.GetUserCredential(userCredential);
+
          }
+         progress_report = progress_report || ((_x) => { });
+         let changePassword=false;
+         while(userCredential) {
+             let tokenReply = null;
+             let url = gHttpMobileManager.CompleteUrl(userCredential.url);
+             //Authentication, Performing Server Authentication
+             if (!changePassword)
+                 tokenReply = await WaitForPromiseT('OAuth', 'getting jwt token',
+                       this.getTokenFromServerAsync(url, userCredential, progress_report));
+             if (tokenReply?.success) {
+                 //await CommAlert("reload", JSON.stringify(gAuth.GetCachedTokenInfo()));
+                 return gAuth.GetCachedTokenInfo();
+             } else {
+                 if (tokenReply?.needChangePassword || changePassword) {
+                     changePassword = true;
+                     userCredential.error = tokenReply?.error || "engine error";
+                     userCredential = await gHttpMobileManager.GetUserCredential(userCredential);
+                     continue;
+                 }
+                 changePassword = false;
+                 userCredential.error = tokenReply?.error || "engine error";
+                 //await WaitForPromiseT('OAuth', `error: ${tokenReply.error}`, this.delay(3000));
+                 userCredential = await gHttpMobileManager.GetUserCredential(userCredential);
+             }
+         }
+         return undefined;
      }
 
 

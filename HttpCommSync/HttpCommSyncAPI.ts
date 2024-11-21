@@ -8,7 +8,7 @@ import {
 } from "./Common";
 // import { gHttpDataSync, TxnUploadParam } from "./HttpDataSync";
 import { gAuth } from "./OAuth";
-import { gHttpMobileManager, RunAt } from "./MobileManager";
+import {gHttpMobileManager, RunAt, UserCredentialProvider} from './MobileManager';
 
 
 
@@ -138,12 +138,13 @@ function HttpCommGetGroupInfo(syncName: string) {
     return groups;
 }
 
-async function FirstCheck(runAt: RunAt | "DEFAULT_APP"): Promise<string> {
+async function FirstCheck(runAt: RunAt | "DEFAULT_APP", userCredentialProvider:UserCredentialProvider): Promise<string> {
     if (runAt == "DEFAULT_APP")
         return gHttpMobileManager.GetAppId();
     if (runAt === "ENG_START" || runAt === "COMM_START") {
         if (runAt === "ENG_START")
             gAuth.SetAPIVersion(2);
+        gHttpMobileManager.SetCredentialProvider(userCredentialProvider);
         await gHttpMobileManager.FirstCheckUI(runAt);
         // let restart = gHttpMobileManager.FirstCheckUI(runAt).restart;
         // //let loginResult = HttpLogin();

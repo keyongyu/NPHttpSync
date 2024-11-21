@@ -222,21 +222,21 @@ namespace facebook::react {
         jmethodID jmeth =meth.getId();
         JNIEnv* env = jni::Environment::current();
         jvalue jcb;
-        //cb.l=createJavaCallback(rt,std::move(f), jsInvoker_).release();
+        jcb.l=createJavaCallback(rt,std::move(f), jsInvoker_).release();
 
-        AsyncCallback<> callback( {rt, std::move(f), jsInvoker_});
-        jcb.l = JCxxCallbackImpl::newObjectCxxArgs(
-                [callback = std::move(callback)](folly::dynamic args) mutable {
-                    callback.call([args = std::move(args)](
-                            jsi::Runtime& rt, jsi::Function& jsFunction) {
-                        std::vector<jsi::Value> jsArgs;
-                        jsArgs.reserve(args.size());
-                        for (const auto& val : args) {
-                            jsArgs.emplace_back(jsi::valueFromDynamic(rt, val));
-                        }
-                        jsFunction.call(rt, (const jsi::Value*)jsArgs.data(), jsArgs.size());
-                    });
-                }).release();
+//        AsyncCallback<> callback( {rt, std::move(f), jsInvoker_});
+//         jcb.l = JCxxCallbackImpl::newObjectCxxArgs(
+//                 [callback = std::move(callback)](folly::dynamic args) mutable {
+//                     callback.call([args = std::move(args)](
+//                             jsi::Runtime& rt, jsi::Function& jsFunction) {
+//                         std::vector<jsi::Value> jsArgs;
+//                         jsArgs.reserve(args.size());
+//                         for (const auto& val : args) {
+//                             jsArgs.emplace_back(jsi::valueFromDynamic(rt, val));
+//                         }
+//                         jsFunction.call(rt, (const jsi::Value*)jsArgs.data(), jsArgs.size());
+//                     });
+//                 }).release();
 
 
         int argc= 7;

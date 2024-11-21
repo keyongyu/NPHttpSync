@@ -432,7 +432,7 @@ export function GetHardwareId()
 {
     return "KY_TEST_111_222"
 }
-export async function CommAlert(title:string, desc:string):Promise<void> {
+export async function CommAlertAsync(title:string, desc:string):Promise<void> {
     return new Promise((resolve, reject) => {
 
         Alert.alert(

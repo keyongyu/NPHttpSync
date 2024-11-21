@@ -10,7 +10,7 @@ import {
   ReportArg, toJson, WaitForPromiseT,
 } from './Common';
 import {gHttpAsync, isTimeoutResponse, NoNetwork, ConnectionError} from "./HttpAsync"
-import {gAuth} from "./OAuth"
+import {gAuth, UserCredential} from './OAuth';
 // import {gHttpDataSync} from "./HttpDataSync"
 import NativeNPSync, {IHttpResponse} from '../specs/NativeNPSync.ts';
 import {gStorageConfig} from './Storage.ts';
@@ -120,6 +120,7 @@ export interface FirstCheckResult{
     INSTRJ_ENG?:InstrUrlReply;
     INSTRJ_COMM?:InstrUrlReply;
 }
+export type UserCredentialProvider =  (oldCredential:UserCredential)=>Promise<UserCredential|null>;
 
 function ISOString() {
     return new Date().toISOString();
@@ -282,7 +283,15 @@ export let gHttpMobileManager = new (class {
   MMLog(jsonObj: ReportArg) {
     Logger.Event('system event: ' + JSON.stringify(jsonObj));
   }
-
+  userCredentialProvider_: UserCredentialProvider|undefined ;
+  SetCredentialProvider(userCredentialProvider: UserCredentialProvider) {
+    this.userCredentialProvider_=userCredentialProvider;
+  }
+  async GetUserCredential(userCredential: UserCredential):Promise<UserCredential|null> {
+     if(!this.userCredentialProvider_)
+       return null;
+     return await this.userCredentialProvider_(userCredential);
+  }
   async FirstCheckUI (runAt:RunAt, dataInToken?:DataInToken,progress?: ProgressReportFunc, fcData?:FirstCheckResult) {
     let onFirstCheckPostInit  = async (finalResult: FinalResult) => {
           let retries=0;

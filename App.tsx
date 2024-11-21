@@ -9,9 +9,8 @@ import {
 
 import NPSyncSpec, { IHttpResponse } from './specs/NativeNPSync';
 import {SetCommPromptChanger} from './HttpCommSync/Common.ts';
-import {gAuth} from './HttpCommSync/OAuth.ts';
-import FileSystem from 'react-native-fs';
-import {FirstCheck} from './HttpCommSync/HttpCommSyncAPI.ts';
+import { UserCredential} from './HttpCommSync/OAuth.ts';
+import {HttpCommClearJWT,FirstCheck} from './HttpCommSync/HttpCommSyncAPI.ts';
 const EMPTY = '<empty>';
 
 function App(): React.JSX.Element {
@@ -81,12 +80,23 @@ function App(): React.JSX.Element {
     );
   }
 
+  async function getUserInfo(old:UserCredential):Promise<UserCredential|null> {
+    return await {
+      url:'https://unza-my-qa.npa.accenture.com/mobile',
+      loginMode:'MOBILE',
+      user:'D13GT09',
+      password:'Unza@123',
+      newPassword:'Unza@123',
+      error:old.error
+    };
+  }
   async function getToken(){
     // await FileSystem.mkdir(FileSystem.DocumentDirectoryPath+'/logs');
       //let  dataInToken = await gAuth.GetTokenInfoAsync();
       //setValue2(JSON.stringify(dataInToken));
       //console.log(dataInToken);
-    await  FirstCheck("ENG_START");
+    HttpCommClearJWT();
+    await  FirstCheck("ENG_START", getUserInfo);
   }
 
   return (
