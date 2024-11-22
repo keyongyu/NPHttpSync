@@ -1,7 +1,7 @@
 import {
   ChangeCommPrompt, CommAlert,
   DataInToken,
-  FCStorage, FirstCheckDir, GetHardwareId,
+  FCStorage, FirstCheckDir, GetEngineVersion, GetHardwareId,
   IsDevEngine,
   Logger,
   make_progress_reporter,
@@ -832,7 +832,7 @@ export let gHttpMobileManager = new (class {
   };
 
   private async HttpFirstCheckAsync(run_at: string, dataInToken: DataInToken ) {
-      let engineVersion= '0.0.1'; //skip hardcoded "Version "
+      let engineVersion= GetEngineVersion(); //skip hardcoded "Version "
       //`${engineInfoObject.engine_version}_${engineInfoObject.build_version}`;
       //let header = this.HttpHeader(dataInToken.AcessToken);
       let body = {

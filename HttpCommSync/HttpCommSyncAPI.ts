@@ -7,33 +7,34 @@ import {
     LoginModeResult, TxnSector, RecreateLogger
 } from "./Common";
 // import { gHttpDataSync, TxnUploadParam } from "./HttpDataSync";
+import { gHttpDataSync} from "./HttpDataSync";
 import { gAuth } from "./OAuth";
 import {gHttpMobileManager, RunAt, UserCredentialProvider} from './MobileManager';
 
 
 
 
-// function HttpCommSyncStop() {
-//     gHttpDataSync.StopCommSync()
-// }
-// async function HttpCommSync(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd?: string) {
-//     gAuth.SetAPIVersion(1);
-//     RecreateLogger();
-//     let progress_wrapper = make_progress_reporter(progress);
-//     try {
-//         progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'start' });
-//         let result = await gHttpDataSync.SyncDataAsync(progress_wrapper, tblSyncNames, firstCheck, distCd??"");
-//         if (result && result.success) {
-//             progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'completed' });
-//         }
-//         else
-//             progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(result) });
-//         return result.success;
-//     } catch (e) {
-//         progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(e) });
-//         return false;
-//     }
-// }
+function HttpCommSyncStop() {
+    gHttpDataSync.StopCommSync();
+}
+async function HttpCommSync(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd?: string) {
+    gAuth.SetAPIVersion(1);
+    RecreateLogger();
+    let progress_wrapper = make_progress_reporter(progress);
+    try {
+        progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'start' });
+        let result = await gHttpDataSync.SyncDataAsync(progress_wrapper, tblSyncNames, firstCheck, distCd??"");
+        if (result && result.success) {
+            progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'completed' });
+        }
+        else
+            progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(result) });
+        return result.success;
+    } catch (e) {
+        progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(e) });
+        return false;
+    }
+}
 
 // let g_SmartTxnUploaded = false;
 // function Comm2EnableSmartTxnUploading(bEnable:boolean):boolean{
@@ -344,24 +345,10 @@ function HttpCommClearJWT():void
     userInfo.token_expiry_date = date.toISOString();
     gAuth.SaveUserInfo();
 }
-// global.HttpLogin = HttpLogin;
-// global.HttpCommSync2 = HttpCommSync2;
-// global.HttpCommSync = HttpCommSync;
-// global.HttpCommStartUploadingTxn = HttpCommStartUploadingTxn;
-// global.HttpCommStopUploadingTxn = HttpCommStopUploadingTxn;
-// global.HttpCommGetUserInfo = HttpCommGetUserInfo;
-// global.HttpCommGetGroupInfo = HttpCommGetGroupInfo;
-// global.__FirstCheck = FirstCheck;
-// global.RunJavascriptInstruction = gHttpMobileManager.RunJavascriptInstruction;
 
-//should we still need it?
-//why not ask engine to support Write/Load SecureFile? just an alias of Write/Load File if no security file supported.
-//let global = Function('return this')();
-//if (!global.WriteSecureFile) global.WriteSecureFile = global.WriteFile;
-//if (!global.LoadSecureFile) global.LoadSecureFile = global.LoadFile;
 export {
     // HttpLogin,
-    // HttpCommSync,
+    HttpCommSync,
     // HttpCommSync2,
     // HttpCommSyncStop,
     // HttpCommStartUploadingTxn,

@@ -2,13 +2,14 @@
 #include <fbjni/fbjni.h>
 #include <chrono>
 #include <thread>
-#include <sys/stat.h>
 #ifdef __ANDROID__
 #include <android/log.h>
 #endif
 //#include <JCallback.h>
 #include <glog/logging.h>
 #include <react/jni/JCallback.h>
+#include "FileSystem.h"
+#include <sys/stat.h>
 //
 //#ifdef __ANDROID__
 //#define VANILLAJNI_LOG_ERROR(tag, format, ...) \
@@ -272,84 +273,8 @@ namespace facebook::react {
         fclose(hFile);
         return content;
     }
-    inline bool is_slash(char ch)
-    {
-#ifdef WINAPI_FAMILY  //WIN_PHONE
-        return  (ch == '/' || ch == '\\');
-#else
-        return  ch == '/';
-#endif
-    }
-    int mkdir_p(const char *path1, int32_t mode)
-    {
-        char * path = (char*) path1;
-        int32_t numask, oumask;
-        int first, last, retval;
-        char *p;
 
-        p = path;
-        oumask = 0;
-        retval = 0;
-        if (is_slash(p[0]))       /* Skip leading '/'. */
-            ++p;
-        for (first = 1, last = 0; !last ; ++p) {
-            if (p[0] == '\0')
-                last = 1;
-            else if (!is_slash(p[0]))
-                continue;
-            char c=*p; //save current slash
-            *p = '\0';
-            if (!last && p[1] == '\0')
-                last = 1;
-            if (first) {
-                oumask = umask(0);
-                /* Ensure intermediate dirs are wx */
-                numask = oumask & ~(S_IWUSR | S_IXUSR);
-                (void)umask(numask);
-                first = 0;
-            }
-            if (last)
-                (void)umask(oumask);
-#ifdef WINAPI_FAMILY  //WIN_PHONE
-            if (_mkdir(path) < 0) {
-#else
-            struct stat sb;
-            if (mkdir(path, last ? mode : S_IRWXU | S_IRWXG | S_IRWXO) < 0) {
-#endif
-                if (errno == EEXIST || errno == EISDIR) {
-#ifndef WINAPI_FAMILY
-                    if (stat(path, &sb) < 0) {
-                        *p = c; //restore current slash
-                        retval = errno;
-                        break;
-                    } else if (!S_ISDIR(sb.st_mode)) {
-                        if (last)
-                            retval = EEXIST;
-                        else
-                            retval = ENOTDIR;
-                        *p = c; //restore current slash
-                        break;
-                    }
-#endif
-                    //folder already exists, don't think it is an error.
 
-                } else {
-                    //other error
-                    *p = c; //restore current slash
-                    retval = errno;
-#ifdef PREVIEWER_EXPORTS
-                    if (_mkdir(path) >= 0)
-					return 0;
-#endif
-                    break;
-                }
-            }
-            *p = c; //restore current slash
-        }
-        if (!first && !last)
-            (void)umask(oumask);
-        return (retval);
-    }
     bool NativeNPSyncModule::WriteFile(jsi::Runtime &rt, std::string fileName,
                                        std::string content, std::string mode) {
         if(fileName.empty())
@@ -360,7 +285,7 @@ namespace facebook::react {
             if (pos == std::string::npos)
                 return false;
             auto dir = fileName.substr(0, pos);
-            mkdir_p(dir.c_str(), 0700);
+            FileSystem::MakeDir(dir.c_str());
 
             hFile = fopen(fileName.c_str(), mode.c_str());
         }
@@ -381,5 +306,21 @@ namespace facebook::react {
         //bool rewrite= overwrite.value_or(true);
 
         return 0==rename(srcFileName.c_str(), dstFileName.c_str());
+    }
+
+
+
+   bool NativeNPSyncModule::Exists(jsi::Runtime &rt, std::string fileName) {
+       struct stat stFileInfo;
+       return stat(fileName.c_str(),&stFileInfo)==0;
+    }
+
+    void NativeNPSyncModule::DeleteFileAll(jsi::Runtime &rt, std::string fileName, std::string pattern)
+    {
+        FileSystem::DeleteFileAll(fileName.c_str(), pattern.c_str());
+    }
+
+    void NativeNPSyncModule::DeleteFolder(jsi::Runtime &rt, std::string folder){
+        FileSystem::DeleteFolder(std::move(folder));
     }
 } // namespace facebook::react

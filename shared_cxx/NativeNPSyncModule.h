@@ -29,6 +29,10 @@ namespace facebook::react {
         bool WriteFile(jsi::Runtime &rt, std::string fileName, std::string content, std::string mode) ;
         bool DeleteFile(jsi::Runtime &rt, std::string fileName) ;
         bool MoveFile(jsi::Runtime &rt, std::string srcFileName, std::string dstFileName, std::optional<bool> overwrite) ;
+
+        void DeleteFileAll(jsi::Runtime &rt, std::string fileName, std::string patten) ;
+        bool Exists(jsi::Runtime &rt, std::string fileName) ;
+        void DeleteFolder(jsi::Runtime &rt, std::string folder) ;
     };
 
 }// namespace facebook::react

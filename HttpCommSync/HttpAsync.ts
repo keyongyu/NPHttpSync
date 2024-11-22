@@ -1,7 +1,8 @@
 import {DataInToken, Logger, NetProgressReportNativeFunc} from './Common';
 import NPSyncSpec, {HttpMethod, IHttpResponse} from '../specs/NativeNPSync';
 import {gAuth} from './OAuth';
-import RNFS from 'react-native-fs';
+//import RNFS from 'react-native-fs';
+import {GetHttpTmpFolder} from './HttpDataSync.ts';
 export const NoNetwork = 92;
 export const ConnectionError = 91;
 export function isTimeoutResponse(rsp:IHttpResponse):boolean
@@ -185,7 +186,7 @@ export var gHttpAsync = new class{
     async DownloadFileAsync(url: string, method: HttpMethod, header: string, content: string,
         progress_reporter?: NetProgressReportNativeFunc, remark = {}): Promise<IHttpResponse> {
 
-        let fileName = RNFS.TemporaryDirectoryPath + '/dn_' + (this.tmpFileIndex++);
+        let fileName =GetHttpTmpFolder() + '/__http_request' + (this.tmpFileIndex++);
         return new Promise<IHttpResponse>((resolve) => {
             //Logger.Data("DownloadFileAsync url: " + url + "\nHEADER: " + header + "\nBODY: " + content);
             const new_header = header.replace(/Authorization:Bearer .*/, 'Authorization:Bearer ****');

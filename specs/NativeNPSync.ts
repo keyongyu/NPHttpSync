@@ -36,6 +36,10 @@ export interface Spec extends TurboModule {
   readonly DeleteFile:(file: string)=>boolean;
   readonly MoveFile:(srcFile: string, dstFile:string, overwrite?:boolean )=>boolean;
 
+  readonly Exists:(file: string)=>boolean;
+  readonly DeleteFileAll:(folder: string, wild:string)=>void;
+  readonly DeleteFolder:(folder: string)=>void;
+
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

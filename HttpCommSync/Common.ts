@@ -432,6 +432,14 @@ export function GetHardwareId()
 {
     return "KY_TEST_111_222"
 }
+export function GetEngineVersion()
+{
+    return "0.0.1";
+}
+export function GetAppVersion()
+{
+    return "0.0.1";
+}
 export async function CommAlertAsync(title:string, desc:string):Promise<void> {
     return new Promise((resolve, reject) => {
 
