@@ -40,7 +40,9 @@
 #ifdef REACT_NATIVE_APP_COMPONENT_DESCRIPTORS_HEADER
 #include REACT_NATIVE_APP_COMPONENT_DESCRIPTORS_HEADER
 #endif
-
+#include "expo_sqlite2/NativeDatabaseBinding.h"
+#include "expo_sqlite2/NativeStatementBinding.h"
+#include "expo_sqlite2/SQLite3Wrapper.h"
 namespace facebook::react {
 
 void registerComponents(
@@ -116,8 +118,10 @@ std::shared_ptr<TurboModule> javaModuleProvider(
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
   return facebook::jni::initialize(vm, [] {
-
-    //JCxxCallbackImpl::registerNatives();
+       expo::NativeDatabaseBinding::registerNatives();
+       expo::NativeStatementBinding::registerNatives();
+       expo::SQLite3Wrapper::registerNatives();
+//
     facebook::react::DefaultTurboModuleManagerDelegate::cxxModuleProvider =
         &facebook::react::cxxModuleProvider;
     facebook::react::DefaultTurboModuleManagerDelegate::javaModuleProvider =

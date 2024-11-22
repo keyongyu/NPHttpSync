@@ -1,26 +1,30 @@
 import {consoleTransport, fileAsyncTransport, logger} from 'react-native-logs';
 import FileSystem from 'react-native-fs';
 import {Alert} from 'react-native';
+import NativeNPSync from '../specs/NativeNPSync.ts';
 
-export const FirstCheckDir=FileSystem.DocumentDirectoryPath+'/FirstCheck';
-
-export var Logger = logger.createLogger({
-    transport: [fileAsyncTransport, consoleTransport],
-    levels: {
-        Data: 0,
-        Debug: 1,
-        Event: 2,
-        Warn: 3,
-        Error: 4,
-        devNotice: 5,
-    },
-    transportOptions: {
+export const FirstCheckDir=FileSystem.DocumentDirectoryPath +'/FirstCheck';
+function getLogger (){
+    NativeNPSync.WriteFile(`${FileSystem.DocumentDirectoryPath}/logs/.a.log`, ' ','w');
+    return logger.createLogger({
+        transport: [fileAsyncTransport, consoleTransport],
+        levels: {
+            Data: 0,
+            Debug: 1,
+            Event: 2,
+            Warn: 3,
+            Error: 4,
+            devNotice: 5,
+        },
+        transportOptions: {
 // @ts-ignore
-        FS: FileSystem,
-        fileName: 'logs/HTTPComm.log',
-    },
-});
+            FS: FileSystem,
+            fileName: 'logs/HTTPComm.log',
+        },
+    });
+}
 
+export var Logger = getLogger();
 export type LoginMode='MOBILE';
 export interface ReportArg {
     cat: string;

@@ -10,6 +10,9 @@
     "test": "jest"
   },
   "dependencies": {
+    "expo": "^52.0.10",
+    "expo-constants": "^17.0.3",
+    "expo-modules-core": "^2.0.5",
     "react": "18.3.1",
     "react-native": "0.76.0",
     "react-native-fs": "^2.20.0",
