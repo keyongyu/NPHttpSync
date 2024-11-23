@@ -1,30 +1,66 @@
-import {consoleTransport, fileAsyncTransport, logger} from 'react-native-logs';
 import FileSystem from 'react-native-fs';
 import {Alert} from 'react-native';
-import NativeNPSync from '../specs/NativeNPSync.ts';
 
-export const FirstCheckDir=FileSystem.DocumentDirectoryPath +'/FirstCheck';
-function getLogger (){
-    NativeNPSync.WriteFile(`${FileSystem.DocumentDirectoryPath}/logs/.a.log`, ' ','w');
-    return logger.createLogger({
-        transport: [fileAsyncTransport, consoleTransport],
-        levels: {
-            Data: 0,
-            Debug: 1,
-            Event: 2,
-            Warn: 3,
-            Error: 4,
-            devNotice: 5,
-        },
-        transportOptions: {
-// @ts-ignore
-            FS: FileSystem,
-            fileName: 'logs/HTTPComm.log',
-        },
-    });
+export const FirstCheckDir = FileSystem.DocumentDirectoryPath + '/FirstCheck';
+
+const error_lvl =  0x01;
+const warn_lvl =  0x02;
+const event_lvl =  0x04;
+const data_lvl =  0x08;
+const debug_lvl =  0x10;
+
+import NPLogger from '../specs/NativeNPLogger';
+
+
+class NPLoggerC {
+    // WriteLog(lvl:number, m:string):void {
+    //     NPLogger.WriteLog(lvl, m);
+    //}
+    readonly Error = this.ReturnWritter(console.error, error_lvl,true);
+    readonly Warn = this.ReturnWritter(console.warn, warn_lvl,true);
+    readonly Event = this.ReturnWritter(console.info,event_lvl,false);
+    readonly Data = this.ReturnWritter(console.log,data_lvl, false);
+    readonly Debug = this.ReturnWritter(console.debug, debug_lvl, false);
+    constructor(fileName:string){
+        NPLogger.Close();
+        NPLogger.Recreate(fileName, 0, -1);
+        this.logFileName = fileName;
+    }
+    logFileName:string;
+    private ReturnWritter(log,lvl: number, bMsgBox:boolean) {
+        if(bMsgBox)
+            return function (msg: any) {
+                log(msg);
+                let m = msg;
+                if (msg instanceof Object)
+                    m = JSON.stringify(msg);
+                NPLogger.WriteLog(lvl, m);
+                if(lvl===warn_lvl || lvl === error_lvl)
+                {
+                    //if (IsDevEngine()) alert(m,lvl===warn_lvl? 'DEV:Warning':'DEV:Error');
+                }
+            };
+        else
+            return function (msg: any) {
+                log(msg);
+                let m = msg;
+                if(msg instanceof Uint8Array )
+                    NPLogger.WriteLog(lvl,m);
+                else  {
+                    if (msg instanceof Object)
+                        m = JSON.stringify(msg);
+                    NPLogger.WriteLog(lvl, m);
+                }
+            }
+    }
+}
+export var Logger = new NPLoggerC(`${FileSystem.DocumentDirectoryPath}/logs/.a.log`);
+
+export function RecreateLogger(){
+    NPLogger.Close();
+    NPLogger.Recreate(Logger.logFileName, 0, -1);
 }
 
-export var Logger = getLogger();
 export type LoginMode='MOBILE';
 export interface ReportArg {
     cat: string;
@@ -147,10 +183,7 @@ export function convertRowIdsToByteArray(rowids: rowids_t) {
 // NPLogger.prototype.Debug = ReturnWritter(debug_lvl, false);
 // export var Logger = new NPLogger('logs/HTTPComm.log');
 //
-export function RecreateLogger(){
-    //Logger = new NPLogger('logs/HTTPComm.log');
-    //return Logger;
-}
+
 
 export function make_progress_reporter(progress?: ProgressReportFunc):ProgressReportFunc {
     return progress?(x: ReportArg) => {

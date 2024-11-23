@@ -323,4 +323,22 @@ namespace facebook::react {
     void NativeNPSyncModule::DeleteFolder(jsi::Runtime &rt, std::string folder){
         FileSystem::DeleteFolder(std::move(folder));
     }
+
+
+    std::shared_ptr<R3_Log>  NativeNPLoggerModule::logger_;
+    void NativeNPLoggerModule::WriteLog(jsi::Runtime &rt, int lvl, std::string text){
+        if(logger_)
+            logger_->LogFullMessage(lvl, text.c_str(), text.length());
+    }
+    void NativeNPLoggerModule::Recreate(jsi::Runtime &rt, std::string logFileName,  int lvl, int maxSize){
+       logger_.reset();
+       auto idx = logFileName.rfind('/');
+       std::string path = logFileName.substr(0, idx);
+       std::string name= logFileName.substr(idx+1);
+       logger_=std::make_shared<R3_Log>(path.c_str(),name.c_str(),maxSize);
+    }
+    void NativeNPLoggerModule::Close(jsi::Runtime &rt){
+        logger_.reset();
+    }
+
 } // namespace facebook::react

@@ -75,6 +75,9 @@ std::shared_ptr<TurboModule> cxxModuleProvider(
   if (name == NativeNPSyncModule::kModuleName) {
     return std::make_shared<NativeNPSyncModule>(jsInvoker);
   }
+  if (name == NativeNPLoggerModule::kModuleName) {
+    return std::make_shared<NativeNPLoggerModule>(jsInvoker);
+  }
 
   // And we fallback to the CXX module providers autolinked
   return autolinking_cxxModuleProvider(name, jsInvoker);

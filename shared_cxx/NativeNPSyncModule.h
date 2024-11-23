@@ -1,6 +1,7 @@
 #pragma once
 
 #include <NPSyncJSI.h>
+#include "R3_Log.hpp"
 
 #include <memory>
 #include <string>
@@ -34,6 +35,16 @@ namespace facebook::react {
         bool Exists(jsi::Runtime &rt, std::string fileName) ;
         void DeleteFolder(jsi::Runtime &rt, std::string folder) ;
     };
+    class NativeNPLoggerModule: public NativeNPLoggerCxxSpec<NativeNPLoggerModule> {
 
+    public:
+        static std::shared_ptr<R3_Log>    logger_;
+    public:
+        NativeNPLoggerModule(std::shared_ptr<CallInvoker> jsInvoker)
+            : NativeNPLoggerCxxSpec<NativeNPLoggerModule>(jsInvoker){}
+        void WriteLog(jsi::Runtime &rt, int lvl,  std::string text) ;
+        void Recreate(jsi::Runtime &rt, std::string logFileName,  int lvl, int maxSize) ;
+        void Close(jsi::Runtime &rt);
+    };
 }// namespace facebook::react
 

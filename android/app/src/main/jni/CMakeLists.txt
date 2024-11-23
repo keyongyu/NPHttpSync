@@ -24,6 +24,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         expo_sqlite2/NativeStatementBinding.cpp
         expo_sqlite2/SQLite3Wrapper.cpp
         ../../../../../shared_cxx/FileSystem.cpp
+        ../../../../../shared_cxx/R3_Log.cpp
         ../../../../../shared_cxx/NativeNPSyncModule.cpp)
 
 # Define where CMake can find the additional header files. We need to crawl back the jni, main, src, app, android folders
