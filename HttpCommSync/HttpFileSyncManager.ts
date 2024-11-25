@@ -117,7 +117,7 @@ export var gDownloadFilesManager = new class {
             fileRequest.FULL_FILE_NAME = `${BINARY_FILE_FOLDER}/${table}/${fileRequest.shortFileName}`;
 
             // Check Sync Method
-            if (fileRequest.SyncMethod === 'Refresh' &&  await FileSystem.exists(fileRequest.FULL_FILE_NAME)) {
+            if (fileRequest.SyncMethod === 'Refresh' &&  NativeNPSync.Exists(fileRequest.FULL_FILE_NAME)) {
                 // Check if file exists in ${Table}
                 // If exists, copy to ${Table}__temp
                 // else download it
@@ -126,7 +126,7 @@ export var gDownloadFilesManager = new class {
                 let p = new Promise<void>((resolve) => {
                     setTimeout(async () => {
                         //NativeNPSync.WriteFile(tmpFile, '', 'w');
-                        FileSystem.unlink(tmpFile);
+                        NativeNPSync.DeleteFile(tmpFile);
                         await FileSystem.copyFile(fileRequest.FULL_FILE_NAME!, tmpFile);
                         Logger.Event(`Sync Method: ${fileRequest.SyncMethod}. Skip downloading ${fileRequest.FILE_NAME} because it already exists.`);
                         existDownloadedFiles.push(fileRequest);
@@ -270,7 +270,7 @@ export var gDownloadFilesManager = new class {
                 Logger.Error(`Failed to download ${fileRequest.FILE_NAME} after ${maxAttempts} attempts\nErr: ${error}.`);
             }
         }
-    };
+    }
 
     async downloadFileTaskAsync (){
         while (this.downloadRequests.length > 0) {

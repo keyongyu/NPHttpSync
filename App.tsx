@@ -8,9 +8,9 @@ import {
 } from 'react-native';
 
 import NPSyncSpec, { IHttpResponse } from './specs/NativeNPSync';
-import {SetCommPromptChanger} from './HttpCommSync/Common.ts';
+import {ReportArg, SetCommPromptChanger} from './HttpCommSync/Common.ts';
 import { UserCredential} from './HttpCommSync/OAuth.ts';
-import {HttpCommClearJWT,FirstCheck} from './HttpCommSync/HttpCommSyncAPI.ts';
+import {HttpCommClearJWT, FirstCheck, HttpCommSync} from './HttpCommSync/HttpCommSyncAPI.ts';
 import * as SQLite from './expo_sqlite2';
 
 const EMPTY = '<empty>';
@@ -33,7 +33,14 @@ function App(): React.JSX.Element {
 
     const db = SQLite.openDatabaseSync('databaseName');
     db.useForHttpDataSync();
-    db.closeSync();
+    HttpCommSync((arg: ReportArg)=>{
+      console.log(JSON.stringify(arg));
+    }, [/*'9.1.0.0_SYNC',*/'profile-image']).then((sucess:boolean) => {
+        console.log("sync finished:"+sucess);
+        //db.closeAsync();
+    })
+
+    //db.closeSync();
     //NPSyncSpec.TestSqliteDB(db.)
   }
   async function sqliteTest2(){

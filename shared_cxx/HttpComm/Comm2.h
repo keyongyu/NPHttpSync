@@ -134,9 +134,14 @@ namespace HttpComm {
 //    bool Comm2_CommitTxn(const std::string& txnName, const std::string& hdrName,
 //        uint64_t* pRowIDs, size_t num_ids, std::string statusFlag);
 //
-//    std::string Comm2_ProcessTblSync(const std::string& fileName, bool dryRun);
+    std::string Comm2_ProcessTblSync(const std::string& fileName, bool dryRun);
 //    std::string Comm2_GetAndResetSmartTxnTables(bool bClearTables);
 //    void Comm2_EnableSmartTxnUploading(bool bEnabled);
 //    std::string chromium_base64_encode(const std::string& src);
 //    void RegistorUDF(DBN * psDBN);
+
+    #define LOG_MSG(lvl, ...)   if(NativeNPLoggerModule::logger_)         \
+                                NativeNPLoggerModule::logger_->LogFormatMessage(lvl, __VA_ARGS__)
+
+    std::string string_format(const char* fmt, ...);
 }

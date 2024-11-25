@@ -274,35 +274,35 @@ uploadtxt=["X_GPS","X_OTHER"];
 HttpCommSync2(cb, tblSyncNames, firstCheck, distCd, uploadtxt);
 async function HttpCommSync2(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd ="", txnUpload=true ) {
  */
-// async function HttpCommSync2(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd ="", txnUpload:TxnUploadParam=true) {
-//     // if("9.1.0.0_SYNC"===tblSyncNames[0]){
-//     //     SetTimeout(() => {
-//     //         alert("Will call HttpCommSyncStop");
-//     //         HttpCommSyncStop();
-//     //     }, 3 * 1000);
-//     // }
-//     RecreateLogger();
-//     gAuth.SetAPIVersion(2);
-//     //if(Array.isArray(txnUpload))
-//     //    return true;
-//     //else
-//     //    alert("HttpCommSync2 firstCheck="+(firstCheck)+",txnUpload="+txnUpload);
-//     let progress_wrapper = make_progress_reporter(progress);
-//     try {
-//         progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'start' });
-//         let distCd2 = distCd??""
-//         let result = await gHttpDataSync.SyncDataAsync2(progress_wrapper, tblSyncNames, firstCheck, distCd2, txnUpload);
-//         if (result && result.success) {
-//             progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'completed' });
-//         }
-//         else
-//             progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(result) });
-//         return result.success;
-//     } catch (e) {
-//         progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(e) });
-//         return false;
-//     }
-// }
+async function HttpCommSync2(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd ="", txnUpload:TxnUploadParam=true) {
+    // if("9.1.0.0_SYNC"===tblSyncNames[0]){
+    //     SetTimeout(() => {
+    //         alert("Will call HttpCommSyncStop");
+    //         HttpCommSyncStop();
+    //     }, 3 * 1000);
+    // }
+    RecreateLogger();
+    gAuth.SetAPIVersion(2);
+    //if(Array.isArray(txnUpload))
+    //    return true;
+    //else
+    //    alert("HttpCommSync2 firstCheck="+(firstCheck)+",txnUpload="+txnUpload);
+    let progress_wrapper = make_progress_reporter(progress);
+    try {
+        progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'start' });
+        let distCd2 = distCd??""
+        let result = await gHttpDataSync.SyncDataAsync2(progress_wrapper, tblSyncNames, firstCheck, distCd2, txnUpload);
+        if (result && result.success) {
+            progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'completed' });
+        }
+        else
+            progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(result) });
+        return result.success;
+    } catch (e) {
+        progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(e) });
+        return false;
+    }
+}
 
 // function HttpCommGetServerURL():string
 // {

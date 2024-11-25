@@ -1,4 +1,5 @@
 #include "NativeNPSyncModule.h"
+#include "HttpComm/Comm2.h"
 #include <fbjni/fbjni.h>
 #include <chrono>
 #include <thread>
@@ -244,8 +245,28 @@ namespace facebook::react {
         if(srcFileName.empty() || dstFileName.empty())
             return false;
         //bool rewrite= overwrite.value_or(true);
+        if(access(srcFileName.c_str(), F_OK ) == -1 ){
+            return true;
+        }
+        auto ret  = 0==rename(srcFileName.c_str(), dstFileName.c_str());
+        if(!ret) {
 
-        return 0==rename(srcFileName.c_str(), dstFileName.c_str());
+            auto pos = dstFileName.rfind('/');
+            if (pos == std::string::npos) {
+                LOG_MSG(LOG_ERROR_LVL, "fail to move file %s to %s", srcFileName.c_str(),
+                        dstFileName.c_str());
+                return false;
+            }
+            auto dstFolder = dstFileName.substr(0, pos);
+            if (access(dstFolder.c_str(), F_OK) == -1 && ENOENT == errno) //folder doesn't exist
+                FileSystem::MakeDir(dstFolder);
+
+            ret = 0==rename(srcFileName.c_str(), dstFileName.c_str());
+            if(ret)
+                LOG_MSG(LOG_ERROR_LVL, "fail to move file %s to %s", srcFileName.c_str(),
+                    dstFileName.c_str());
+        }
+        return ret;
     }
 
 
@@ -263,29 +284,44 @@ namespace facebook::react {
     void NativeNPSyncModule::DeleteFolder(jsi::Runtime &rt, std::string folder){
         FileSystem::DeleteFolder(std::move(folder));
     }
+
     std::string NativeNPSyncModule::workDir_ ;
     void NativeNPSyncModule::SetWorkDir(jsi::Runtime &rt, std::string folder){
         workDir_ = folder;
     }
+
     sqlite3* NativeNPSyncModule::db_;
     void NativeNPSyncModule::SetWorkingSqliteConnection(sqlite3* db){
         db_= db;
-        LOGX(">>>> set sqlite connection %p", db_);
+        //LOGX(">>>> set sqlite connection %p", db_);
     }
-//    void NativeNPSyncModule::TestSqliteDB(jsi::Runtime &rt, jsi::Object)
-//    {
-//
-//    }
+
     std::string NativeNPSyncModule::Comm2ProcessTblSync(jsi::Runtime &rt, std::string fileName, bool dryRun)
     {
-        return "";
+        return HttpComm::Comm2_ProcessTblSync(fileName, dryRun);
     }
+
     void NativeNPSyncModule::SQLBeginTransaction(jsi::Runtime &rt)
     {
-
+        char *error=nullptr;
+        if(GetSqlite3DB()) {
+            if(SQLITE_OK == sqlite3_exec(GetSqlite3DB(), "BEGIN", 0, 0, &error))
+                return;
+            LOG_MSG(LOG_ERROR_LVL, "cannot start transcation, error: %s", error?error:"no error");
+        }else
+            LOG_MSG(LOG_ERROR_LVL, "sql connection is NOT ready");
     }
-    void NativeNPSyncModule::SQLCommit(jsi::Runtime &rt, bool rollback){
+    void NativeNPSyncModule::SQLCommit(jsi::Runtime &rt, bool commit)
+    {
 
+        char *error=nullptr;
+        const char * sql = (commit) ? "COMMIT TRANSACTION" : "ROLLBACK TRANSACTION";
+        if(GetSqlite3DB()) {
+            if(SQLITE_OK == sqlite3_exec(GetSqlite3DB(), sql, 0, 0, &error))
+                return;
+            LOG_MSG(LOG_ERROR_LVL, "cannot %s, error: %s",sql,  error?error:"no error");
+        }else
+            LOG_MSG(LOG_ERROR_LVL, "sql connection is NOT ready");
     }
 
 

@@ -24,8 +24,7 @@ using namespace facebook::react;
 using namespace rapidjson;
 
 //extern R3_Log* g_pHttpCommLog;
-#define LOG_MSG(lvl, ...)   if(NativeNPLoggerModule::logger_)         \
-                                NativeNPLoggerModule::logger_->LogFormatMessage(lvl, __VA_ARGS__)
+
 #define _stricmp       strcasecmp
 namespace HttpComm{
 char * np_strupr(char* pOrg){
@@ -65,6 +64,11 @@ CFTMMapFileImpl::CFTMMapFileImpl(const char filename[]) :fAddr(nullptr), fSize(0
     int fildes = open(filename, O_RDONLY);
     if (fildes < 0)
     {
+        int err=errno;
+        char * errTxt = strerror(err);
+        LOG_MSG(LOG_ERROR_LVL, "cannot open file %s, error:%s",
+                filename,
+                errTxt);
         return;
     }
 
@@ -616,7 +620,7 @@ public:
     SqliteHelper(const string& tblName) :m_TblName(tblName) {}
 
     static sqlite3* GetSqliteDB() {
-        return NativeNPSyncModule::db_;
+        return NativeNPSyncModule::GetSqlite3DB();
     }
 
     bool ExistsTable() {
@@ -1778,8 +1782,8 @@ string Comm2_ProcessTblSync(const string& fileName, bool dryRun)
 
     bool hasWarningInfo = false;
     string errMsg;
-    auto astr_file_name= GetAbsPath(fileName);
-    CFTMMapFileImpl mmap_file(astr_file_name.c_str());
+    //auto astr_file_name= GetAbsPath(fileName);
+    CFTMMapFileImpl mmap_file(fileName.c_str());
     char* data = (char*)mmap_file.fAddr;
     auto len = mmap_file.fSize;
     if (data == NULL || len == 0) {

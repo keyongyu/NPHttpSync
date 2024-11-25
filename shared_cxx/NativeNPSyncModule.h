@@ -42,13 +42,13 @@ namespace facebook::react {
         //void TestSqliteDB(jsi::Runtime &rt, jsi::Object);
         std::string Comm2ProcessTblSync(jsi::Runtime &rt, std::string fileName, bool dryRun);
         void SQLBeginTransaction(jsi::Runtime &rt) ;
-        void SQLCommit(jsi::Runtime &rt, bool rollback) ;
+        void SQLCommit(jsi::Runtime &rt, bool commit) ;
     private:
-        friend class HttpComm::SqliteHelper;
         static sqlite3 * db_;
     public:
         static std::string workDir_;
         static void SetWorkingSqliteConnection(sqlite3* db);
+        static sqlite3* GetSqlite3DB(){ return db_;}
     };
     class NativeNPLoggerModule: public NativeNPLoggerCxxSpec<NativeNPLoggerModule> {
 

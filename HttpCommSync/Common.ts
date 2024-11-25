@@ -55,7 +55,7 @@ class NPLoggerC {
             }
     }
 }
-export var Logger = new NPLoggerC(`${WorkDir}/logs/.a.log`);
+export var Logger = new NPLoggerC(`${WorkDir}/logs/HTTPComm.log`);
 
 export function RecreateLogger(){
     NPLogger.Close();
@@ -143,47 +143,6 @@ export function convertRowIdsToByteArray(rowids: rowids_t) {
     }
     return new Uint8Array(buf.buffer);
 }
-
-
-// export const error_lvl=  0x01;
-// const warn_lvl=  0x02;
-// const event_lvl=  0x04;
-// const data_lvl=  0x08;
-// const debug_lvl=  0x10;
-//
-//
-//
-// function ReturnWritter(lvl: number, bMsgBox:boolean) {
-//     if(bMsgBox)
-//         return function (msg: any) {
-//             let m = msg;
-//             if (msg instanceof Object)
-//                 m = JSON.stringify(msg);
-//             this.Write(lvl, m);
-//             if(lvl===warn_lvl || lvl === error_lvl)
-//             {
-//                 if (IsDevEngine()) alert(m,lvl===warn_lvl? 'DEV:Warning':'DEV:Error');
-//             }
-//         };
-//     else
-//          return function (msg: any) {
-//             let m = msg;
-//             if(msg instanceof Uint8Array )
-//                 this.Write(lvl,m);
-//             else  {
-//                 if (msg instanceof Object)
-//                     m = JSON.stringify(msg);
-//                 this.Write(lvl, m);
-//             }
-//         }
-// }
-// NPLogger.prototype.Error = ReturnWritter(error_lvl,true);
-// NPLogger.prototype.Warn = ReturnWritter(warn_lvl,true);
-// NPLogger.prototype.Event = ReturnWritter(event_lvl,false);
-// NPLogger.prototype.Data = ReturnWritter(data_lvl, false);
-// NPLogger.prototype.Debug = ReturnWritter(debug_lvl, false);
-// export var Logger = new NPLogger('logs/HTTPComm.log');
-//
 
 
 export function make_progress_reporter(progress?: ProgressReportFunc):ProgressReportFunc {
@@ -480,7 +439,6 @@ export function GetAppVersion()
 }
 export async function CommAlertAsync(title:string, desc:string):Promise<void> {
     return new Promise((resolve, reject) => {
-
         Alert.alert(
           title, desc,
           [

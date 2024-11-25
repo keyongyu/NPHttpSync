@@ -206,7 +206,7 @@ async function TableSyncAsync(dataFromToken:DataInToken, manifestObj:any,
             return destFile;
         },
         getPreservedFilePath: function (seqID:number) {
-            return GetHttpTmpFolder() + '/result_' + seqID.toString() + '.json';
+            return GetHttpTmpFolder() + '/tbsyn_result_' + seqID.toString() + '.json';
         },
         //getBackupFilePath: function (seqID) {
         //    return __GetHttpTmpFolder() + '/backup_' + seqID + '.json';
@@ -784,27 +784,27 @@ export let gHttpDataSync = new class {
     //     return await gHttpAsync.SendWebReqWithTokenAsync(url, 'POST', dataInToken, arrayBuffer, progress);
     // };
 
-    // async SyncDataAsync2(progress: ProgressReportFunc, syncNames: string[], firstCheck: boolean,
-    //                      distCd:string, txnUpload:TxnUploadParam):Promise<SuccessOrErrorDesc>{
-    //     if (bSyncDataGoingOn) {
-    //         if ((syncNames === null || syncNames.length == 0) && txnUpload != false) {
-    //             let smartTxnEnabled = HttpCommStopUploadingTxn();
-    //             let ret = await gHttpDataSync.UploadAllTxnsNowAsyncFromCommSync2(progress, -1);
-    //             if(smartTxnEnabled)
-    //                 HttpCommStartUploadingTxn(progress, -1);
-    //             return ret;
-    //         }
-    //         return { success: false, error: 'Previous data sync is going on' };
-    //     }
-    //
-    //     bSyncDataGoingOn = true;
-    //     bSyncStopRequested = false;
-    //     let success = await this.SyncDataAsyncImpl2(progress, syncNames, firstCheck, distCd, txnUpload);
-    //     // let success = await this.SyncDataAsyncImpl(progress, ["profile-cust"], firstCheck, "D02");
-    //     // let success = await this.SyncDataAsyncImpl(progress, ["SYNC"], firstCheck);
-    //     bSyncDataGoingOn = false;
-    //     return success;
-    // }
+    async SyncDataAsync2(progress: ProgressReportFunc, syncNames: string[], firstCheck: boolean,
+                         distCd:string, txnUpload:TxnUploadParam):Promise<SuccessOrErrorDesc>{
+        if (bSyncDataGoingOn) {
+            // if ((syncNames === null || syncNames.length == 0) && txnUpload != false) {
+            //     let smartTxnEnabled = HttpCommStopUploadingTxn();
+            //     let ret = await gHttpDataSync.UploadAllTxnsNowAsyncFromCommSync2(progress, -1);
+            //     if(smartTxnEnabled)
+            //         HttpCommStartUploadingTxn(progress, -1);
+            //     return ret;
+            // }
+            return { success: false, error: 'Previous data sync is going on' };
+        }
+
+        bSyncDataGoingOn = true;
+        bSyncStopRequested = false;
+        let success = await this.SyncDataAsyncImpl2(progress, syncNames, firstCheck, distCd, txnUpload);
+        // let success = await this.SyncDataAsyncImpl(progress, ["profile-cust"], firstCheck, "D02");
+        // let success = await this.SyncDataAsyncImpl(progress, ["SYNC"], firstCheck);
+        bSyncDataGoingOn = false;
+        return success;
+    }
 
 
     StopCommSync () {

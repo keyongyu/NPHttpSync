@@ -43,7 +43,7 @@ export interface Spec extends TurboModule {
   readonly SetWorkDir:(folder: string)=>void;
   readonly Comm2ProcessTblSync:(fileName:string, dryRun:boolean)=>string;
   readonly SQLBeginTransaction:()=>void;
-  readonly SQLCommit:(rollback:boolean)=>void;
+  readonly SQLCommit:(commit:boolean)=>void;
 
   //readonly TestSqliteDB:(db: Object)=>void;
 }
