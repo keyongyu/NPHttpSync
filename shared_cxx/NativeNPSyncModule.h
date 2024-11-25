@@ -2,10 +2,13 @@
 
 #include <NPSyncJSI.h>
 #include "R3_Log.hpp"
-
+#include "../../../../../shared_cxx/NativeNPSyncModule.h"
+#include "vendor/sqlite3/sqlite3.h"
 #include <memory>
 #include <string>
-
+namespace HttpComm{
+    class SqliteHelper;
+}
 namespace facebook::react {
 
     class NativeNPSyncModule : public NativeNPSyncCxxSpec<NativeNPSyncModule> {
@@ -34,6 +37,18 @@ namespace facebook::react {
         void DeleteFileAll(jsi::Runtime &rt, std::string fileName, std::string patten) ;
         bool Exists(jsi::Runtime &rt, std::string fileName) ;
         void DeleteFolder(jsi::Runtime &rt, std::string folder) ;
+        void SetWorkDir(jsi::Runtime &rt, std::string folder);
+
+        //void TestSqliteDB(jsi::Runtime &rt, jsi::Object);
+        std::string Comm2ProcessTblSync(jsi::Runtime &rt, std::string fileName, bool dryRun);
+        void SQLBeginTransaction(jsi::Runtime &rt) ;
+        void SQLCommit(jsi::Runtime &rt, bool rollback) ;
+    private:
+        friend class HttpComm::SqliteHelper;
+        static sqlite3 * db_;
+    public:
+        static std::string workDir_;
+        static void SetWorkingSqliteConnection(sqlite3* db);
     };
     class NativeNPLoggerModule: public NativeNPLoggerCxxSpec<NativeNPLoggerModule> {
 
@@ -42,6 +57,7 @@ namespace facebook::react {
     public:
         NativeNPLoggerModule(std::shared_ptr<CallInvoker> jsInvoker)
             : NativeNPLoggerCxxSpec<NativeNPLoggerModule>(jsInvoker){}
+        ~NativeNPLoggerModule(){ logger_.reset();}
         void WriteLog(jsi::Runtime &rt, int lvl,  std::string text) ;
         void Recreate(jsi::Runtime &rt, std::string logFileName,  int lvl, int maxSize) ;
         void Close(jsi::Runtime &rt);

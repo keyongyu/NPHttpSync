@@ -232,7 +232,7 @@ async function TableSyncAsync(dataFromToken:DataInToken, manifestObj:any,
         },
         //numByPassError:0
 
-    } ;
+    };
     // Clear all files before starting table sync
     NativeNPSync.DeleteFileAll(GetHttpTmpFolder(), 'result_*.json');
     NativeNPSync.DeleteFileAll(GetHttpTmpFolder(), '__http_request*');
@@ -251,7 +251,7 @@ async function TableSyncAsync(dataFromToken:DataInToken, manifestObj:any,
     if(!bSyncStopRequested)
         await gDownloadFilesManager.waitAllFilesDownloaded();
     if(gDownloadFilesManager.downloadTracker.size>0){
-        Logger.Event("Finish downloading table sync files.");
+        Logger.Event('Finish downloading table sync files.');
         for (const [table, tracker] of gDownloadFilesManager.downloadTracker) {
             if (tracker.total > 0) {
                 let failCount = tracker.total - tracker.successDownloads.length
@@ -362,7 +362,7 @@ async function TableSyncAsyncImpl(tblSyncContext:TblSyncContext, progress:Progre
                 }
                 tblSyncContext.numAttempts += 1;
                 retry =((response.rsp_code??0) < 500) && tblSyncContext.numAttempts < MaxNumRetries;
-                NativeNPSync.DeleteFile(file);
+                NativeNPSync.DeleteFile(file!);
                 if (retry) {
                     let retryInterval= tblSyncContext.getRetryInterval();
                     Logger.Warn(`Received bad rsp of tblsync,${error}, will retry it after ${retryInterval} sec.`);
@@ -374,7 +374,7 @@ async function TableSyncAsyncImpl(tblSyncContext:TblSyncContext, progress:Progre
             }
             else
                 tblSyncContext.resetRetryInterval();
-            let str_comm_rsp = Comm2ProcessTblSync(file, true);
+            let str_comm_rsp = NativeNPSync.Comm2ProcessTblSync(file!, true);
             let comm_rsp = str_comm_rsp === "" ? null : JSON.parse(str_comm_rsp);
             if (!comm_rsp) {
                 retry = false;
@@ -536,7 +536,7 @@ async function ProcessTableSyncAsync(tblSyncContext:TblSyncContext, progress:Pro
     try {
         let sequenceID = tblSyncContext.StartMsgID;
         let success = false;
-        SQLBeginTran();
+        NativeNPSync.SQLBeginTransaction();
         for (; ;) {
             let groupName = tblSyncContext.groupNames.get(sequenceID)??"";
             progress({
@@ -544,7 +544,7 @@ async function ProcessTableSyncAsync(tblSyncContext:TblSyncContext, progress:Pro
                 name: groupName, status: 'progress', detail: 'processing'
             });
             let file = tblSyncContext.getPreservedFilePath(sequenceID);
-            let comm_rsp_str = Comm2ProcessTblSync(file, false);
+            let comm_rsp_str = NativeNPSync.Comm2ProcessTblSync(file, false);
             if (!comm_rsp_str) {
                 //something wrong, need to backup the received data
                 tblSyncContext.backupForDebug(sequenceID);
@@ -604,13 +604,11 @@ async function ProcessTableSyncAsync(tblSyncContext:TblSyncContext, progress:Pro
         //         });
         //     });
 
-        if (success) SQLCommit();
-        else SQLRollback();
-
+        NativeNPSync.SQLCommit(success);
         return { success };
     } catch (error) {
-        progress({ cat: 'TblSync', subCat: tblSyncContext.syncName, name: '', status: 'failed', detail: error });
-        SQLRollback();
+        progress({ cat: 'TblSync', subCat: tblSyncContext.syncName, name: '', status: 'failed', detail: ''+error });
+        NativeNPSync.SQLCommit(false);
         return { success: false };
     }
 }

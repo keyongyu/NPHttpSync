@@ -4,12 +4,13 @@ import {
     ProgressReportFunc,
     TableSyncDefinition,
     WaitForPromiseT,
-    LoginModeResult, TxnSector, RecreateLogger
-} from "./Common";
+    LoginModeResult, TxnSector, RecreateLogger, WorkDir,
+} from './Common';
 // import { gHttpDataSync, TxnUploadParam } from "./HttpDataSync";
 import { gHttpDataSync} from "./HttpDataSync";
 import { gAuth } from "./OAuth";
 import {gHttpMobileManager, RunAt, UserCredentialProvider} from './MobileManager';
+import NativeNPSync from '../specs/NativeNPSync.ts';
 
 
 
@@ -18,6 +19,7 @@ function HttpCommSyncStop() {
     gHttpDataSync.StopCommSync();
 }
 async function HttpCommSync(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd?: string) {
+    NativeNPSync.SetWorkDir(WorkDir);
     gAuth.SetAPIVersion(1);
     RecreateLogger();
     let progress_wrapper = make_progress_reporter(progress);

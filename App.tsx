@@ -12,6 +12,7 @@ import {SetCommPromptChanger} from './HttpCommSync/Common.ts';
 import { UserCredential} from './HttpCommSync/OAuth.ts';
 import {HttpCommClearJWT,FirstCheck} from './HttpCommSync/HttpCommSyncAPI.ts';
 import * as SQLite from './expo_sqlite2';
+
 const EMPTY = '<empty>';
 
 function App(): React.JSX.Element {
@@ -28,10 +29,18 @@ function App(): React.JSX.Element {
     //const storedValue = NativeLocalStorage?.getItem('myKey');
     //setValue(storedValue ?? '');
   }, []);
-  async function sqliteTest(){
+  function sqliteTest(){
+
+    const db = SQLite.openDatabaseSync('databaseName');
+    db.useForHttpDataSync();
+    db.closeSync();
+    //NPSyncSpec.TestSqliteDB(db.)
+  }
+  async function sqliteTest2(){
     //await 1;
     try {
       console.log('sqliteTest');
+      //const dbx = SQLite.openDatabaseSync('databaseName');
       const db = await SQLite.openDatabaseAsync('databaseName');
 
       // `execAsync()` is useful for bulk queries when you want to execute altogether.
@@ -43,6 +52,7 @@ function App(): React.JSX.Element {
   INSERT INTO test (value, intValue) VALUES ('test2', 456);
   INSERT INTO test (value, intValue) VALUES ('test3', 789);
   `);
+      //dbx.execSync(` PRAGMA journal_mode = WAL;`);
 
       // `runAsync()` is useful when you want to execute some write operations.
       const result = await db.runAsync('INSERT INTO test (value, intValue) VALUES (?, ?)', 'aaa', 100);
@@ -66,7 +76,7 @@ function App(): React.JSX.Element {
         console.log(row.id, row.value, row.intValue);
       }
     }catch(err) {
-      console.log(err);
+      console.error(err);
     }
   }
   // function saveValue() {

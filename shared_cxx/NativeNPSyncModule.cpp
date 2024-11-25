@@ -4,73 +4,13 @@
 #include <thread>
 #ifdef __ANDROID__
 #include <android/log.h>
+#define LOGX(...) __android_log_print(ANDROID_LOG_WARN,"KY", __VA_ARGS__)
 #endif
 //#include <JCallback.h>
 #include <glog/logging.h>
 #include <react/jni/JCallback.h>
 #include "FileSystem.h"
 #include <sys/stat.h>
-//
-//#ifdef __ANDROID__
-//#define VANILLAJNI_LOG_ERROR(tag, format, ...) \
-//  __android_log_print(ANDROID_LOG_ERROR, tag, format, ##__VA_ARGS__)
-//#else
-//#define VANILLAJNI_LOG_ERROR(tag, format, ...)
-//#endif
-//
-//#define VANILLAJNI_DIE() std::abort()
-//
-//namespace jni{
-//    void logErrorMessageAndDie(const char* message);
-//    JavaVM* globalVm = nullptr;
-//    struct JavaVMInitializer {
-//        explicit JavaVMInitializer(JavaVM* vm) {
-//            if (!vm) {
-//                logErrorMessageAndDie(
-//                        "You cannot pass a NULL JavaVM to ensureInitialized");
-//            }
-//            globalVm = vm;
-//        }
-//    };
-//
-//    jint ensureInitialized(JNIEnv** env, JavaVM* vm) {
-//        static JavaVMInitializer init(vm);
-//
-//        if (env == nullptr) {
-//            logErrorMessageAndDie(
-//                    "Need to pass a valid JNIEnv pointer to vanillajni initialization "
-//                    "routine");
-//        }
-//
-//        if (vm->GetEnv(reinterpret_cast<void**>(env), JNI_VERSION_1_6) != JNI_OK) {
-//            logErrorMessageAndDie(
-//                    "Error retrieving JNIEnv during initialization of vanillajni");
-//        }
-//
-//        return JNI_VERSION_1_6;
-//    }
-//
-//    JNIEnv* getCurrentEnv() {
-//        JNIEnv* env = nullptr;
-//        jint ret = globalVm->GetEnv((void**)&env, JNI_VERSION_1_6);
-//        if (ret != JNI_OK) {
-//            logErrorMessageAndDie(
-//                    "There was an error retrieving the current JNIEnv. Make sure the "
-//                    "current thread is attached");
-//        }
-//        return env;
-//    }
-//
-//    void logErrorMessageAndDie(const char* message) {
-//        (void)message;
-//        VANILLAJNI_LOG_ERROR(
-//                "VanillaJni",
-//                "Aborting due to error detected in native code: %s",
-//                message);
-//        VANILLAJNI_DIE();
-//    }
-//}
-//
 
 namespace facebook::react {
     auto createJavaCallback(
@@ -323,6 +263,39 @@ namespace facebook::react {
     void NativeNPSyncModule::DeleteFolder(jsi::Runtime &rt, std::string folder){
         FileSystem::DeleteFolder(std::move(folder));
     }
+    std::string NativeNPSyncModule::workDir_ ;
+    void NativeNPSyncModule::SetWorkDir(jsi::Runtime &rt, std::string folder){
+        workDir_ = folder;
+    }
+    sqlite3* NativeNPSyncModule::db_;
+    void NativeNPSyncModule::SetWorkingSqliteConnection(sqlite3* db){
+        db_= db;
+        LOGX(">>>> set sqlite connection %p", db_);
+    }
+//    void NativeNPSyncModule::TestSqliteDB(jsi::Runtime &rt, jsi::Object)
+//    {
+//
+//    }
+    std::string NativeNPSyncModule::Comm2ProcessTblSync(jsi::Runtime &rt, std::string fileName, bool dryRun)
+    {
+        return "";
+    }
+    void NativeNPSyncModule::SQLBeginTransaction(jsi::Runtime &rt)
+    {
+
+    }
+    void NativeNPSyncModule::SQLCommit(jsi::Runtime &rt, bool rollback){
+
+    }
+
+
+
+
+
+
+
+
+
 
 
     std::shared_ptr<R3_Log>  NativeNPLoggerModule::logger_;

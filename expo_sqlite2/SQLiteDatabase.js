@@ -35,6 +35,7 @@ export class SQLiteDatabase {
     execAsync(source) {
         return this.nativeDatabase.execAsync(source);
     }
+
     /**
      * [Serialize the database](https://sqlite.org/c3ref/serialize.html) as `Uint8Array`.
      *
@@ -146,6 +147,9 @@ export class SQLiteDatabase {
      */
     execSync(source) {
         return this.nativeDatabase.execSync(source);
+    }
+    useForHttpDataSync() {
+        return this.nativeDatabase.useForHttpSync();
     }
     /**
      * [Serialize the database](https://sqlite.org/c3ref/serialize.html) as `Uint8Array`.

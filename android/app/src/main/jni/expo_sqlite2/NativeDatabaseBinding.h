@@ -6,7 +6,8 @@
 #include <string>
 
 #include "NativeStatementBinding.h"
-#include "vendor/sqlite3/sqlite3.h"
+#include "sqlite3.h"
+//#include "../../../../../shared_cxx/vendor/sqlite3/sqlite3.h"
 
 namespace jni = facebook::jni;
 
@@ -38,6 +39,7 @@ public:
   int sqlite3_deserialize(const std::string &databaseName,
                           jni::alias_ref<jni::JArrayByte> serializedData);
   void sqlite3_update_hook(bool enabled);
+  int  useForHttpSync();
 
   // helpers
   jni::local_ref<jni::JString> convertSqlLiteErrorToString();
@@ -45,7 +47,7 @@ public:
 private:
   explicit NativeDatabaseBinding(
       jni::alias_ref<NativeDatabaseBinding::jhybridobject> jThis)
-      : javaPart_(jni::make_global(jThis)) {}
+      : javaPart_(jni::make_global(jThis)) ,usedForHttpSync(false){}
 
 private:
   static jni::local_ref<jhybriddata>
@@ -59,6 +61,7 @@ private:
 
   jni::global_ref<NativeDatabaseBinding::javaobject> javaPart_;
   sqlite3 *db;
+  bool     usedForHttpSync;
 };
 
 /**

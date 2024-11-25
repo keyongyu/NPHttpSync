@@ -1,12 +1,13 @@
 import FileSystem from 'react-native-fs';
 import {Alert} from 'react-native';
 
-export const FirstCheckDir = FileSystem.DocumentDirectoryPath + '/FirstCheck';
+export const WorkDir= FileSystem.DocumentDirectoryPath ;
+export const FirstCheckDir = WorkDir + '/FirstCheck';
 
 const error_lvl =  0x01;
-const warn_lvl =  0x02;
+const warn_lvl =   0x02;
 const event_lvl =  0x04;
-const data_lvl =  0x08;
+const data_lvl =   0x08;
 const debug_lvl =  0x10;
 
 import NPLogger from '../specs/NativeNPLogger';
@@ -54,7 +55,7 @@ class NPLoggerC {
             }
     }
 }
-export var Logger = new NPLoggerC(`${FileSystem.DocumentDirectoryPath}/logs/.a.log`);
+export var Logger = new NPLoggerC(`${WorkDir}/logs/.a.log`);
 
 export function RecreateLogger(){
     NPLogger.Close();

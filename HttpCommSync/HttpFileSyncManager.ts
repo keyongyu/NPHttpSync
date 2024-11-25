@@ -1,14 +1,14 @@
 import {
     CommSector, convertRowIdsToByteArray, countBy, DataInToken,
-    Logger, Manifest, ProgressReportFunc, TxnDefinition
-} from "./Common";
+    Logger, Manifest, ProgressReportFunc, TxnDefinition, WorkDir,
+} from './Common';
 //import {gHttpDataSync} from "./HttpDataSync";
 import {gHttpMobileManager} from "./MobileManager";
 import {gHttpAsync} from "./HttpAsync";
 //import {gAuth} from "./OAuth";
 import NativeNPSync from '../specs/NativeNPSync.ts';
 import FileSystem from 'react-native-fs';
-export const  BINARY_FILE_FOLDER= FileSystem.DocumentDirectoryPath;
+export const  BINARY_FILE_FOLDER= WorkDir;
 
 export type FileRecD={
     //"795FD9BB:383DA764-6B98-44C0-9286-11B1B0B7A441",

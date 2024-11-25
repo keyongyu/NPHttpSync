@@ -5,8 +5,9 @@
 #include <fbjni/fbjni.h>
 #include <string>
 
-#include "vendor/sqlite3/sqlite3.h"
+#include "sqlite3.h"
 
+//#include "../../../../../shared_cxx/vendor/sqlite3/sqlite3.h"
 namespace jni = facebook::jni;
 
 namespace expo {
@@ -47,7 +48,7 @@ private:
   friend HybridBase;
   friend NativeDatabaseBinding;
 
-  exsqlite3_stmt *stmt;
+  sqlite3_stmt *stmt;
 };
 
 /**

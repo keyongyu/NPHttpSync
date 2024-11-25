@@ -98,6 +98,10 @@ export declare class SQLiteDatabase {
      */
     execSync(source: string): void;
     /**
+     * Tell httpSync module to use this connection for data sync
+     */
+    useForHttpDataSync():void;
+    /**
      * [Serialize the database](https://sqlite.org/c3ref/serialize.html) as `Uint8Array`.
      *
      * > **Note:** Running heavy tasks with this function can block the JavaScript thread and affect performance.

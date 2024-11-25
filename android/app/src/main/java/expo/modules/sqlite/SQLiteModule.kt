@@ -108,6 +108,11 @@ class SQLiteModule : Module() {
         initDb(database)
       }
 
+      Function("useForHttpSync") { database: NativeDatabase ->
+        useForHttpSync(database)
+      }
+
+
       AsyncFunction("isInTransactionAsync") { database: NativeDatabase ->
         maybeThrowForClosedDatabase(database)
         return@AsyncFunction database.ref.sqlite3_get_autocommit() == 0
@@ -237,6 +242,11 @@ class SQLiteModule : Module() {
     if (database.openOptions.enableChangeListener) {
       addUpdateHook(database)
     }
+  }
+  @Throws(AccessClosedResourceException::class)
+  private fun useForHttpSync(database: NativeDatabase) {
+    maybeThrowForClosedDatabase(database)
+    database.ref.useForHttpSync()
   }
 
   @Throws(AccessClosedResourceException::class, SQLiteErrorException::class)

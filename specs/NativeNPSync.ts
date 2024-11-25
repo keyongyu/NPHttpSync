@@ -40,6 +40,12 @@ export interface Spec extends TurboModule {
   readonly DeleteFileAll:(folder: string, wild:string)=>void;
   readonly DeleteFolder:(folder: string)=>void;
 
+  readonly SetWorkDir:(folder: string)=>void;
+  readonly Comm2ProcessTblSync:(fileName:string, dryRun:boolean)=>string;
+  readonly SQLBeginTransaction:()=>void;
+  readonly SQLCommit:(rollback:boolean)=>void;
+
+  //readonly TestSqliteDB:(db: Object)=>void;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(
