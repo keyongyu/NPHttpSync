@@ -12,6 +12,10 @@ To start Metro, run the following command from the _root_ of your React Native p
 
 ```bash
 # using npm
+npm install 
+cp np_patch/node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake 
+cp np_patch/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/ExpoModulesHelper.kt node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/ExpoModulesHelper.kt
+
 npm start
 
 # OR using Yarn
@@ -26,7 +30,8 @@ Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _roo
 
 ```bash
 # using npm
-npm run android
+#npm run android
+npx expo run android
 
 # OR using Yarn
 yarn android
