@@ -140,8 +140,8 @@ namespace HttpComm {
 //    std::string chromium_base64_encode(const std::string& src);
 //    void RegistorUDF(DBN * psDBN);
 
-    #define LOG_MSG(lvl, ...)   if(NativeNPLoggerModule::logger_)         \
-                                NativeNPLoggerModule::logger_->LogFormatMessage(lvl, __VA_ARGS__)
-
     std::string string_format(const char* fmt, ...);
 }
+
+#define LOG_MSG(lvl, ...)   if(facebook::react::NativeNPLoggerModule::logger_)         \
+                                facebook::react::NativeNPLoggerModule::logger_->LogFormatMessage(lvl, __VA_ARGS__)

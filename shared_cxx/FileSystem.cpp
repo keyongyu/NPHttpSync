@@ -6,6 +6,9 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "HttpComm/Comm2.h"
+#include "R3_Log.hpp"
+#include "NativeNPSyncModule.h"
 namespace FileSystem {
     inline bool is_slash(char ch) {
         return ch == '/';
@@ -207,5 +210,11 @@ namespace FileSystem {
     }
     void DeleteFolder(std::string dir){
         DeleteAllInFolder(dir.c_str());
+        if(0!=rmdir(dir.c_str())){
+            char* err=strerror(errno);
+            //printf("err=%s",err);
+            LOG_MSG(LOG_ERROR_LVL,"cannot delete folder %s, error:%s", dir.c_str(), err );
+        }
+
     }
 }

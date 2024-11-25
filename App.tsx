@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 
 import NPSyncSpec, { IHttpResponse } from './specs/NativeNPSync';
-import {ReportArg, SetCommPromptChanger} from './HttpCommSync/Common.ts';
+import {ReportArg, SetCommPromptChanger, WorkDir} from './HttpCommSync/Common.ts';
 import { UserCredential} from './HttpCommSync/OAuth.ts';
 import {HttpCommClearJWT, FirstCheck, HttpCommSync} from './HttpCommSync/HttpCommSyncAPI.ts';
 import * as SQLite from './expo_sqlite2';
@@ -33,6 +33,8 @@ function App(): React.JSX.Element {
 
     const db = SQLite.openDatabaseSync('databaseName');
     db.useForHttpDataSync();
+    //NPSyncSpec.DeleteFolder(WorkDir+"/M_PRD");
+
     HttpCommSync((arg: ReportArg)=>{
       console.log(JSON.stringify(arg));
     }, [/*'9.1.0.0_SYNC',*/'profile-image']).then((sucess:boolean) => {
