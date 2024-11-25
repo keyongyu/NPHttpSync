@@ -23,9 +23,9 @@ namespace facebook::react {
         //jsi::Value callTest(jsi::Runtime &rt, jsi::String id);
         AsyncPromise<std::string> callPromise(jsi::Runtime &rt, std::string id);
 
-        void SendHttpRequest(jsi::Runtime &rt, jsi::Function f, std::string reqId,
-                             std::string method, std::string url, std::string header,
-                             std::string content, std::string fileToBeSaved, std::optional<double> nTimeoutMs);
+        void SendHttpRequest(jsi::Runtime &rt, jsi::Function f, const std::string& reqId,
+                             const std::string& method, const std::string& url, const std::string& header,
+                             const std::string& content, const std::string& fileToBeSaved, std::optional<double> nTimeoutMs);
         void SendHttpRequestBlob(jsi::Runtime &rt, jsi::Function f, std::string reqId,
                              std::string method, std::string url, std::string header,
                               jsi::Object content, std::string fileToBeSaved, std::optional<double> nTimeoutMs);

@@ -3,16 +3,17 @@
 #include <fbjni/fbjni.h>
 #include <chrono>
 #include <thread>
-#ifdef __ANDROID__
-#include <android/log.h>
-#define LOGX(...) __android_log_print(ANDROID_LOG_WARN,"KY", __VA_ARGS__)
-#endif
+//#ifdef __ANDROID__
+//#include <android/log.h>
+//#define LOGX(...) __android_log_print(ANDROID_LOG_WARN,"KY", __VA_ARGS__)
+//#endif
 //#include <JCallback.h>
 #include <glog/logging.h>
 #include <react/jni/JCallback.h>
 #include "FileSystem.h"
 #include <sys/stat.h>
 
+extern int g_nLogLevel;
 namespace facebook::react {
     auto createJavaCallback(
             jsi::Runtime& rt,
@@ -56,7 +57,7 @@ namespace facebook::react {
              jmethodID jmeth =meth.getId();
              JNIEnv* env = jni::Environment::current();
              jvalue arg;
-             arg.l=createJavaCallback(rt,std::move(f), jsInvoker).release();
+             arg.l=createJavaCallback(rt,std::move(f), std::move(jsInvoker)).release();
              env->CallStaticVoidMethod((jclass)jobj, jmeth, arg);
 //            static jmethodID cachedMethodId = nullptr;
 //            if (cachedMethodId == nullptr) {
@@ -103,7 +104,7 @@ namespace facebook::react {
         if(env){
             return JNativeHelper::ttt();
         }
-        return std::string(input.rbegin(), input.rend());
+        return {input.rbegin(), input.rend()};
     }
 
     void NativeNPSyncModule::echoFromCpp(jsi::Runtime &rt, std::string id, jsi::Function f) {
@@ -152,9 +153,10 @@ namespace facebook::react {
 
     }
 
-    void NativeNPSyncModule::SendHttpRequest(jsi::Runtime &rt, jsi::Function f, std::string reqId,
-                                 std::string method, std::string url, std::string header,
-                                 std::string content, std::string fileToBeSaved, std::optional<double> nTimeoutMs) {
+    void NativeNPSyncModule::SendHttpRequest(jsi::Runtime &rt, jsi::Function f, const std::string& reqId,
+                                 const std::string& method, const std::string& url, const std::string& header,
+                                 const std::string& content, const std::string& fileToBeSaved,
+                                 std::optional<double> nTimeoutMs) {
 
 
         static auto cls = JNativeHelper::javaClassStatic();
@@ -344,6 +346,8 @@ namespace facebook::react {
        auto idx = logFileName.rfind('/');
        std::string path = logFileName.substr(0, idx);
        std::string name= logFileName.substr(idx+1);
+       if(lvl!=0)
+           g_nLogLevel = lvl;
        logger_=std::make_shared<R3_Log>(path.c_str(),name.c_str(),maxSize);
     }
     void NativeNPLoggerModule::Close(jsi::Runtime &rt){
