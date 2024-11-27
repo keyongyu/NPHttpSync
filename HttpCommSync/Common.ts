@@ -31,7 +31,7 @@ class NPLoggerC {
     private ReturnWritter(log,lvl: number, bMsgBox:boolean) {
         if(bMsgBox)
             return function (msg: any) {
-                log(msg);
+                //log(msg);
                 let m = msg;
                 if (msg instanceof Object)
                     m = JSON.stringify(msg);
@@ -43,7 +43,7 @@ class NPLoggerC {
             };
         else
             return function (msg: any) {
-                log(msg);
+                //log(msg);
                 let m = msg;
                 if(msg instanceof Uint8Array )
                     NPLogger.WriteLog(lvl,m);

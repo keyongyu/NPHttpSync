@@ -29,21 +29,34 @@ function App(): React.JSX.Element {
     //const storedValue = NativeLocalStorage?.getItem('myKey');
     //setValue(storedValue ?? '');
   }, []);
-  function sqliteTest(){
-
+  function syncImages(){
     const db = SQLite.openDatabaseSync('databaseName');
     db.useForHttpDataSync();
     //NPSyncSpec.DeleteFolder(WorkDir+"/M_PRD");
 
     HttpCommSync((arg: ReportArg)=>{
       console.log(JSON.stringify(arg));
-    }, [/*'9.1.0.0_SYNC',*/'profile-image']).then((sucess:boolean) => {
-        console.log("sync finished:"+sucess);
-        //db.closeAsync();
+    }, ['profile-image']).then((sucess:boolean) => {
+      console.log("sync finished:"+sucess);
+      db.closeSync();
+      //db.closeAsync();
     })
 
     //db.closeSync();
     //NPSyncSpec.TestSqliteDB(db.)
+  }
+  function syncDB(){
+    const db = SQLite.openDatabaseSync('databaseName');
+    db.useForHttpDataSync();
+    //NPSyncSpec.DeleteFolder(WorkDir+"/M_PRD");
+
+    HttpCommSync((arg: ReportArg)=>{
+       console.log(JSON.stringify(arg));
+    }, ['9.1.0.0_SYNC']).then((sucess:boolean) => {
+        console.log("sync finished:"+sucess);
+        db.closeSync();
+        //db.closeAsync();
+    })
   }
   async function sqliteTest2(){
     //await 1;
@@ -107,9 +120,8 @@ function App(): React.JSX.Element {
     //log.warn("setValue2:" + v);
   }
   function reverseValue() {
-    // let r = NPSyncSpec.reverseString(editingValue ?? EMPTY);
-    // setValue(r);
-    sqliteTest();
+     let r = NPSyncSpec.reverseString(editingValue ?? EMPTY);
+     setValue(r);
   }
 
   function callBackTest() {
@@ -171,7 +183,8 @@ function App(): React.JSX.Element {
         onChangeText={setEditingValue}
       />
 
-      <Button title="reverse" onPress={reverseValue} />
+      <Button title="sync db" onPress={syncDB} />
+      <Button title="sync images" onPress={syncImages} />
       <Button title="callback" onPress={callBackTest} />
       <Button title="promise" onPress={testPromise} />
       <Button title="sendhttpreq" onPress={sendhttp} />
@@ -201,13 +214,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   textInput: {
-    margin: 10,
-    height: 20,
+    margin: 4,
+    height: 40,
     borderColor: 'black',
     borderWidth: 1,
-    paddingLeft: 5,
-    paddingRight: 5,
-    borderRadius: 5,
+    paddingLeft: 2,
+    paddingRight: 2,
+    borderRadius: 2,
   },
 });
 

@@ -348,7 +348,10 @@ namespace facebook::react {
        std::string name= logFileName.substr(idx+1);
        if(lvl!=0)
            g_nLogLevel = lvl;
-       logger_=std::make_shared<R3_Log>(path.c_str(),name.c_str(),maxSize);
+       if (access(path.c_str(), F_OK) == -1 && ENOENT == errno) //folder doesn't exist
+           FileSystem::MakeDir(path);
+
+        logger_=std::make_shared<R3_Log>(path.c_str(),name.c_str(),maxSize);
     }
     void NativeNPLoggerModule::Close(jsi::Runtime &rt){
         logger_.reset();

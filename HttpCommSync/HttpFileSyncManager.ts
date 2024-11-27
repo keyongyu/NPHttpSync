@@ -121,10 +121,10 @@ export var gDownloadFilesManager = new class {
                 // Check if file exists in ${Table}
                 // If exists, copy to ${Table}__temp
                 // else download it
-                let tmpFile=fileRequest.tempFileName;
-                let timeout = existDownloadedFiles.length%10==9 ? 0:10;
-                let p = new Promise<void>((resolve) => {
-                    setTimeout(async () => {
+                let tmpFile= fileRequest.tempFileName;
+                // let timeout = existDownloadedFiles.length%10==9 ? 0:10;
+                // let p = new Promise<void>((resolve) => {
+                //     setTimeout(async () => {
                         NativeNPSync.WriteFile(tmpFile, '', 'w');
                         NativeNPSync.DeleteFile(tmpFile);
                         //console.log(`delete ${tmpFile}`);
@@ -133,10 +133,10 @@ export var gDownloadFilesManager = new class {
                         //console.log(`**** end of copying file: ${fileRequest.FULL_FILE_NAME} to ${tmpFile}`);
                         Logger.Event(`Sync Method: ${fileRequest.SyncMethod}. Skip downloading ${fileRequest.FILE_NAME} because it already exists.`);
                         existDownloadedFiles.push(fileRequest);
-                        resolve();
-                    }, timeout);
-                });
-                await p;
+                //         resolve();
+                //     }, timeout);
+                // });
+                // await p;
             }else
                 validDownloadRequests.push(fileRequest);
         }
