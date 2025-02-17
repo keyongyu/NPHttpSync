@@ -154,12 +154,20 @@ function App(): React.JSX.Element {
   }
 
   async function getUserInfo(old:UserCredential):Promise<UserCredential|null> {
+    // return await {
+    //   url:'https://unza-my-qa.npa.accenture.com/mobile',
+    //   loginMode:'MOBILE',
+    //   user:'D13GT09',
+    //   password:'Unza@123',
+    //   newPassword:'Unza@123',
+    //   error:old.error
+    // };
     return await {
-      url:'https://unza-my-qa.npa.accenture.com/mobile',
+      url:'https://acme-intg.npa.accenture.com/mobile',
       loginMode:'MOBILE',
-      user:'D13GT09',
-      password:'Unza@123',
-      newPassword:'Unza@123',
+      user:'VS1',
+      password:'Newspage@1',
+      newPassword:'Newspage@1',
       error:old.error
     };
   }

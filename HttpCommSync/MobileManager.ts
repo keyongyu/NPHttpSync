@@ -1,5 +1,5 @@
 import {
-  ChangeCommPrompt, CommAlert,
+  ChangeCommPrompt, CommAlertAsync,
   DataInToken,
   FCStorage, FirstCheckDir, GetEngineVersion, GetHardwareId,
   IsDevEngine,
@@ -423,12 +423,12 @@ export let gHttpMobileManager = new (class {
       } else if (reply.error_code === NoNetwork || reply.error_code == ConnectionError ) {
           // 2710: No network available. Please ensure that network connection is available and then try again.
           // 4025: MMSvcs
-          await CommAlert('IDS_HTTPCOMM_NO_NETWORK', 'IDS_MM_DIALOG_TITLE');
+          await CommAlertAsync('IDS_HTTPCOMM_NO_NETWORK', 'IDS_MM_DIALOG_TITLE');
           return { success: false, detail: "Unable to perform FirstCheck validation, no network connection." };
       }else if (isTimeoutResponse(reply)) {
           // 2714:Server did not respond
           // 4025: MMSvcs
-          await CommAlert('(IDS_HTTPCOMM_NO_RESPONSE)', '(IDS_MM_DIALOG_TITLE)');
+          await CommAlertAsync('(IDS_HTTPCOMM_NO_RESPONSE)', '(IDS_MM_DIALOG_TITLE)');
           return { success: false, detail: "Unable to perform FirstCheck validation, server has no response." };
       }
       else {
@@ -903,7 +903,7 @@ export let gHttpMobileManager = new (class {
 
               // Show localised error alert in Production engine
               if (!IsDevEngine())
-                await CommAlert('(IDS_MM_USER_VALIDATION_FAIL)', '(IDS_MM_DIALOG_TITLE)'); // 4036: User validation failed. Please contact Administrator.
+                await CommAlertAsync('(IDS_MM_USER_VALIDATION_FAIL)', '(IDS_MM_DIALOG_TITLE)'); // 4036: User validation failed. Please contact Administrator.
               return false;
           } else {
               Logger.Error('FirstCheck: unknown reply, ' + JSON.stringify(result));

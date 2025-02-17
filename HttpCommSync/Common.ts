@@ -28,7 +28,7 @@ class NPLoggerC {
         this.logFileName = fileName;
     }
     logFileName:string;
-    private ReturnWritter(log,lvl: number, bMsgBox:boolean) {
+    private ReturnWritter(log:(data:any)=>void,lvl: number, bMsgBox:boolean) {
         if(bMsgBox)
             return function (msg: any) {
                 //log(msg);
@@ -438,7 +438,7 @@ export function GetAppVersion()
     return "0.0.1";
 }
 export async function CommAlertAsync(title:string, desc:string):Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve , __reject) => {
         Alert.alert(
           title, desc,
           [
