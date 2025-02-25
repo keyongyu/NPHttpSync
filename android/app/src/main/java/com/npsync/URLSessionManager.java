@@ -121,7 +121,7 @@ public class URLSessionManager {
 			String	rcvFilePath = null;
 			if (argv.length > 3)
 				strHeaderPairs = argv[3];
-			if (argv.length > 4) {
+			if (argv.length > 4 && m_Blob ==null && m_BlobLength==0) {
 				strContent = argv[4];
 				if (strContent.startsWith("FILE:")) {
 					strContent = argv[4].substring(5);

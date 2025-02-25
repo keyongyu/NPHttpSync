@@ -16,7 +16,7 @@
 #ifndef WINAPI_FAMILY
 #include <unistd.h>
 #include <sys/mman.h>
-#include <fcntl.h>  
+#include <fcntl.h>
 #endif
 #include "../NativeNPSyncModule.h"
 using namespace std;
@@ -358,116 +358,116 @@ void Buffer::JsonAppendString(const char* zIn, unsigned int N) {
     assert(m_nLen <= m_nCapcity);
 }
 
-//static void JsonAppendEmbeddedFile(Buffer* buf, sqlite3_value* pValue) {
-//    switch (sqlite3_value_type(pValue)) {
-//        //case SQLITE_NULL: {
-//        //case SQLITE_INTEGER:
-//        //case SQLITE_FLOAT:
-//        //	buf->Append("null", 4);
-//        //	break;
-//        //}
-//    case SQLITE_TEXT: {
-//        char* z = (char*)sqlite3_value_text(pValue);
-//        //int n =
-//        sqlite3_value_bytes(pValue);
-//        buf->Append("\"", 1);
-//        buf->AppendFileInBase64WithoutPadding(z);
-//        buf->Append("\"", 1);
-//        //buf->JsonAppendString(z, (size_t)n);
-//        break;
-//    }
-//    default:
-//        buf->Append("null", 4);
-//        break;
-//    }
-//}
+static void JsonAppendEmbeddedFile(Buffer* buf, sqlite3_value* pValue) {
+    switch (sqlite3_value_type(pValue)) {
+        //case SQLITE_NULL: {
+        //case SQLITE_INTEGER:
+        //case SQLITE_FLOAT:
+        //	buf->Append("null", 4);
+        //	break;
+        //}
+    case SQLITE_TEXT: {
+        char* z = (char*)sqlite3_value_text(pValue);
+        //int n =
+        sqlite3_value_bytes(pValue);
+        buf->Append("\"", 1);
+        buf->AppendFileInBase64WithoutPadding(z);
+        buf->Append("\"", 1);
+        //buf->JsonAppendString(z, (size_t)n);
+        break;
+    }
+    default:
+        buf->Append("null", 4);
+        break;
+    }
+}
 
-//static void JsonAppendBoolean(Buffer* buf, sqlite3_value* pValue) {
-//    switch (sqlite3_value_type(pValue)) {
-//    case SQLITE_INTEGER: {
-//        int iValue = sqlite3_value_int(pValue);
-//        if (iValue != 0) {
-//            buf->Append("true", 4);
-//        }
-//        else {
-//            buf->Append("false", 5);
-//        }
-//        break;
-//    }
-//    case SQLITE_TEXT: {
-//        char* z = (char*)sqlite3_value_text(pValue);
-//        if (_stricmp(z, "true") == 0) {
-//            buf->Append("true", 4);
-//        }
-//        else {
-//            buf->Append("false", 5);
-//        }
-//        break;
-//    }
-//    default: {
-//        buf->Append("false", 5);
-//        break;
-//    }
-//    }
-//}
+static void JsonAppendBoolean(Buffer* buf, sqlite3_value* pValue) {
+    switch (sqlite3_value_type(pValue)) {
+    case SQLITE_INTEGER: {
+        int iValue = sqlite3_value_int(pValue);
+        if (iValue != 0) {
+            buf->Append("true", 4);
+        }
+        else {
+            buf->Append("false", 5);
+        }
+        break;
+    }
+    case SQLITE_TEXT: {
+        char* z = (char*)sqlite3_value_text(pValue);
+        if (_stricmp(z, "true") == 0) {
+            buf->Append("true", 4);
+        }
+        else {
+            buf->Append("false", 5);
+        }
+        break;
+    }
+    default: {
+        buf->Append("false", 5);
+        break;
+    }
+    }
+}
 
-////extract UUID from file field which looks like "TBL_1/UUID.jpg"
-////too sad, such handling is hardcoded in txn composition.
-//static void JsonAppendUUIDFromFileValue(Buffer* buf, sqlite3_value* pValue)
-//{
-//	switch (sqlite3_value_type(pValue)) {
-//	case SQLITE_TEXT: {
-//		const char* z = (const char*)sqlite3_value_text(pValue);
-//		uint32_t len = 0;
-//		auto p_slash = strrchr(z, '/');
-//		if (p_slash != nullptr)
-//			z = p_slash + 1;
-//		auto p_dot = strrchr(z, '.');
-//		if (p_dot != nullptr)
-//			len = p_dot - z;
-//		buf->JsonAppendString(z, len);
-//		break;
-//	}
-//    case SQLITE_NULL: {
-//        buf->Append("null", 4);
-//        break;
-//    }
-//	default:
-//		break;
-//	}
-//}
-//
-//static void JsonAppendValue(Buffer* buf, sqlite3_value* pValue) {
-//    switch (sqlite3_value_type(pValue)) {
-//    case SQLITE_NULL: {
-//        buf->Append("null", 4);
-//        break;
-//    }
-//    case SQLITE_INTEGER:
-//    case SQLITE_FLOAT: {
-//        char* z = (char*)sqlite3_value_text(pValue);
-//        int n = sqlite3_value_bytes(pValue);
-//        buf->Append(z, (size_t)n);
-//        break;
-//    }
-//    case SQLITE_TEXT: {
-//        const char* z = (const char*)sqlite3_value_text(pValue);
-//        buf->JsonAppendString(z);
-//        break;
-//    }
-//    case SQLITE_BLOB: {
-//        int n = sqlite3_value_bytes(pValue);
-//        byte* z = (byte*)sqlite3_value_blob(pValue);
-//        buf->Append("\"", 1);
-//        buf->AppendDataInBase64(z, n);
-//        buf->Append("\"", 1);
-//
-//        break;
-//    }
-//    default:
-//        break;
-//    }
-//}
+//extract UUID from file field which looks like "TBL_1/UUID.jpg"
+//too sad, such handling is hardcoded in txn composition.
+static void JsonAppendUUIDFromFileValue(Buffer* buf, sqlite3_value* pValue)
+{
+	switch (sqlite3_value_type(pValue)) {
+	case SQLITE_TEXT: {
+		const char* z = (const char*)sqlite3_value_text(pValue);
+		uint32_t len = 0;
+		auto p_slash = strrchr(z, '/');
+		if (p_slash != nullptr)
+			z = p_slash + 1;
+		auto p_dot = strrchr(z, '.');
+		if (p_dot != nullptr)
+			len = p_dot - z;
+		buf->JsonAppendString(z, len);
+		break;
+	}
+    case SQLITE_NULL: {
+        buf->Append("null", 4);
+        break;
+    }
+	default:
+		break;
+	}
+}
+
+static void JsonAppendValue(Buffer* buf, sqlite3_value* pValue) {
+    switch (sqlite3_value_type(pValue)) {
+    case SQLITE_NULL: {
+        buf->Append("null", 4);
+        break;
+    }
+    case SQLITE_INTEGER:
+    case SQLITE_FLOAT: {
+        char* z = (char*)sqlite3_value_text(pValue);
+        int n = sqlite3_value_bytes(pValue);
+        buf->Append(z, (size_t)n);
+        break;
+    }
+    case SQLITE_TEXT: {
+        const char* z = (const char*)sqlite3_value_text(pValue);
+        buf->JsonAppendString(z);
+        break;
+    }
+    case SQLITE_BLOB: {
+        int n = sqlite3_value_bytes(pValue);
+        byte* z = (byte*)sqlite3_value_blob(pValue);
+        buf->Append("\"", 1);
+        buf->AppendDataInBase64(z, n);
+        buf->Append("\"", 1);
+
+        break;
+    }
+    default:
+        break;
+    }
+}
 
 struct TxnSchema
 {
@@ -608,17 +608,24 @@ bool LoadTxnSchema(const string& json_str, TxnSchema& txn_schema, string& err_de
     return true;
 }
 
-typedef std::shared_ptr<sqlite3_stmt> stmt_sptr;
+//typedef std::shared_ptr<sqlite3_stmt> stmt_sptr;
+
+struct delete_stmt{
+    void operator()(sqlite3_stmt* stmt) {
+        if (stmt)
+            sqlite3_finalize(stmt);
+    }
+};
+typedef std::unique_ptr<sqlite3_stmt, delete_stmt> stmt_ptr;
 
 class SqliteHelper
 {
 protected:
     string						  m_TblName;
-    stmt_sptr					  m_Stmt;
+    stmt_ptr					  m_Stmt;
     string                        m_ErrorDesc;
 public:
     SqliteHelper(const string& tblName) :m_TblName(tblName) {}
-
     static sqlite3* GetSqliteDB() {
         return NativeNPSyncModule::GetSqlite3DB();
     }
@@ -636,20 +643,32 @@ public:
         }
         return ct > 0;
     }
-
-    stmt_sptr CreateStatement(const std::string& sql) {
+    stmt_ptr CreateStatement(const std::string& sql) {
         sqlite3_stmt* stmt = nullptr;
         auto status = sqlite3_prepare_v2(
-            GetSqliteDB(), sql.c_str(), (int)sql.size(), &stmt, nullptr
+                GetSqliteDB(), sql.c_str(), (int)sql.size(), &stmt, nullptr
         );
         if (status == SQLITE_OK) {
-            return  std::shared_ptr<sqlite3_stmt>(stmt, &sqlite3_finalize);
+            return  stmt_ptr(stmt);
         }
         else {
             m_ErrorDesc = sqlite3_errstr(status);
-            return std::shared_ptr<sqlite3_stmt>();
+            return  stmt_ptr(nullptr);
         }
     }
+//    stmt_sptr CreateStatement1(const std::string& sql) {
+//        sqlite3_stmt* stmt = nullptr;
+//        auto status = sqlite3_prepare_v2(
+//            GetSqliteDB(), sql.c_str(), (int)sql.size(), &stmt, nullptr
+//        );
+//        if (status == SQLITE_OK) {
+//            return  std::shared_ptr<sqlite3_stmt>(stmt, &sqlite3_finalize);
+//        }
+//        else {
+//            m_ErrorDesc = sqlite3_errstr(status);
+//            return std::shared_ptr<sqlite3_stmt>();
+//        }
+//    }
 
 public:
     //int BindParameter(int par_idx, sqlite3_value* val) {
@@ -659,687 +678,723 @@ public:
     const string& GetTableName() { return m_TblName; }
     const string& GetErrorDesc() { return m_ErrorDesc; }
 };
-static uint32_t s_Comm2MsgId = 0;
-uint32_t& GetComm2MsgID() {
+static int s_Comm2MsgId = 0;
+int GetComm2MsgID() {
     if (s_Comm2MsgId == 0) {
         std::mt19937 mt((unsigned int)time( nullptr ));
-        s_Comm2MsgId = mt();
+        uint32_t v= mt();
+        v>>=1;
+        s_Comm2MsgId=v;
     }
-    return s_Comm2MsgId;
+    int d= (s_Comm2MsgId++)&0x7FFFFFFF;
+    s_Comm2MsgId &= 0x7FFFFFFF;
+    return d;
 
 }
 
 enum TxnFieldType { enNormalTxnField, enBooleanTxnField, enFileTxnField, enBlobTxnField, enCommStatusField };
-//class SqliteTxnHelper : public SqliteHelper
-//{
-//    bool						  m_IsHdr;
-//    //true file, false blob
-//    map<string, bool>			  m_BinaryFields;
-//    vector<TxnFieldType>		  m_FieldsType;
-//
-//    vector<int>                   m_JionKeysPos;
-//protected:
-//    void DiscoverBinaryFileds(const string& tblName) {
-//        g_pEngine->GetR3Rsc()->GetBinaryFields(tblName.c_str(), m_BinaryFields);
-//    }
-//
-//    void DiscoverJoinKeysPos(const string& tblName, const vector<string>& join_keys)
-//    {
-//        if (join_keys.size() <= 0) {
-//            return;
-//        }
-//        stmt_sptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", tblName.c_str()));
-//        if (!stmt.get()) {
-//            return;
-//        }
-//        m_JionKeysPos.resize(join_keys.size(), -1);
-//        int seq_of_id = -1;
-//        //vector<string> keys = join_keys;
-//        int row = 0;
-//        int num_solved = 0;
-//        while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
-//            const char* txt = (const char*)sqlite3_column_text(stmt.get(), 1);
-//            if (txt) {
-//                if (_stricmp(txt, "ID") == 0) {
-//                    seq_of_id = row;
-//                }
-//                auto it = std::find(join_keys.begin(), join_keys.end(), txt);
-//                if (it != join_keys.end()) {
-//                    auto seq = it - join_keys.begin();
-//                    m_JionKeysPos[seq] = row;
-//                    num_solved++;
-//                    if (num_solved == m_JionKeysPos.size()) {
-//                        break;
-//                    }
-//                }
-//            }
-//            row++;
-//        }
-//        if (seq_of_id != -1) {
-//            std::for_each(m_JionKeysPos.begin(), m_JionKeysPos.end(), [seq_of_id](int& seq) {
-//                if (seq == -1) {
-//                    seq = seq_of_id;
-//                }
-//                });
-//        }
-//
-//    }
-//
-//    bool GetFilesFromRow(vector<UploadFile>& files, uint64_t par_rowid,
-//        const string& par_commsStatus, const vector<string>* embedded_columns) {
-//        int n = sqlite3_column_count(m_Stmt.get());
-//        for (int col_id = m_IsHdr ? 1 : 0; col_id < n; ++col_id) {
-//            auto fieldType = m_FieldsType[m_IsHdr ? col_id - 1 : col_id];
-//            auto val = sqlite3_column_value(m_Stmt.get(), col_id);
-//
-//            if (fieldType == enFileTxnField && val) {
-//                bool isEmbeddedColumn = false;
-//                if(embedded_columns){
-//                    const auto& columns = *embedded_columns;
-//                    const char* txt = (const char*)sqlite3_column_name(m_Stmt.get(), col_id);
-//					isEmbeddedColumn = find(columns.begin(), columns.end(), txt) != columns.end();
-//				}
-//
-//                if (!isEmbeddedColumn) {
-//                    const char* pFileName = (const char*)sqlite3_value_text(val);
-//                    const char* pColumnName = sqlite3_column_name(m_Stmt.get(), col_id);
-//                    const char* pCommsStatus = par_commsStatus.c_str();
-//                    const char* table = m_TblName.c_str();
-//
-//                    if (pFileName != NULL && *pFileName != 0 && pColumnName != NULL && *pColumnName != 0)
-//                        files.push_back(UploadFile(pFileName, pColumnName, pCommsStatus, table, par_rowid));
-//                    else if (pFileName == NULL && pColumnName != NULL && *pColumnName != 0)
-//                        files.push_back(UploadFile("", pColumnName, pCommsStatus, table, par_rowid));
-//                }
-//            }
-//        }
-//        return true;
-//    }
-//    bool AppendOneRow(Buffer* buf, const vector<string>* p_embedded_cols)
-//    {
-//        //int num_solved = 0;
-//        int n = sqlite3_column_count(m_Stmt.get());
-//        buf->Append("[", 1);
-//        for (int col_id = m_IsHdr ? 1 : 0; col_id < n; ++col_id) {
-//            auto fieldType = m_FieldsType[m_IsHdr ? col_id - 1 : col_id];
-//            auto val = sqlite3_column_value(m_Stmt.get(), col_id);
-//
-//            if (val) {
-//                //if (it != m_BinaryFields.end() && it->second) {
-//                switch (fieldType) {
-//                case enFileTxnField: {
-//                    JsonAppendUUIDFromFileValue(buf, val);
-//                    buf->Append(",", 1);
-//
-//                    bool isEmbeddedColumn = false;
-//                    if (p_embedded_cols) {
-//                        const vector<string>& columns = * p_embedded_cols;
-//                        const char* txt = (const char*)sqlite3_column_name(m_Stmt.get(), col_id);
-//                        if (find(columns.begin(), columns.end(), txt) != columns.end())
-//                        {
-//                            isEmbeddedColumn = true;
-//                        }
-//                    }
-//
-//                    if (isEmbeddedColumn) {
-//                        JsonAppendEmbeddedFile(buf, val);
-//                        buf->Append(",", 1);
-//                    }
-//
-//                }
-//                    break;
-//                case enBlobTxnField:
-//                    //JsonAppendBlob(buf, val);
-//                    JsonAppendValue(buf, val);
-//                    buf->Append(",", 1);
-//                    break;
-//                case enNormalTxnField:
-//                    JsonAppendValue(buf, val);
-//                    buf->Append(",", 1);
-//                    break;
-//                case enBooleanTxnField:
-//                    JsonAppendBoolean(buf, val);
-//                    buf->Append(",", 1);
-//                    break;
-//                case enCommStatusField:
-//                    break;
-//                }
-//            }
-//        }
-//        if (n > 0)
-//            ((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
-//        else
-//            buf->Append("]");
-//        return true;
-//    }
-//
-//public:
-//
-//    SqliteTxnHelper(const string& tbl_name, const vector<string>& join_keys, bool is_head, bool getFilesOnly = false) :SqliteHelper(tbl_name) {
-//        m_IsHdr = is_head;
-//        DiscoverBinaryFileds(tbl_name);
-//
-//        if (is_head ){
-//            DiscoverJoinKeysPos(tbl_name, join_keys);
-//            if( getFilesOnly)
-//				m_Stmt = CreateStatement(string_format("select rowid, * from [%s] where COMMS_STATUS in ('P', 'T', '#')",
-//					tbl_name.c_str()));
-//            else
-//				m_Stmt = CreateStatement(string_format("select rowid, * from [%s] where COMMS_STATUS='P'",
-//					tbl_name.c_str()));
-//            if (!m_Stmt.get()) {
-//                m_ErrorDesc = "Can't find table " + tbl_name + " or column COMMS_STATUS";
-//            }
-//        }
-//        else {
-//            string where;
-//            for (auto& key : join_keys) {
-//                where = where + string_format(" %s=? and ", key.c_str());
-//            }
-//            if (where.length() > 4) {
-//                where = where.substr(0, where.length() - 4);
-//            }
-//
-//            string query = string_format("select * from [%s]", tbl_name.c_str());
-//            if (where.length() > 0) {
-//                query.append(" where ").append(where);
-//            }
-//            m_Stmt = CreateStatement(query);
-//        }
-//    }
-//    SqliteTxnHelper(const string& tbl_name, string statusFlag) :SqliteHelper(tbl_name), m_IsHdr(true) {
-//        string query = string_format("update [%s] set COMMS_STATUS='%s', COMMS_DATETIME=datetime('now') where rowid=?", tbl_name.c_str(), statusFlag.c_str());
-//        m_Stmt = CreateStatement(query);
-//
-//        auto pStmt = m_Stmt.get();
-//        if (!pStmt) {
-//            query = string_format("update [%s] set COMMS_STATUS='%s' where rowid=?", tbl_name.c_str(), statusFlag.c_str());
-//            m_Stmt = CreateStatement(query);
-//        }
-//    }
-//
-//    bool UpdateRows(uint64_t* pRowIDs, size_t numRowID) {
-//        auto pStmt = m_Stmt.get();
-//        if (!pStmt)
-//            return false;
-//        //int needCommit = sqlite3_get_autocommit(GetSqliteDB());
-//        //if (needCommit)
-//        sqlite3_exec(GetSqliteDB(), "BEGIN", 0, 0, 0);
-//        int rc = SQLITE_OK;
-//        for (auto i = 0; i < numRowID; ++i) {
-//            uint64_t rowid = pRowIDs[i];
-//            sqlite3_bind_int64(pStmt, 1, rowid);
-//            sqlite3_step(pStmt);
-//            rc = sqlite3_reset(pStmt);
-//            if (rc != SQLITE_OK) {
-//                m_ErrorDesc = string_format("CommitTxn failed: %s\n", sqlite3_errstr(rc));
-//                break;
-//            }
-//        }
-//        //if (needCommit) {
-//        if (rc == SQLITE_OK)
-//            sqlite3_exec(GetSqliteDB(), "COMMIT", 0, 0, 0);
-//        else
-//            sqlite3_exec(GetSqliteDB(), "ROLLBACK", 0, 0, 0);
-//        //}
-//        return (rc == SQLITE_OK);
-//    }
-//    bool FillAllColumnsInfo(int& nCommStatusColIdx) {
-//        nCommStatusColIdx = -1;
-//        stmt_sptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", m_TblName.c_str()));
-//        if (!stmt.get())
-//            return !m_IsHdr;
-//        int rc = 0;
-//        while ((rc = sqlite3_step(stmt.get())) == SQLITE_ROW) {
-//            const char* txt = (const char*)sqlite3_column_text(stmt.get(), 1);
-//            const char* type = (const char*)sqlite3_column_text(stmt.get(), 2);
-//            if (txt && type) {
-//                TxnFieldType fieldType = enNormalTxnField;
-//                if (m_IsHdr && _stricmp(txt, "COMMS_STATUS") == 0)
-//                    nCommStatusColIdx = (int) (m_FieldsType.size());
-//                if (_stricmp(txt, "COMMS_STATUS") == 0 || _stricmp(txt, "COMMS_DATETIME") == 0)
-//                    fieldType = enCommStatusField;
-//                else {
-//                    auto it = m_BinaryFields.find(txt);
-//                    if (it != m_BinaryFields.end())
-//                        fieldType = it->second ? enFileTxnField : enBlobTxnField;
-//                    else if (_stricmp(type, "boolean") == 0)
-//                        fieldType = enBooleanTxnField;
-//                }
-//                m_FieldsType.push_back(fieldType);
-//            }
-//        }
-//        if (m_FieldsType.size() == 0) {
-//			m_ErrorDesc = "Cannot find table: " + m_TblName;
-//			return false;
-//		}
-//        return true;
-//	}
-//	bool AppendColumns(Buffer* buf,  const TxnSchema& txn_schema) {
-//        stmt_sptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", m_TblName.c_str()));
-//        if (!stmt.get())
-//            return !m_IsHdr;
-//        if (buf) buf->Append("[");
-//        int row = 0;
-//        //int num_solved = 0;
-//        while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
-//            const char* txt = (const char*)sqlite3_column_text(stmt.get(), 1);
-//            const char* type = (const char*)sqlite3_column_text(stmt.get(), 2);
-//            if (txt && type) {
-//                row++;
-//
-//                TxnFieldType fieldType = enNormalTxnField;
-//                if (_stricmp(txt, "COMMS_STATUS") == 0 || _stricmp(txt, "COMMS_DATETIME") == 0)
-//                    fieldType = enCommStatusField;
-//                auto it = m_BinaryFields.find(txt);
-//                if (it != m_BinaryFields.end()) {
-//                    fieldType = it->second ? enFileTxnField : enBlobTxnField;
-//
-//                    if (buf) {
-//                        if (it->second) {
-//                            buf->JsonAppendString(txt, (uint32)strlen(txt));
-//                            buf->Append(",", 1);
-//                        }
-//
-//                        bool isEmbeddedColumn = false;
-//                        const auto*  p_cols= txn_schema.GetEmbededColByTable(GetTableName());
-//
-//						if (p_cols && find(p_cols->begin(), p_cols->end(), txt) != p_cols->end())
-//							isEmbeddedColumn = true;
-//
-//                        if (isEmbeddedColumn || fieldType == enBlobTxnField) {
-//                            string binary_name = string_format("Binary#%s", txt);
-//                            buf->JsonAppendString(binary_name.c_str(), (uint32)binary_name.size());
-//                            buf->Append(",", 1);
-//                        }
-//                    }
-//                }
-//                else {
-//                    if (fieldType != enCommStatusField && buf) {
-//                        buf->JsonAppendString(txt, (uint32)strlen(txt));
-//                        buf->Append(",", 1);
-//                    }
-//                }
-//
-//                if (_stricmp(type, "boolean") == 0) {
-//                    fieldType = enBooleanTxnField;
-//                }
-//                m_FieldsType.push_back(fieldType);
-//            }
-//        }
-//        if (row > 0 && buf)
-//            ((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
-//        else if (row <= 0 && buf)
-//            buf->Append("]");
-//        return true;
-//    }
-//    bool VerifyEmbeddedCols(const TxnSchema& txn_schema, string& err_desc) {
-//        const auto * emb_cols = txn_schema.GetEmbededColByTable(GetTableName());
-//        if (emb_cols)
-//            return ValidateEmbeddedTblCols(* emb_cols, err_desc);
-//        else
-//            return true;
-//    }
-//
-//    inline bool ValidateEmbeddedTblCols(const vector<string>& tblCols, string& err_desc) {
-//        //Dont need it, when app start, engine will make sure type consistent between dbn table definition and real table
-//        //stmt_sptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", m_TblName.c_str()));
-//        //if (!stmt.get()) {
-//        //    err_desc = string_format("Cannot get column info of table:%s. Please check the manifest file.", m_TblName.c_str());
-//        //    return false;
-//        //}
-//
-//        //vector<string> fileColumns;
-//        //while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
-//        //    const char* txt = (const char*)sqlite3_column_text(stmt.get(), 1);
-//        //    const char* type = (const char*)sqlite3_column_text(stmt.get(), 2);
-//        //    if (txt && type) {
-//        //        auto it = m_BinaryFields.find(txt);
-//        //        if (it != m_BinaryFields.end()) { //if is blob or file
-//        //            fileColumns.push_back(txt);
-//        //        }
-//        //    }
-//        //}
-//
-//        for (const string& col : tblCols) {
-//            if (m_BinaryFields.find(col) == m_BinaryFields.end()) {
-//                err_desc = string_format("Cannot get column %s from table:%s. Please check the manifest file.",col.c_str(), m_TblName.c_str());
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
-//
-//    bool BindJoinKeysForDetails(vector<SqliteTxnHelper>& dtl_walkers)
-//    {
-//        if (m_JionKeysPos.size()) {
-//            for (auto par_idx = 0; par_idx < m_JionKeysPos.size(); par_idx++) {
-//                auto col_id = m_JionKeysPos[par_idx];
-//                if (col_id >= 0) {
-//                    //first column is ROWID, skip it
-//                    auto val = sqlite3_column_value(m_Stmt.get(), col_id + 1);
-//                    for (auto& dtl_walker : dtl_walkers) {
-//                        int rc = dtl_walker.BindParameter(par_idx + 1, val);
-//                        if (rc != SQLITE_OK) {
-//                            m_ErrorDesc = sqlite3_errstr(rc);
-//                            return false;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return true;
-//    }
-//    bool StepHdrRec(vector<SqliteTxnHelper>& dtl_walkers,
-//        const vector<string>* p_embedded_cols, Buffer& buf, vector<uint64_t>& rowids)
-//    {
-//        if (!m_Stmt.get()) {
-//            return false;
-//        }
-//        int rc = sqlite3_step(m_Stmt.get());
-//        if (SQLITE_ROW == rc) {
-//            uint64_t val = (uint64_t)sqlite3_column_int64(m_Stmt.get(), 0);
-//            buf.AppendFormat("{\"Header\":{\"Name\":\"%s\",\"Record\":", m_TblName.c_str());
-//            AppendOneRow(&buf, p_embedded_cols);
-//            rowids.push_back(val);
-//			buf.Append("}");
-//            if(!BindJoinKeysForDetails(dtl_walkers))
-//                return false;
-//            return true;
-//		}
-//		return false;
-//    }
-//
-//	bool StepHdrRec(vector<SqliteTxnHelper>& dtl_walkers,
-//        const vector<string>* p_embedded_cols,
-//        vector<UploadFile>& files, uint64_t& par_rowid,
-//        int hdr_comm_status_idx, string& par_commsStatus )
-//    {
-//        if (!m_Stmt.get()) {
-//            return false;
-//        }
-//        int rc = sqlite3_step(m_Stmt.get());
-//        if (SQLITE_ROW == rc) {
-//            uint64_t val = (uint64_t)sqlite3_column_int64(m_Stmt.get(), 0);
-//		    par_rowid = val;
-//		    par_commsStatus = (const char*)sqlite3_value_text(sqlite3_column_value(m_Stmt.get(), hdr_comm_status_idx));
-//		    GetFilesFromRow(files, par_rowid, par_commsStatus, p_embedded_cols);
-//            if (!BindJoinKeysForDetails(dtl_walkers))
-//                return false;
-//            return true;
-//        }
-//        return false;
-//    }
-//    bool AppendAllRecordsTo(Buffer* buf, const vector<string>* p_embedded_cols) {
-//        if (!m_Stmt.get())
-//            return false;
-//
-//		buf->AppendFormat("{\"Name\":\"%s\",\"Record\":[", m_TblName.c_str());
-//		bool has_record = false;
-//		while (SQLITE_ROW == sqlite3_step(m_Stmt.get())) {
-//			AppendOneRow(buf,  p_embedded_cols);
-//			buf->Append(",");
-//			has_record = true;
-//		}
-//		sqlite3_reset(m_Stmt.get());
-//		if (has_record)
-//			((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
-//		else
-//			buf->Append("]");
-//		buf->Append("},");
-//        return true;
-//    }
-//	bool GetAllFiles(vector<UploadFile>& files, uint64_t par_rowid, string par_commsStatus,
-//        const vector<string>* p_embedded_cols) {
-//        if (!m_Stmt.get())
-//            return false;
-//		while (SQLITE_ROW == sqlite3_step(m_Stmt.get())) {
-//			GetFilesFromRow(files, par_rowid, par_commsStatus, p_embedded_cols);
-//		}
-//		sqlite3_reset(m_Stmt.get());
-//        return true;
-//    }
-//
-//    int BindParameter(int par_idx, sqlite3_value* val) {
-//        auto rc = sqlite3_bind_value(m_Stmt.get(), par_idx, val);
-//        return rc;
-//    }
-//};
+class SqliteTxnHelper : public SqliteHelper
+{
+    bool						  m_IsHdr;
+    //true file, false blob
+    map<string, bool>			  m_BinaryFields;
+    vector<TxnFieldType>		  m_FieldsType;
+
+    vector<int>                   m_JionKeysPos;
+protected:
+    //CHECK COLUMN TYPE  IF IT IS FILE OR BLOB
+    void DiscoverBinaryFileds(const string& tblName) {
+        stmt_ptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", tblName.c_str()));
+        if (!stmt.get()) {
+            return;
+        }
+        while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+            //0,ID,NVARCHAR(500),0,,1
+            //1,MODULE,NVARCHAR(500),0,,0
+            //3,PIC,FILE,0,,0
+
+            //colum 1 is the column name, column 2 is column type
+            const char* colType = (const char*)sqlite3_column_text(stmt.get(), 2);
+            if (colType) {
+                //here assume the column
+                if (_stricmp(colType, "FILE") == 0) {
+                    const char* colName = (const char*)sqlite3_column_text(stmt.get(), 1);
+                   m_BinaryFields[colName]=true ;
+                }else
+                if (_stricmp(colType, "BLOB") == 0) {
+                    const char* colName = (const char*)sqlite3_column_text(stmt.get(), 1);
+                    m_BinaryFields[colName] = false;
+                }
+            }
+        }
+
+    }
+
+    void DiscoverJoinKeysPos(const string& tblName, const vector<string>& join_keys)
+    {
+        if (join_keys.size() <= 0) {
+            return;
+        }
+        stmt_ptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", tblName.c_str()));
+        if (!stmt.get()) {
+            return;
+        }
+        m_JionKeysPos.resize(join_keys.size(), -1);
+        int seq_of_id = -1;
+        //vector<string> keys = join_keys;
+        int row = 0;
+        int num_solved = 0;
+        while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+            const char* txt = (const char*)sqlite3_column_text(stmt.get(), 1);
+            if (txt) {
+                if (_stricmp(txt, "ID") == 0) {
+                    seq_of_id = row;
+                }
+                auto it = std::find(join_keys.begin(), join_keys.end(), txt);
+                if (it != join_keys.end()) {
+                    auto seq = it - join_keys.begin();
+                    m_JionKeysPos[seq] = row;
+                    num_solved++;
+                    if (num_solved == m_JionKeysPos.size()) {
+                        break;
+                    }
+                }
+            }
+            row++;
+        }
+        if (seq_of_id != -1) {
+            std::for_each(m_JionKeysPos.begin(), m_JionKeysPos.end(), [seq_of_id](int& seq) {
+                if (seq == -1) {
+                    seq = seq_of_id;
+                }
+                });
+        }
+
+    }
+
+    bool GetFilesFromRow(vector<UploadFile>& files, uint64_t par_rowid,
+        const string& par_commsStatus, const vector<string>* embedded_columns) {
+        int n = sqlite3_column_count(m_Stmt.get());
+        for (int col_id = m_IsHdr ? 1 : 0; col_id < n; ++col_id) {
+            auto fieldType = m_FieldsType[m_IsHdr ? col_id - 1 : col_id];
+            auto val = sqlite3_column_value(m_Stmt.get(), col_id);
+
+            if (fieldType == enFileTxnField && val) {
+                bool isEmbeddedColumn = false;
+                if(embedded_columns){
+                    const auto& columns = *embedded_columns;
+                    const char* txt = (const char*)sqlite3_column_name(m_Stmt.get(), col_id);
+					isEmbeddedColumn = find(columns.begin(), columns.end(), txt) != columns.end();
+				}
+
+                if (!isEmbeddedColumn) {
+                    const char* pFileName = (const char*)sqlite3_value_text(val);
+                    const char* pColumnName = sqlite3_column_name(m_Stmt.get(), col_id);
+                    const char* pCommsStatus = par_commsStatus.c_str();
+                    const char* table = m_TblName.c_str();
+
+                    if (pFileName != NULL && *pFileName != 0 && pColumnName != NULL && *pColumnName != 0)
+                        files.push_back(UploadFile(pFileName, pColumnName, pCommsStatus, table, par_rowid));
+                    else if (pFileName == NULL && pColumnName != NULL && *pColumnName != 0)
+                        files.push_back(UploadFile("", pColumnName, pCommsStatus, table, par_rowid));
+                }
+            }
+        }
+        return true;
+    }
+    bool AppendOneRow(Buffer* buf, const vector<string>* p_embedded_cols)
+    {
+        //int num_solved = 0;
+        int n = sqlite3_column_count(m_Stmt.get());
+        buf->Append("[", 1);
+        for (int col_id = m_IsHdr ? 1 : 0; col_id < n; ++col_id) {
+            auto fieldType = m_FieldsType[m_IsHdr ? col_id - 1 : col_id];
+            auto val = sqlite3_column_value(m_Stmt.get(), col_id);
+
+            if (val) {
+                //if (it != m_BinaryFields.end() && it->second) {
+                switch (fieldType) {
+                case enFileTxnField: {
+                    JsonAppendUUIDFromFileValue(buf, val);
+                    buf->Append(",", 1);
+
+                    bool isEmbeddedColumn = false;
+                    if (p_embedded_cols) {
+                        const vector<string>& columns = * p_embedded_cols;
+                        const char* txt = (const char*)sqlite3_column_name(m_Stmt.get(), col_id);
+                        if (find(columns.begin(), columns.end(), txt) != columns.end())
+                        {
+                            isEmbeddedColumn = true;
+                        }
+                    }
+
+                    if (isEmbeddedColumn) {
+                        JsonAppendEmbeddedFile(buf, val);
+                        buf->Append(",", 1);
+                    }
+
+                }
+                    break;
+                case enBlobTxnField:
+                    //JsonAppendBlob(buf, val);
+                    JsonAppendValue(buf, val);
+                    buf->Append(",", 1);
+                    break;
+                case enNormalTxnField:
+                    JsonAppendValue(buf, val);
+                    buf->Append(",", 1);
+                    break;
+                case enBooleanTxnField:
+                    JsonAppendBoolean(buf, val);
+                    buf->Append(",", 1);
+                    break;
+                case enCommStatusField:
+                    break;
+                }
+            }
+        }
+        if (n > 0)
+            ((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
+        else
+            buf->Append("]");
+        return true;
+    }
+
+public:
+
+    SqliteTxnHelper(const string& tbl_name, const vector<string>& join_keys, bool is_head, bool getFilesOnly = false) :SqliteHelper(tbl_name) {
+        m_IsHdr = is_head;
+        DiscoverBinaryFileds(tbl_name);
+
+        if (is_head ){
+            DiscoverJoinKeysPos(tbl_name, join_keys);
+            if( getFilesOnly)
+				m_Stmt = CreateStatement(string_format("select rowid, * from [%s] where COMMS_STATUS in ('P', 'T', '#')",
+					tbl_name.c_str()));
+            else
+				m_Stmt = CreateStatement(string_format("select rowid, * from [%s] where COMMS_STATUS='P'",
+					tbl_name.c_str()));
+            if (!m_Stmt.get()) {
+                m_ErrorDesc = "Can't find table " + tbl_name + " or column COMMS_STATUS";
+            }
+        }
+        else {
+            string where;
+            for (auto& key : join_keys) {
+                where = where + string_format(" %s=? and ", key.c_str());
+            }
+            if (where.length() > 4) {
+                where = where.substr(0, where.length() - 4);
+            }
+
+            string query = string_format("select * from [%s]", tbl_name.c_str());
+            if (where.length() > 0) {
+                query.append(" where ").append(where);
+            }
+            m_Stmt = CreateStatement(query);
+        }
+    }
+    SqliteTxnHelper(const string& tbl_name, string statusFlag) :SqliteHelper(tbl_name), m_IsHdr(true) {
+        string query = string_format("update [%s] set COMMS_STATUS='%s', COMMS_DATETIME=datetime('now') where rowid=?", tbl_name.c_str(), statusFlag.c_str());
+        m_Stmt = CreateStatement(query);
+
+        auto pStmt = m_Stmt.get();
+        if (!pStmt) {
+            query = string_format("update [%s] set COMMS_STATUS='%s' where rowid=?", tbl_name.c_str(), statusFlag.c_str());
+            m_Stmt = CreateStatement(query);
+        }
+    }
+
+    bool UpdateRows(uint64_t* pRowIDs, size_t numRowID) {
+        auto pStmt = m_Stmt.get();
+        if (!pStmt)
+            return false;
+        //int needCommit = sqlite3_get_autocommit(GetSqliteDB());
+        //if (needCommit)
+        sqlite3_exec(GetSqliteDB(), "BEGIN", 0, 0, 0);
+        int rc = SQLITE_OK;
+        for (auto i = 0; i < numRowID; ++i) {
+            uint64_t rowid = pRowIDs[i];
+            sqlite3_bind_int64(pStmt, 1, rowid);
+            sqlite3_step(pStmt);
+            rc = sqlite3_reset(pStmt);
+            if (rc != SQLITE_OK) {
+                m_ErrorDesc = string_format("CommitTxn failed: %s\n", sqlite3_errstr(rc));
+                break;
+            }
+        }
+        //if (needCommit) {
+        if (rc == SQLITE_OK)
+            sqlite3_exec(GetSqliteDB(), "COMMIT", 0, 0, 0);
+        else
+            sqlite3_exec(GetSqliteDB(), "ROLLBACK", 0, 0, 0);
+        //}
+        return (rc == SQLITE_OK);
+    }
+    bool FillAllColumnsInfo(int& nCommStatusColIdx) {
+        nCommStatusColIdx = -1;
+        stmt_ptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", m_TblName.c_str()));
+        if (!stmt.get())
+            return !m_IsHdr;
+        int rc = 0;
+        while ((rc = sqlite3_step(stmt.get())) == SQLITE_ROW) {
+            const char* txt = (const char*)sqlite3_column_text(stmt.get(), 1);
+            const char* type = (const char*)sqlite3_column_text(stmt.get(), 2);
+            if (txt && type) {
+                TxnFieldType fieldType = enNormalTxnField;
+                if (m_IsHdr && _stricmp(txt, "COMMS_STATUS") == 0)
+                    nCommStatusColIdx = (int) (m_FieldsType.size());
+                if (_stricmp(txt, "COMMS_STATUS") == 0 || _stricmp(txt, "COMMS_DATETIME") == 0)
+                    fieldType = enCommStatusField;
+                else {
+                    auto it = m_BinaryFields.find(txt);
+                    if (it != m_BinaryFields.end())
+                        fieldType = it->second ? enFileTxnField : enBlobTxnField;
+                    else if (_stricmp(type, "boolean") == 0)
+                        fieldType = enBooleanTxnField;
+                }
+                m_FieldsType.push_back(fieldType);
+            }
+        }
+        if (m_FieldsType.size() == 0) {
+			m_ErrorDesc = "Cannot find table: " + m_TblName;
+			return false;
+		}
+        return true;
+	}
+	bool AppendColumns(Buffer* buf,  const TxnSchema& txn_schema) {
+        stmt_ptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", m_TblName.c_str()));
+        if (!stmt.get())
+            return !m_IsHdr;
+        if (buf) buf->Append("[");
+        int row = 0;
+        //int num_solved = 0;
+        while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+            const char* txt = (const char*)sqlite3_column_text(stmt.get(), 1);
+            const char* type = (const char*)sqlite3_column_text(stmt.get(), 2);
+            if (txt && type) {
+                row++;
+
+                TxnFieldType fieldType = enNormalTxnField;
+                if (_stricmp(txt, "COMMS_STATUS") == 0 || _stricmp(txt, "COMMS_DATETIME") == 0)
+                    fieldType = enCommStatusField;
+                auto it = m_BinaryFields.find(txt);
+                if (it != m_BinaryFields.end()) {
+                    fieldType = it->second ? enFileTxnField : enBlobTxnField;
+
+                    if (buf) {
+                        if (it->second) {
+                            buf->JsonAppendString(txt, (uint32_t)strlen(txt));
+                            buf->Append(",", 1);
+                        }
+
+                        bool isEmbeddedColumn = false;
+                        const auto*  p_cols= txn_schema.GetEmbededColByTable(GetTableName());
+
+						if (p_cols && find(p_cols->begin(), p_cols->end(), txt) != p_cols->end())
+							isEmbeddedColumn = true;
+
+                        if (isEmbeddedColumn || fieldType == enBlobTxnField) {
+                            string binary_name = string_format("Binary#%s", txt);
+                            buf->JsonAppendString(binary_name.c_str(), (uint32_t)binary_name.size());
+                            buf->Append(",", 1);
+                        }
+                    }
+                }
+                else {
+                    if (fieldType != enCommStatusField && buf) {
+                        buf->JsonAppendString(txt, (uint32_t)strlen(txt));
+                        buf->Append(",", 1);
+                    }
+                }
+
+                if (_stricmp(type, "boolean") == 0) {
+                    fieldType = enBooleanTxnField;
+                }
+                m_FieldsType.push_back(fieldType);
+            }
+        }
+        if (row > 0 && buf)
+            ((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
+        else if (row <= 0 && buf)
+            buf->Append("]");
+        return true;
+    }
+    bool VerifyEmbeddedCols(const TxnSchema& txn_schema, string& err_desc) {
+        const auto * emb_cols = txn_schema.GetEmbededColByTable(GetTableName());
+        if (emb_cols)
+            return ValidateEmbeddedTblCols(* emb_cols, err_desc);
+        else
+            return true;
+    }
+
+    inline bool ValidateEmbeddedTblCols(const vector<string>& tblCols, string& err_desc) {
+        //Dont need it, when app start, engine will make sure type consistent between dbn table definition and real table
+        //stmt_sptr stmt = CreateStatement(string_format("PRAGMA table_info = '%s'", m_TblName.c_str()));
+        //if (!stmt.get()) {
+        //    err_desc = string_format("Cannot get column info of table:%s. Please check the manifest file.", m_TblName.c_str());
+        //    return false;
+        //}
+
+        //vector<string> fileColumns;
+        //while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+        //    const char* txt = (const char*)sqlite3_column_text(stmt.get(), 1);
+        //    const char* type = (const char*)sqlite3_column_text(stmt.get(), 2);
+        //    if (txt && type) {
+        //        auto it = m_BinaryFields.find(txt);
+        //        if (it != m_BinaryFields.end()) { //if is blob or file
+        //            fileColumns.push_back(txt);
+        //        }
+        //    }
+        //}
+
+        for (const string& col : tblCols) {
+            if (m_BinaryFields.find(col) == m_BinaryFields.end()) {
+                err_desc = string_format("Cannot get column %s from table:%s. Please check the manifest file.",col.c_str(), m_TblName.c_str());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool BindJoinKeysForDetails(vector<SqliteTxnHelper>& dtl_walkers)
+    {
+        if (m_JionKeysPos.size()) {
+            for (auto par_idx = 0; par_idx < m_JionKeysPos.size(); par_idx++) {
+                auto col_id = m_JionKeysPos[par_idx];
+                if (col_id >= 0) {
+                    //first column is ROWID, skip it
+                    auto val = sqlite3_column_value(m_Stmt.get(), col_id + 1);
+                    for (auto& dtl_walker : dtl_walkers) {
+                        int rc = dtl_walker.BindParameter(par_idx + 1, val);
+                        if (rc != SQLITE_OK) {
+                            m_ErrorDesc = sqlite3_errstr(rc);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    bool StepHdrRec(vector<SqliteTxnHelper>& dtl_walkers,
+        const vector<string>* p_embedded_cols, Buffer& buf, vector<uint64_t>& rowids)
+    {
+        if (!m_Stmt.get()) {
+            return false;
+        }
+        int rc = sqlite3_step(m_Stmt.get());
+        if (SQLITE_ROW == rc) {
+            uint64_t val = (uint64_t)sqlite3_column_int64(m_Stmt.get(), 0);
+            buf.AppendFormat("{\"Header\":{\"Name\":\"%s\",\"Record\":", m_TblName.c_str());
+            AppendOneRow(&buf, p_embedded_cols);
+            rowids.push_back(val);
+			buf.Append("}");
+            if(!BindJoinKeysForDetails(dtl_walkers))
+                return false;
+            return true;
+		}
+		return false;
+    }
+
+	bool StepHdrRec(vector<SqliteTxnHelper>& dtl_walkers,
+        const vector<string>* p_embedded_cols,
+        vector<UploadFile>& files, uint64_t& par_rowid,
+        int hdr_comm_status_idx, string& par_commsStatus )
+    {
+        if (!m_Stmt.get()) {
+            return false;
+        }
+        int rc = sqlite3_step(m_Stmt.get());
+        if (SQLITE_ROW == rc) {
+            uint64_t val = (uint64_t)sqlite3_column_int64(m_Stmt.get(), 0);
+		    par_rowid = val;
+		    par_commsStatus = (const char*)sqlite3_value_text(sqlite3_column_value(m_Stmt.get(), hdr_comm_status_idx));
+		    GetFilesFromRow(files, par_rowid, par_commsStatus, p_embedded_cols);
+            if (!BindJoinKeysForDetails(dtl_walkers))
+                return false;
+            return true;
+        }
+        return false;
+    }
+    bool AppendAllRecordsTo(Buffer* buf, const vector<string>* p_embedded_cols) {
+        if (!m_Stmt.get())
+            return false;
+
+		buf->AppendFormat("{\"Name\":\"%s\",\"Record\":[", m_TblName.c_str());
+		bool has_record = false;
+		while (SQLITE_ROW == sqlite3_step(m_Stmt.get())) {
+			AppendOneRow(buf,  p_embedded_cols);
+			buf->Append(",");
+			has_record = true;
+		}
+		sqlite3_reset(m_Stmt.get());
+		if (has_record)
+			((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
+		else
+			buf->Append("]");
+		buf->Append("},");
+        return true;
+    }
+	bool GetAllFiles(vector<UploadFile>& files, uint64_t par_rowid, string par_commsStatus,
+        const vector<string>* p_embedded_cols) {
+        if (!m_Stmt.get())
+            return false;
+		while (SQLITE_ROW == sqlite3_step(m_Stmt.get())) {
+			GetFilesFromRow(files, par_rowid, par_commsStatus, p_embedded_cols);
+		}
+		sqlite3_reset(m_Stmt.get());
+        return true;
+    }
+
+    int BindParameter(int par_idx, sqlite3_value* val) {
+        auto rc = sqlite3_bind_value(m_Stmt.get(), par_idx, val);
+        return rc;
+    }
+};
 
 
-////check txn schema, still process if detail table or column is defined wrongly.
-////check txn data, will abort this txn if anything wrong in retrieving hanging files
-//bool Comm2_GetTxnHangingFiles(const std::string& name, const std::string& json_str, vector<UploadFile>& files, string& err_desc)
-//{
-//    TxnSchema txn_schema;
-//    int num_rec = 0;
-//    const bool getFilesOnly = true;
-//    do {
-//        if (!LoadTxnSchema(json_str, txn_schema, err_desc)) {
-//            break;
-//        }
-//        SqliteTxnHelper hdr_walker(txn_schema.HdrTbl, txn_schema.JoinKeys, true, getFilesOnly);
-//        int idx_comm_status = 0;
-//        if (!hdr_walker.FillAllColumnsInfo(idx_comm_status)) {
-//            //err_desc +=string_format("Cannot get column info of table:%s", txn_schema.HdrTbl.c_str());
-//            //break;
-//            //dont need report such error, because the next call will be maketxn, let maketxn report error
-//            return false;
-//        }
-//
-//       //just get error description only, will continue
-//        hdr_walker.VerifyEmbeddedCols(txn_schema, err_desc);
-//        vector<SqliteTxnHelper> dtl_walkers;
-//        for (auto& dtl : txn_schema.DtlTbls) {
-//            SqliteTxnHelper dtl_walker(dtl, txn_schema.JoinKeys, false, getFilesOnly);
-//            dtl_walker.VerifyEmbeddedCols(txn_schema, err_desc);
-//            int dontCare;
-//
-//            if (dtl_walker.FillAllColumnsInfo(dontCare)) {
-//                dtl_walkers.push_back(dtl_walker);
-//            }
-//            else {
-//                //ignore any detail table that we can't retrieve coloumn info from sqlite.
-//                //and record any error encountered
-//                if (err_desc.length())
-//                    err_desc += "\n";
-//                 err_desc += dtl_walker.GetErrorDesc();
-//                //break;
-//            }
-//	    }
-//         while (true) {
-//            uint64_t rowid = 0;
-//            string comms_status;
-//            const auto * p_embedded_cols = txn_schema.GetEmbededColByTable(hdr_walker.GetTableName());
-//            if (!hdr_walker.StepHdrRec(dtl_walkers, p_embedded_cols, files,
-//						rowid, idx_comm_status+1, comms_status)) {
-//				err_desc += hdr_walker.GetErrorDesc();
-//                break;
-//            }
-//            for (auto& dtl_walker : dtl_walkers) {
-//                p_embedded_cols = txn_schema.GetEmbededColByTable(dtl_walker.GetTableName());
-//                dtl_walker.GetAllFiles(files, rowid, comms_status, p_embedded_cols);
-//                if (dtl_walker.GetErrorDesc().length()) {
-//                    err_desc = dtl_walker.GetErrorDesc();
-//                    break;
-//                }
-//            }
-//            num_rec++;
-//        }
-//    } while (0);
-//
-//    if (err_desc.length()) {
-//        //the javascript part will report error, here we just generate error
-//	    //if (g_pHttpCommLog != NULL && err_desc.length())
-//        //    g_pHttpCommLog->LogFormatMessage(LOG_ERROR_LVL, "Fail to get hanging file for txn(%s): %s",name.c_str(),  err_desc.c_str());
-//        return false;
-//    }
-//	if (files.size()>0)
-//        LOG_MSG(LOG_EVENT, "Get %zu hanging Files for txn (%s) ", files.size(), name.c_str() );
-//    return true;
-//}
+//check txn schema, still process if detail table or column is defined wrongly.
+//check txn data, will abort this txn if anything wrong in retrieving hanging files
+bool Comm2_GetTxnHangingFiles(const std::string& name, const std::string& json_str, vector<UploadFile>& files, string& err_desc)
+{
+    TxnSchema txn_schema;
+    //int num_rec = 0;
+    const bool getFilesOnly = true;
+    do {
+        if (!LoadTxnSchema(json_str, txn_schema, err_desc)) {
+            break;
+        }
+        SqliteTxnHelper hdr_walker(txn_schema.HdrTbl, txn_schema.JoinKeys, true, getFilesOnly);
+        int idx_comm_status = 0;
+        if (!hdr_walker.FillAllColumnsInfo(idx_comm_status)) {
+            //err_desc +=string_format("Cannot get column info of table:%s", txn_schema.HdrTbl.c_str());
+            //break;
+            //dont need report such error, because the next call will be maketxn, let maketxn report error
+            return false;
+        }
 
-//bool Comm2_MakeTxn(const string& strCompany, const string& strAppId, const string& strRefreshToken, unsigned long max_msgsize, const std::string& name,
-//    const std::string& json_str, Comm2Txn& txn, string& err_desc)
-//{
-//    if (max_msgsize == 0 || max_msgsize >= 20 * 1024 * 1024) {
-//        max_msgsize = 1024 * 1024;
-//    }
-//    txn.m_HasNext = false;
-//    Buffer data_buffer;
-//    Buffer* buf = &data_buffer;
-//    TxnSchema txn_schema;
-//    int num_rec = 0;
-//    do {
-//        if (!LoadTxnSchema(json_str, txn_schema, err_desc)) {
-//            break;
-//        }
-//        //dont validate the embedded columns here, the get hanging file already checked it.
-//
-//        SqliteTxnHelper hdr_walker(txn_schema.HdrTbl, txn_schema.JoinKeys, true, false);
-//        vector<SqliteTxnHelper> dtl_walker;
-//        for (auto& dtl : txn_schema.DtlTbls) {
-//            SqliteTxnHelper txn_dtl(dtl, txn_schema.JoinKeys, false, false);
-//            if (!txn_dtl.ExistsTable())
-//                continue;
-//            dtl_walker.push_back(txn_dtl);
-//        }
-//
-//        Buffer schema_buffer;
-//        //int dtlCommsStatusIdx = 0;
-//        schema_buffer.AppendFormat("\"Schema\":{ \"Header\":{\"Name\":\"%s\",\"Columns\":", txn_schema.HdrTbl.c_str());
-//        if (!hdr_walker.AppendColumns(&schema_buffer, txn_schema)) {
-//            err_desc = string_format("Cannot get column info of table:%s", txn_schema.HdrTbl.c_str());
-//            break;
-//        }
-//        schema_buffer.Append("},");
-//        schema_buffer.Append("\"Detail\":[");
-//        for (auto& dtl_walker : dtl_walker) {
-//            schema_buffer.AppendFormat("{\"Name\":\"%s\", \"Columns\":", dtl_walker.GetTableName().c_str());
-//            if (!dtl_walker.AppendColumns(&schema_buffer,  txn_schema)) {
-//                schema_buffer.Append("[]");
-//            }
-//            schema_buffer.Append("},");
-//        }
-//        if (dtl_walker.size()) {
-//            ((char*)schema_buffer.m_pBuf)[schema_buffer.m_nLen - 1] = ']';
-//            schema_buffer.Append("},");
-//        }
-//        else {
-//            schema_buffer.Append("]},");
-//        }
-//
-//        txn.m_pRowIDs = new vector<uint64_t>();
-//        buf->Append("\"Data\":[");
-//        do {
-//            //{ Header: {Name:, Record:[...]}},
-//            //uint64_t rowid = 0;
-//            string commsStatus;
-//            const auto * p_embedded_cols = txn_schema.GetEmbededColByTable(hdr_walker.GetTableName());
-//            if (!hdr_walker.StepHdrRec(dtl_walker, p_embedded_cols,*buf,*txn.m_pRowIDs)) {
-//                if (hdr_walker.GetErrorDesc().length()) {
-//                    err_desc = hdr_walker.GetErrorDesc();
-//                    //err_desc = string_format("Cant find any record for uploading from table %s",
-//                    //    hdr_walker.GetTableName().c_str());
-//                    goto EXIT;
-//                }
-//                else {
-//                    break;
-//                }
-//            }
-//            buf->Append(", \"Detail\":[");
-//            for (auto& dtl_walker : dtl_walker) {
-//                //{Name:, Record:[...]},
-//                p_embedded_cols = txn_schema.GetEmbededColByTable(dtl_walker.GetTableName());
-//                dtl_walker.AppendAllRecordsTo(buf, p_embedded_cols);
-//                if (dtl_walker.GetErrorDesc().length()) {
-//                    err_desc = dtl_walker.GetErrorDesc();
-//                }
-//            }
-//            if (dtl_walker.size()) {
-//                ((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
-//            }
-//            else {
-//                buf->Append("]");
-//            }
-//
-//            buf->Append("},");
-//            num_rec++;
-//        } while (buf->m_nLen < max_msgsize);
-//
-//        if (!num_rec) {
-//            buf->Append("]");
-//            goto EXIT;
-//        }
-//        else {
-//            ((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
-//        }
-//
-//        time_t now; time(&now);
-//        char time_buf[sizeof "1970-01-01T00:00:00.000Z"];
-//        strftime(time_buf, sizeof time_buf, "%FT%T.000Z", gmtime(&now));
-//
-//        txn.m_MsgID = ++GetComm2MsgID();
-//        txn.m_HasNext = buf->m_nLen >= max_msgsize;
-//        txn.m_pBuf = new Buffer();
-//        txn.m_pBuf->AppendFormat(
-//            R"xxx({"Comm": {
-//    "TenantID":"%s",
-//    "AppID" : "%s",
-//    "HardwareID" : "%s",
-//    "EngVersion" : "%s",
-//    "AppVersion" : "%s",
-//    "Type" : "TRANSACTION",
-//    "Name" : "%s",
-//    "MsgID" : %d,
-//    "RequestDT": "%s",
-//    "RefreshToken":"%s"
-//    },
-//    "Payload": {)xxx",
-//            strCompany.c_str(),
-//            strAppId.c_str(),
-//            g_pEngine->GetDeviceUUID().c_str(),
-//            g_pEngine->GetEngineVerStr().c_str(),
-//            g_pEngine->GetR3Rsc()->GetAppVersion(),
-//            //np_strupr((char*)name.c_str()),
-//            name.c_str(),
-//            txn.m_MsgID,
-//            time_buf,
-//            strRefreshToken.c_str());
-//
-//        txn.m_pBuf->Append(schema_buffer.m_pBuf, schema_buffer.m_nLen);
-//        txn.m_pBuf->Append(data_buffer.m_pBuf, data_buffer.m_nLen);
-//        txn.m_pBuf->Append("}"); //end Payload
-//        txn.m_pBuf->Append("}"); //end whole
-//
-//    } while (0);
-//EXIT:
-//    if (!num_rec || err_desc.length()) {
-//        if (txn.m_pBuf) {
-//            delete txn.m_pBuf;
-//            txn.m_pBuf = NULL;
-//        }
-//        if (txn.m_pRowIDs) {
-//            delete txn.m_pRowIDs;
-//            txn.m_pRowIDs = NULL;
-//        }
-//        //if(g_pHttpCommLog && err_desc.length()) {
-//        //   g_pHttpCommLog->LogFormatMessage(LOG_ERROR_LVL, "Fail to compose txn data: %s", err_desc.c_str());
-//        //}
-//        return false;
-//    }
-//	if (num_rec>0)
-//        LOG_MSG(LOG_EVENT, "Compose Txn(%s) based on %d records", name.c_str(), num_rec);
-//    return true;
-//}
-//
-//bool Comm2_CommitTxn(const string& txnName, const string& hdrTable,
-//    uint64_t* pRowIDs, size_t numRowID, string statusFlag)
-//{
-//    //sqlite3_stmt *stmt = nullptr;
-//    SqliteTxnHelper helper(hdrTable, statusFlag);
-//    return helper.UpdateRows(pRowIDs, numRowID);
-//}
+       //just get error description only, will continue
+        hdr_walker.VerifyEmbeddedCols(txn_schema, err_desc);
+        vector<SqliteTxnHelper> dtl_walkers;
+        for (auto& dtl : txn_schema.DtlTbls) {
+            SqliteTxnHelper dtl_walker(dtl, txn_schema.JoinKeys, false, getFilesOnly);
+            dtl_walker.VerifyEmbeddedCols(txn_schema, err_desc);
+            int dontCare;
+
+            if (dtl_walker.FillAllColumnsInfo(dontCare)) {
+                //dtl_walkers.push_back(dtl_walker);
+                dtl_walkers.push_back(std::move(dtl_walker));
+            }
+            else {
+                //ignore any detail table that we can't retrieve coloumn info from sqlite.
+                //and record any error encountered
+                if (err_desc.length())
+                    err_desc += "\n";
+                 err_desc += dtl_walker.GetErrorDesc();
+                //break;
+            }
+	    }
+         while (true) {
+            uint64_t rowid = 0;
+            string comms_status;
+            const auto * p_embedded_cols = txn_schema.GetEmbededColByTable(hdr_walker.GetTableName());
+            if (!hdr_walker.StepHdrRec(dtl_walkers, p_embedded_cols, files,
+						rowid, idx_comm_status+1, comms_status)) {
+				err_desc += hdr_walker.GetErrorDesc();
+                break;
+            }
+            for (auto& dtl_walker : dtl_walkers) {
+                p_embedded_cols = txn_schema.GetEmbededColByTable(dtl_walker.GetTableName());
+                dtl_walker.GetAllFiles(files, rowid, comms_status, p_embedded_cols);
+                if (dtl_walker.GetErrorDesc().length()) {
+                    err_desc = dtl_walker.GetErrorDesc();
+                    break;
+                }
+            }
+            //num_rec++;
+        }
+    } while (0);
+
+    if (err_desc.length()) {
+        //the javascript part will report error, here we just generate error
+	    //if (g_pHttpCommLog != NULL && err_desc.length())
+        //    g_pHttpCommLog->LogFormatMessage(LOG_ERROR_LVL, "Fail to get hanging file for txn(%s): %s",name.c_str(),  err_desc.c_str());
+        return false;
+    }
+	if (files.size()>0)
+        LOG_MSG(LOG_EVENT, "Get %zu hanging Files for txn (%s) ", files.size(), name.c_str() );
+    return true;
+}
+
+bool Comm2_MakeTxn(const string& strCompany, const string& strAppId, const string& strRefreshToken,
+                   unsigned long max_msgsize, const std::string& name,
+                   const std::string& json_str, Comm2Txn& txn, string& err_desc)
+{
+    if (max_msgsize == 0 || max_msgsize >= 20 * 1024 * 1024) {
+        max_msgsize = 1024 * 1024;
+    }
+    txn.m_HasNext = false;
+    Buffer data_buffer;
+    Buffer* buf = &data_buffer;
+    TxnSchema txn_schema;
+    int num_rec = 0;
+    do {
+        if (!LoadTxnSchema(json_str, txn_schema, err_desc)) {
+            break;
+        }
+        //dont validate the embedded columns here, the get hanging file already checked it.
+
+        SqliteTxnHelper hdr_walker(txn_schema.HdrTbl, txn_schema.JoinKeys, true, false);
+        vector<SqliteTxnHelper> dtl_walker;
+        for (auto& dtl : txn_schema.DtlTbls) {
+            SqliteTxnHelper txn_dtl(dtl, txn_schema.JoinKeys, false, false);
+            if (!txn_dtl.ExistsTable())
+                continue;
+            dtl_walker.push_back(std::move(txn_dtl));
+        }
+
+        Buffer schema_buffer;
+        //int dtlCommsStatusIdx = 0;
+        schema_buffer.AppendFormat("\"Schema\":{ \"Header\":{\"Name\":\"%s\",\"Columns\":", txn_schema.HdrTbl.c_str());
+        if (!hdr_walker.AppendColumns(&schema_buffer, txn_schema)) {
+            err_desc = string_format("Cannot get column info of table:%s", txn_schema.HdrTbl.c_str());
+            break;
+        }
+        schema_buffer.Append("},");
+        schema_buffer.Append("\"Detail\":[");
+        for (auto& dtl : dtl_walker) {
+            schema_buffer.AppendFormat("{\"Name\":\"%s\", \"Columns\":", dtl.GetTableName().c_str());
+            if (!dtl.AppendColumns(&schema_buffer,  txn_schema)) {
+                schema_buffer.Append("[]");
+            }
+            schema_buffer.Append("},");
+        }
+        if (dtl_walker.size()) {
+            ((char*)schema_buffer.m_pBuf)[schema_buffer.m_nLen - 1] = ']';
+            schema_buffer.Append("},");
+        }
+        else {
+            schema_buffer.Append("]},");
+        }
+
+        txn.m_pRowIDs = new vector<uint64_t>();
+        buf->Append("\"Data\":[");
+        do {
+            //{ Header: {Name:, Record:[...]}},
+            //uint64_t rowid = 0;
+            string commsStatus;
+            const auto * p_embedded_cols = txn_schema.GetEmbededColByTable(hdr_walker.GetTableName());
+            if (!hdr_walker.StepHdrRec(dtl_walker, p_embedded_cols,*buf,*txn.m_pRowIDs)) {
+                if (hdr_walker.GetErrorDesc().length()) {
+                    err_desc = hdr_walker.GetErrorDesc();
+                    //err_desc = string_format("Cant find any record for uploading from table %s",
+                    //    hdr_walker.GetTableName().c_str());
+                    goto EXIT;
+                }
+                else {
+                    break;
+                }
+            }
+            buf->Append(", \"Detail\":[");
+            for (auto& dtl_walker : dtl_walker) {
+                //{Name:, Record:[...]},
+                p_embedded_cols = txn_schema.GetEmbededColByTable(dtl_walker.GetTableName());
+                dtl_walker.AppendAllRecordsTo(buf, p_embedded_cols);
+                if (dtl_walker.GetErrorDesc().length()) {
+                    err_desc = dtl_walker.GetErrorDesc();
+                }
+            }
+            if (dtl_walker.size()) {
+                ((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
+            }
+            else {
+                buf->Append("]");
+            }
+
+            buf->Append("},");
+            num_rec++;
+        } while (buf->m_nLen < max_msgsize);
+
+        if (!num_rec) {
+            buf->Append("]");
+            goto EXIT;
+        }
+        else {
+            ((char*)buf->m_pBuf)[buf->m_nLen - 1] = ']';
+        }
+
+        time_t now; time(&now);
+        char time_buf[sizeof "1970-01-01T00:00:00.000Z"];
+        strftime(time_buf, sizeof time_buf, "%FT%T.000Z", gmtime(&now));
+
+        txn.m_MsgID = GetComm2MsgID();
+        txn.m_HasNext = buf->m_nLen >= max_msgsize;
+        txn.m_pBuf = new Buffer();
+        txn.m_pBuf->AppendFormat(
+            R"xxx({"Comm": {
+    "TenantID":"%s",
+    "AppID" : "%s",
+    "HardwareID" : "%s",
+    "EngVersion" : "%s",
+    "AppVersion" : "%s",
+    "Type" : "TRANSACTION",
+    "Name" : "%s",
+    "MsgID" : %d,
+    "RequestDT": "%s",
+    "RefreshToken":"%s"
+    },
+    "Payload": {)xxx",
+            strCompany.c_str(),
+            strAppId.c_str(),
+            /*
+            g_pEngine->GetDeviceUUID().c_str(),
+            g_pEngine->GetEngineVerStr().c_str(),
+            g_pEngine->GetR3Rsc()->GetAppVersion(),
+             */
+            "devuuid",
+            "eng0.0.1",
+            "app0.0.1",
+
+            //np_strupr((char*)name.c_str()),
+            name.c_str(),
+            txn.m_MsgID,
+            time_buf,
+            strRefreshToken.c_str());
+
+        txn.m_pBuf->Append(schema_buffer.m_pBuf, schema_buffer.m_nLen);
+        txn.m_pBuf->Append(data_buffer.m_pBuf, data_buffer.m_nLen);
+        txn.m_pBuf->Append("}"); //end Payload
+        txn.m_pBuf->Append("}"); //end whole
+
+    } while (0);
+EXIT:
+    if (!num_rec || err_desc.length()) {
+        if (txn.m_pBuf) {
+            delete txn.m_pBuf;
+            txn.m_pBuf = NULL;
+        }
+        if (txn.m_pRowIDs) {
+            delete txn.m_pRowIDs;
+            txn.m_pRowIDs = NULL;
+        }
+        //if(g_pHttpCommLog && err_desc.length()) {
+        //   g_pHttpCommLog->LogFormatMessage(LOG_ERROR_LVL, "Fail to compose txn data: %s", err_desc.c_str());
+        //}
+        return false;
+    }
+	if (num_rec>0)
+        LOG_MSG(LOG_EVENT, "Compose Txn(%s) based on %d records", name.c_str(), num_rec);
+    return true;
+}
+
+bool Comm2_CommitTxn(const string& txnName, const string& hdrTable,
+    uint64_t* pRowIDs, size_t numRowID, string statusFlag)
+{
+    //sqlite3_stmt *stmt = nullptr;
+    SqliteTxnHelper helper(hdrTable, statusFlag);
+    return helper.UpdateRows(pRowIDs, numRowID);
+}
 
 
 class SqliteTblSyncHelper :public SqliteHelper {
@@ -1425,7 +1480,7 @@ public:
         if (DbType == "BIGINT" || DbType == "INTEGER")
             return TblSyncType == "INTEGER" || TblSyncType == "SMALLINT" || TblSyncType == "SHORT";
         if (DbType == "DOUBLE")
-            return TblSyncType == "FLOAT" || TblSyncType == "REAL" 
+            return TblSyncType == "FLOAT" || TblSyncType == "REAL"
                     || TblSyncType == "INTEGER" || TblSyncType == "SMALLINT" || TblSyncType == "SHORT";
         if (DbType == "NVARCHAR" || DbType == "VARCHAR")
             return true;
@@ -1435,7 +1490,7 @@ public:
     }
     bool AreCompatibleTypes(const rapidjson::Value& tblColumns, string& errMsg) {
         map<string, string> physicalCols;
-        stmt_sptr stmt = CreateStatement(string_format("PRAGMA table_info = [%s]",
+        stmt_ptr stmt = CreateStatement(string_format("PRAGMA table_info = [%s]",
             GetTableName().c_str()));
         if (!stmt.get())
             return true; //
@@ -1538,7 +1593,7 @@ public:
         bool& bSomethingWrong, string& errMsg) {
 
         map<string, bool> physicalCols;
-        stmt_sptr stmt = CreateStatement(string_format("PRAGMA table_info = [%s]",
+        stmt_ptr stmt = CreateStatement(string_format("PRAGMA table_info = [%s]",
             GetTableName().c_str()));
         if (!stmt.get())
             return false;
@@ -1989,8 +2044,8 @@ string Comm2_ProcessTblSync(const string& fileName, bool dryRun)
 
             rapidjson::Value& schemaColumns = schemaDef["Columns"];
             SqliteTblSyncHelper tblsync(schemaDef);
- 
-            if (!tblsync.IsFileTagTable() && !tblsync.ExistsTable()) 
+
+            if (!tblsync.IsFileTagTable() && !tblsync.ExistsTable())
                 tblsync.CreateTableBySchema(schemaColumns);
 
             if (tblsync.IsFileTagTable()) {
@@ -2033,7 +2088,7 @@ string Comm2_ProcessTblSync(const string& fileName, bool dryRun)
 
                                         rowObject.AddMember(rjColName, rjValue, document.GetAllocator());
                                     }
-                                    
+
                                 }
                                 recordsArray.PushBack(rowObject, document.GetAllocator());
                             }
@@ -2097,7 +2152,7 @@ string Comm2_ProcessTblSync(const string& fileName, bool dryRun)
                     LOG_MSG(LOG_WARNING, "%s", errMsg.c_str());
                     continue;
                 }
-#endif       
+#endif
             }
             // Process data
             for (rapidjson::SizeType k = 0; k < dataNode.Size(); k++) {

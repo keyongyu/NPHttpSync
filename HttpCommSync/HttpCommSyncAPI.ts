@@ -1,10 +1,11 @@
 import {
-    Logger,
+    //Logger,
     make_progress_reporter,
     ProgressReportFunc,
     TableSyncDefinition,
-    WaitForPromiseT,
-    LoginModeResult, TxnSector, RecreateLogger, WorkDir,
+    //WaitForPromiseT,
+    //LoginModeResult,
+    TxnSector, RecreateLogger, WorkDir,
 } from './Common';
 // import { gHttpDataSync, TxnUploadParam } from "./HttpDataSync";
 import { gHttpDataSync} from "./HttpDataSync";
@@ -38,32 +39,34 @@ async function HttpCommSync(progress: ProgressReportFunc, tblSyncNames: string[]
     }
 }
 
-// let g_SmartTxnUploaded = false;
-// function Comm2EnableSmartTxnUploading(bEnable:boolean):boolean{
-//     let old = g_SmartTxnUploaded ;
-//     g_SmartTxnUploaded = bEnable;
-//     __Comm2EnableSmartTxnUploading(bEnable);
-//     return old;
-// }
-// function HttpCommStartUploadingTxn(progress: ProgressReportFunc, intervalInMs: number) {
-//     //alert("HttpCommStartUploadingTxn intervalInMs="+intervalInMs);
-//     let progress_wrapper = make_progress_reporter(progress);
-//     Comm2EnableSmartTxnUploading(true);
-//     gHttpDataSync.UploadAllTxnsNow(progress_wrapper, intervalInMs);
-// }
-
-// function HttpCommStopUploadingTxn():boolean {
-//     //alert("HttpCommStopUploadingTxn");
-//     let old = Comm2EnableSmartTxnUploading(false);
-//     gHttpDataSync.StopBgTxnUploading();
-//     return old;
-// }
-
-function GetUserInfo() {
-    let userInfo = gAuth.LoadUserInfo();
-    if (userInfo) return userInfo.user_info
-    else return null;
+let g_SmartTxnUploaded = false;
+function Comm2EnableSmartTxnUploading(bEnable:boolean):boolean{
+    let old = g_SmartTxnUploaded ;
+    g_SmartTxnUploaded = bEnable;
+    //TODO: for now , smart txn uploading is not implemented
+    //__Comm2EnableSmartTxnUploading(bEnable);
+    return old;
 }
+
+async function HttpCommStartUploadingTxn(progress: ProgressReportFunc, intervalInMs: number) {
+    //alert("HttpCommStartUploadingTxn intervalInMs="+intervalInMs);
+    let progress_wrapper = make_progress_reporter(progress);
+    Comm2EnableSmartTxnUploading(true);
+    await gHttpDataSync.UploadAllTxnsNowAsync(progress_wrapper, intervalInMs);
+}
+
+function HttpCommStopUploadingTxn():boolean {
+    //alert("HttpCommStopUploadingTxn");
+    let old = Comm2EnableSmartTxnUploading(false);
+    gHttpDataSync.StopBgTxnUploading();
+    return old;
+}
+
+// function GetUserInfo() {
+//     let userInfo = gAuth.LoadUserInfo();
+//     if (userInfo) return userInfo.user_info
+//     else return null;
+// }
 
 // function __HttpCommSmartTxnUpload() {
 //     gHttpDataSync.StartSmartTxnUploading();
@@ -274,35 +277,35 @@ uploadtxt=["X_GPS","X_OTHER"];
 HttpCommSync2(cb, tblSyncNames, firstCheck, distCd, uploadtxt);
 async function HttpCommSync2(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd ="", txnUpload=true ) {
  */
-async function HttpCommSync2(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd ="", txnUpload:TxnUploadParam=true) {
-    // if("9.1.0.0_SYNC"===tblSyncNames[0]){
-    //     SetTimeout(() => {
-    //         alert("Will call HttpCommSyncStop");
-    //         HttpCommSyncStop();
-    //     }, 3 * 1000);
-    // }
-    RecreateLogger();
-    gAuth.SetAPIVersion(2);
-    //if(Array.isArray(txnUpload))
-    //    return true;
-    //else
-    //    alert("HttpCommSync2 firstCheck="+(firstCheck)+",txnUpload="+txnUpload);
-    let progress_wrapper = make_progress_reporter(progress);
-    try {
-        progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'start' });
-        let distCd2 = distCd??""
-        let result = await gHttpDataSync.SyncDataAsync2(progress_wrapper, tblSyncNames, firstCheck, distCd2, txnUpload);
-        if (result && result.success) {
-            progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'completed' });
-        }
-        else
-            progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(result) });
-        return result.success;
-    } catch (e) {
-        progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(e) });
-        return false;
-    }
-}
+// async function HttpCommSync2(progress: ProgressReportFunc, tblSyncNames: string[], firstCheck = true, distCd ="", txnUpload:TxnUploadParam=true) {
+//     // if("9.1.0.0_SYNC"===tblSyncNames[0]){
+//     //     SetTimeout(() => {
+//     //         alert("Will call HttpCommSyncStop");
+//     //         HttpCommSyncStop();
+//     //     }, 3 * 1000);
+//     // }
+//     RecreateLogger();
+//     gAuth.SetAPIVersion(2);
+//     //if(Array.isArray(txnUpload))
+//     //    return true;
+//     //else
+//     //    alert("HttpCommSync2 firstCheck="+(firstCheck)+",txnUpload="+txnUpload);
+//     let progress_wrapper = make_progress_reporter(progress);
+//     try {
+//         progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'start' });
+//         let distCd2 = distCd??""
+//         let result = await gHttpDataSync.SyncDataAsync2(progress_wrapper, tblSyncNames, firstCheck, distCd2, txnUpload);
+//         if (result && result.success) {
+//             progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'completed' });
+//         }
+//         else
+//             progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(result) });
+//         return result.success;
+//     } catch (e) {
+//         progress_wrapper({ cat: 'HttpCommSync', subCat: '', name: '', status: 'failed', detail: JSON.stringify(e) });
+//         return false;
+//     }
+// }
 
 // function HttpCommGetServerURL():string
 // {
@@ -352,16 +355,16 @@ export {
     // HttpLogin,
     HttpCommSync,
     // HttpCommSync2,
-    // HttpCommSyncStop,
-    // HttpCommStartUploadingTxn,
+    HttpCommSyncStop,
+    HttpCommStartUploadingTxn,
     // __HttpCommSmartTxnUpload,
-    // HttpCommStopUploadingTxn,
+    HttpCommStopUploadingTxn,
     HttpCommGetGroupInfo,
     //HttpCommSetServerURL,
     //HttpCommGetServerURL,
     HttpCommClearJWT,
     //GetUserInfo as __GetUserInfo,
-    //HttpCommQueryInfo as __HttpCommQueryInfo,
+    HttpCommQueryInfo as __HttpCommQueryInfo,
     //FirstCheck as __FirstCheck,
     FirstCheck,
 }

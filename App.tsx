@@ -8,9 +8,15 @@ import {
 } from 'react-native';
 
 import NPSyncSpec, { IHttpResponse } from './specs/NativeNPSync';
-import {ReportArg, SetCommPromptChanger, WorkDir} from './HttpCommSync/Common.ts';
+import {CommAlertAsync, ReportArg, SetCommPromptChanger, WorkDir} from './HttpCommSync/Common.ts';
 import { UserCredential} from './HttpCommSync/OAuth.ts';
-import {HttpCommClearJWT, FirstCheck, HttpCommSync} from './HttpCommSync/HttpCommSyncAPI.ts';
+import {
+  HttpCommClearJWT,
+  FirstCheck,
+  HttpCommSync,
+  HttpCommStartUploadingTxn,
+  HttpCommStopUploadingTxn,
+} from './HttpCommSync/HttpCommSyncAPI.ts';
 import * as SQLite from './expo_sqlite2';
 
 const EMPTY = '<empty>';
@@ -136,12 +142,14 @@ function App(): React.JSX.Element {
     setValue2(text);
   }
   function sendhttp() {
-    NPSyncSpec.SendHttpRequest(
+    NPSyncSpec.SendHttpRequestStr(
       (rsp: IHttpResponse) => {
-        setValue2(`got reply, code: ${rsp.rsp_data}`);
-        setTimeout(() => {
-          setValue2(JSON.stringify(rsp).substring(0, 40));
-        }, 3000);
+        if(rsp.type==='RESULT_RSP') {
+          setValue2(`got reply, code: ${rsp.rsp_data}`);
+          setTimeout(() => {
+            setValue2(JSON.stringify(rsp).substring(0, 40));
+          }, 3000);
+        }
       },
       'reqid',
       'POST',
@@ -162,6 +170,21 @@ function App(): React.JSX.Element {
     //   newPassword:'Unza@123',
     //   error:old.error
     // };
+    if(old.error){
+      // await CommAlertAsync("error", old.error);
+      let ok= await new Promise((resolve , __reject) => {
+        Alert.alert(
+          "error", old.error,
+          [
+            {text: 'OK', onPress: () => resolve(true)},
+            {text: 'Cancel', onPress: () => resolve(false)},
+          ]
+
+        );
+      });
+      if(!ok)
+        return null;
+    }
     return await {
       url:'https://acme-intg.npa.accenture.com/mobile',
       loginMode:'MOBILE',
@@ -180,6 +203,62 @@ function App(): React.JSX.Element {
     await  FirstCheck("ENG_START", getUserInfo);
   }
 
+  async function uploadTxn() {
+    const db = SQLite.openDatabaseSync('databaseName');
+    db.useForHttpDataSync();
+    //NPSyncSpec.DeleteFolder(WorkDir+"/M_PRD");
+
+    await HttpCommStartUploadingTxn((arg: ReportArg) => {
+      console.log(JSON.stringify(arg));
+    }, 0);
+    await db.closeAsync();
+  }
+  function stopUploading() {
+    HttpCommStopUploadingTxn();
+  }
+
+  async function createTxn(){
+    const db = await SQLite.openDatabaseAsync('databaseName');
+
+    // `execAsync()` is useful for bulk queries when you want to execute altogether.
+    // Please note that `execAsync()` does not escape parameters and may lead to SQL injection.
+    await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+     create table if NOT exists TXN_CUST ([ID] NVARCHAR(500),
+   [CUST_CD] NVARCHAR(500),
+   [CUST_NAME] NVARCHAR(500),
+   [ADDRESS] NVARCHAR(500),
+   [PICTURE] FILE,
+   [DIST_CD] NVARCHAR(500),
+   [DIST_NAME] NVARCHAR(500),
+    [COMMS_STATUS] NVARCHAR(10),
+    [COMMS_DATETIME] DATETIME,
+   PRIMARY KEY(ID) );
+   
+    delete from txn_cust;
+
+    insert into TXN_CUST  values('ID_0001', 'CUST_CD_0001',
+                             'CUST_NAME_0001','ADDR1',
+                             '', 'DISST_CD_001','dst_name_0302',
+                               'P', datetime('now')
+                            );
+
+  insert into TXN_CUST  values('ID_0002', 'CUST_CD_0002',
+                             'CUST_NAME_0002','ADDR2',
+                             '', 'DISST_CD_002','dst_name_0303'
+                                 ,'P', datetime('now')
+                            );
+  insert into TXN_CUST  values('ID_0003', 'CUST_CD_0003',
+                             'CUST_NAME_0003','ADDR3',
+                             '', 'DISST_CD_003','dst_name_0304'
+                              ,'P', datetime('now')
+  `);
+    await db.closeAsync();
+    // await FileSystem.mkdir(FileSystem.DocumentDirectoryPath+'/logs');
+    //let  dataInToken = await gAuth.GetTokenInfoAsync();
+    //setValue2(JSON.stringify(dataInToken));
+    //console.log(dataInToken);
+  }
   return (
     <SafeAreaView style={{flex: 1}}>
       <Text style={styles.text}>
@@ -197,6 +276,9 @@ function App(): React.JSX.Element {
       <Button title="promise" onPress={testPromise} />
       <Button title="sendhttpreq" onPress={sendhttp} />
       <Button title="token" onPress={getToken} />
+      <Button title="createtxn" onPress={createTxn} />
+      <Button title="uploadtxn" onPress={uploadTxn} />
+      <Button title="stop uploading" onPress={stopUploading} />
       <Modal
         animationType="slide"
         transparent={false}

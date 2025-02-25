@@ -1,8 +1,8 @@
 import {
-    CommAlertAsync,
+    //CommAlertAsync,
     DataInToken, FirstCheckDir, GetHardwareId,
     Logger,
-    LoginModeResult,
+    //LoginModeResult,
     make_progress_reporter,
     ProgressReportFunc,
     toJson,
@@ -10,7 +10,7 @@ import {
 } from './Common';
 import {gHttpMobileManager} from './MobileManager';
 import {ConnectionError, gHttpAsync, isTimeoutResponse, NoNetwork} from './HttpAsync';
-import NativeNPSync, {IHttpResponse} from '../specs/NativeNPSync.ts';
+import NativeNPSync, {IHttpResponseErr, IHttpResponseRsp} from '../specs/NativeNPSync.ts';
 
 type TokenFromServerResult = {
     success: boolean,
@@ -310,12 +310,12 @@ export let gAuth = new class {
         let refreshToken = this.UserInfoJSON?.refresh_token;
         let baseURL = this.UserInfoJSON?.base_url;
 
-        let formValue = 'grant_type=refresh_token&redirect_uri='+REDIRECT_URI
+        let formValue = 'grant_type=refresh_token&redirect_uri=' + REDIRECT_URI
             + '&hardware_id=' + GetHardwareId() + '&refresh_token=' + refreshToken;
         let tokenRsp = await gHttpAsync.SendWebReqAsync(baseURL + 'oauth2/token', 'POST',
             this.HttpHeader(), formValue);
-        let userInfo = toJson(tokenRsp.rsp_data ?? '');
-        if (tokenRsp.rsp_code === 200
+        let userInfo = toJson(tokenRsp.type === 'RESULT_RSP' ? tokenRsp.rsp_data : '');
+        if (tokenRsp.type === 'RESULT_RSP' && tokenRsp.rsp_code === 200
             && userInfo.hasOwnProperty("expires_in")
             && userInfo.hasOwnProperty("access_token")
             && userInfo.hasOwnProperty("refresh_token")
@@ -331,10 +331,10 @@ export let gAuth = new class {
             return {
                 success: false,
                 error_info: str,
-                error_code:tokenRsp.error_code
+                error_code:tokenRsp.type === 'RESULT_ERR'? tokenRsp.error_code: tokenRsp.rsp_code
             };
         }
-    };
+    }
 
      delay(ms: number) {
         return new Promise( resolve => setTimeout(resolve, ms) );
@@ -379,40 +379,40 @@ export let gAuth = new class {
 
 
 
-    async RefreshTokenUI(baseUrl: string, refreshToken: string) {
-        type RefreshTokenResult = {
-            success: boolean
-        };
-        let finalResultX = { success: false, restart: false };
-
-        async function onRefreshTokenPostInit(finalResult: RefreshTokenResult) {
-            Logger.Event('Refresh token');
-            let formValue = `grant_type=refresh_token&redirect_uri=${REDIRECT_URI}&hardware_id=${GetHardwareId()}&refresh_token=${refreshToken}`;
-            let tokenRsp = await gHttpAsync.SendWebReqAsync(baseUrl + 'oauth2/token', 'POST', gAuth.HttpHeader(), formValue, undefined, 20);
-            let userInfo = toJson(tokenRsp.rsp_data??"");
-            if (tokenRsp.rsp_code === 200
-                && userInfo.hasOwnProperty("expires_in")
-                && userInfo.hasOwnProperty("access_token")
-                && userInfo.hasOwnProperty("refresh_token")
-                && userInfo.hasOwnProperty("user_info")) {
-                gAuth.UpdateUserInfo(userInfo);
-                gAuth.SaveUserInfo();
-                Logger.Event('Refresh token success');
-                finalResult.success = true;
-            } else {
-                Logger.Event(`Fail to refresh token: ${JSON.stringify(tokenRsp)}`);
-                finalResult.success = false;
-            }
-        }
-        if(!refreshToken)
-           return finalResultX;
-        // 2711: Authentication, 2712: Performing Server Authentication
-        let title = 'IDS_HTTPCOMM_AUTH_DIALOG_TITLE';
-        let desc = 'IDS_HTTPCOMM_AUTHENTICATION';
-        await WaitForPromiseT(title, desc, onRefreshTokenPostInit(finalResultX));
-        return finalResultX;
-    }
-
+    // async RefreshTokenUI(baseUrl: string, refreshToken: string) {
+    //     type RefreshTokenResult = {
+    //         success: boolean
+    //     };
+    //     let finalResultX = { success: false, restart: false };
+    //
+    //     async function onRefreshTokenPostInit(finalResult: RefreshTokenResult) {
+    //         Logger.Event('Refresh token');
+    //         let formValue = `grant_type=refresh_token&redirect_uri=${REDIRECT_URI}&hardware_id=${GetHardwareId()}&refresh_token=${refreshToken}`;
+    //         let tokenRsp = await gHttpAsync.SendWebReqAsync(baseUrl + 'oauth2/token', 'POST', gAuth.HttpHeader(), formValue, undefined, 20);
+    //         let userInfo = toJson(tokenRsp.rsp_data??"");
+    //         if (tokenRsp.rsp_code === 200
+    //             && userInfo.hasOwnProperty("expires_in")
+    //             && userInfo.hasOwnProperty("access_token")
+    //             && userInfo.hasOwnProperty("refresh_token")
+    //             && userInfo.hasOwnProperty("user_info")) {
+    //             gAuth.UpdateUserInfo(userInfo);
+    //             gAuth.SaveUserInfo();
+    //             Logger.Event('Refresh token success');
+    //             finalResult.success = true;
+    //         } else {
+    //             Logger.Event(`Fail to refresh token: ${JSON.stringify(tokenRsp)}`);
+    //             finalResult.success = false;
+    //         }
+    //     }
+    //     if(!refreshToken)
+    //        return finalResultX;
+    //     // 2711: Authentication, 2712: Performing Server Authentication
+    //     let title = 'IDS_HTTPCOMM_AUTH_DIALOG_TITLE';
+    //     let desc = 'IDS_HTTPCOMM_AUTHENTICATION';
+    //     await WaitForPromiseT(title, desc, onRefreshTokenPostInit(finalResultX));
+    //     return finalResultX;
+    // }
+    //
     // async forgetPasswordAsync(baseUrl: string, user_id: string, progress_report?: ProgressReportFunc ): Promise<IHttpResponse> {
     //     progress_report = progress_report || ((_x) => { });
     //     let result: TokenFromServerResult= { success: false, error: "", needChangePassword:false };
@@ -482,10 +482,11 @@ export let gAuth = new class {
         return result;
 
     }
-    private async processTokenReply(tokenRequest:IHttpResponse,result: TokenFromServerResult,
+    private async processTokenReply(tokenRsp:IHttpResponseRsp|IHttpResponseErr,result: TokenFromServerResult,
                               progress_report: ProgressReportFunc,credential:UserCredential, baseUrl:string, bChangePassword:boolean){
-        let tokenResponseData = toJson(tokenRequest.rsp_data??"");
-        if (tokenRequest.rsp_code === 200
+        let tokenResponseData = toJson(tokenRsp.type === 'RESULT_RSP' ? tokenRsp.rsp_data : "");
+        const  isRsp = tokenRsp.type === 'RESULT_RSP';
+        if ( isRsp &&  tokenRsp.rsp_code === 200
             && tokenResponseData.hasOwnProperty('access_token')
             && tokenResponseData.hasOwnProperty('refresh_token')
             && tokenResponseData.hasOwnProperty('expires_in')
@@ -503,16 +504,16 @@ export let gAuth = new class {
             this.UserInfoJSON = this.CompleteUserInfo(tokenResponseData, baseUrl, credential.loginMode);
             //await CommAlert('userinfo',JSON.stringify(this.UserInfoJSON));
             this.SaveUserInfo();
-            Logger.Event("Got token");
+            Logger.Event('Got token');
             progress_report({ cat: 'Authenticate', subCat: '', name: '', status: 'completed' });
             result.success = true;
-            return ;
+            return;
         } else {
             result.success = false;
-            if (tokenRequest.error_code === NoNetwork || tokenRequest.error_code == ConnectionError) {
+            if (!isRsp && (tokenRsp.error_code === NoNetwork || tokenRsp.error_code == ConnectionError)) {
                 // No network available. Please ensure that network connection is available and then try again.
                 result.error = 'IDS_HTTPCOMM_NO_NETWORK';
-            }else if (isTimeoutResponse(tokenRequest)) {
+            }else if (isTimeoutResponse(tokenRsp)) {
                 //server did not respond
                 result.error = 'IDS_HTTPCOMM_NO_RESPONSE';
             } else {
@@ -520,8 +521,8 @@ export let gAuth = new class {
                 if (tokenResponseData.message) errorMessage = tokenResponseData.message;
                 else errorMessage = JSON.stringify(tokenResponseData);
                 //TODO, right now, no way to tell if it is password expired or not, have to use this error as hint to change password
-                const password_expired_hint="Password reset is required";
-                if(credential.loginMode === "MOBILE" && tokenRequest.rsp_code===200 && errorMessage.indexOf(password_expired_hint)!=-1){
+                const password_expired_hint='Password reset is required';
+                if(credential.loginMode === 'MOBILE' && isRsp &&  tokenRsp.rsp_code===200 && errorMessage.indexOf(password_expired_hint)!=-1){
                     result.needChangePassword = true;
                 }
                 Logger.Error(`Fail to get access token,  Error: ${errorMessage}`);

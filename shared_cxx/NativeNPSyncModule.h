@@ -21,9 +21,9 @@ namespace facebook::react {
 
         //void echoFromCpp(jsi::Runtime& rt, std::string id, AsyncCallback<std::string> callback);
         //jsi::Value callTest(jsi::Runtime &rt, jsi::String id);
-        AsyncPromise<std::string> callPromise(jsi::Runtime &rt, std::string id);
+        AsyncPromise<std::string> callPromise(jsi::Runtime &rt, std::string id) ;
 
-        void SendHttpRequest(jsi::Runtime &rt, jsi::Function f, const std::string& reqId,
+        void SendHttpRequestStr(jsi::Runtime &rt, jsi::Function f, const std::string& reqId,
                              const std::string& method, const std::string& url, const std::string& header,
                              const std::string& content, const std::string& fileToBeSaved, std::optional<double> nTimeoutMs);
         void SendHttpRequestBlob(jsi::Runtime &rt, jsi::Function f, std::string reqId,
@@ -31,6 +31,7 @@ namespace facebook::react {
                               jsi::Object content, std::string fileToBeSaved, std::optional<double> nTimeoutMs);
         std::string LoadFile(jsi::Runtime &rt, std::string fileName, std::optional<int> maxBytemaxBytes) ;
         bool WriteFile(jsi::Runtime &rt, std::string fileName, std::string content, std::string mode) ;
+        bool AppendFile(jsi::Runtime &rt, std::string dstFile, std::string srcFile);
         bool DeleteFile(jsi::Runtime &rt, std::string fileName) ;
         bool MoveFile(jsi::Runtime &rt, std::string srcFileName, std::string dstFileName, std::optional<bool> overwrite) ;
 
@@ -43,6 +44,14 @@ namespace facebook::react {
         std::string Comm2ProcessTblSync(jsi::Runtime &rt, std::string fileName, bool dryRun);
         void SQLBeginTransaction(jsi::Runtime &rt) ;
         void SQLCommit(jsi::Runtime &rt, bool commit) ;
+        jsi::Object __Comm2MakeTxn(jsi::Runtime &rt, std::string companyID, std::string appID, std::string refreshToken,
+                                   double maxMsgSize, std::string txnName, std::string clientSchema) ;
+
+        void __Comm2CommitTxn(jsi::Runtime &rt, std::string txnName,
+                              std::string hdrTblName, jsi::Object txnBlk, std::string  commStatus) ;
+
+        jsi::Object __Comm2GetTxnHangingFiles(jsi::Runtime &rt, std::string  txnName,
+                                             std::string  clientSchema);
     private:
         static sqlite3 * db_;
     public:

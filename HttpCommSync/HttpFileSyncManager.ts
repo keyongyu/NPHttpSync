@@ -1,15 +1,23 @@
 import {
-    CommSector, convertRowIdsToByteArray, countBy, DataInToken,
-    Logger, Manifest, ProgressReportFunc, TxnDefinition, WorkDir,
+    CommSector, convertRowIdsToByteArray, countBy, DataInToken, Logger,
+    Manifest, ProgressReportFunc, TxnDefinition, WorkDir,
 } from './Common';
 //import {gHttpDataSync} from "./HttpDataSync";
 import {gHttpMobileManager} from "./MobileManager";
 import {gHttpAsync} from "./HttpAsync";
 //import {gAuth} from "./OAuth";
-import NativeNPSync from '../specs/NativeNPSync.ts';
+import NativeNPSync, {FileRecU} from '../specs/NativeNPSync.ts';
 import FileSystem from 'react-native-fs';
+import {GetHardwareId} from './Common';
+import {GetEngineVersion} from './Common';
+import {GetAppVersion} from './Common';
+import {gAuth} from './OAuth.ts';
+import {gHttpDataSync} from './HttpDataSync.ts';
 export const  BINARY_FILE_FOLDER= WorkDir;
 
+function ExistFile(fileName: string) {
+    return NativeNPSync.Exists(`${BINARY_FILE_FOLDER}/${fileName}`);
+}
 export type FileRecD={
     //"795FD9BB:383DA764-6B98-44C0-9286-11B1B0B7A441",
     ID:string;
@@ -38,19 +46,19 @@ type TrackingTableD = {
 }
 
 
-// type FileUploadStatus = {
-//    total:number;
-//    count:number;
-// }
-//
-// type TrackingTableU = {
-//     total: number;
-//     processedCount: number;
-//     startedCount: number;
-//     inProgress: boolean;
-//     successUploads: FileRecU[];
-//     rowTracker:Map<string, FileUploadStatus>;
-// };
+type FileUploadStatus = {
+   total:number;
+   count:number;
+}
+
+type TrackingTableU = {
+    total: number;
+    processedCount: number;
+    startedCount: number;
+    inProgress: boolean;
+    successUploads: FileRecU[];
+    rowTracker:Map<string, FileUploadStatus>;
+};
 
 type TrackMapD = Map<string, TrackingTableD>
 
@@ -247,17 +255,23 @@ export var gDownloadFilesManager = new class {
             Logger.Warn(`Failed to download ${fileRequest.FILE_NAME}`);
             return ;
         }
-        let originFile = response.rsp_data;
-        if (response.rsp_code === 200) {
+        if (response.type==="RESULT_RSP" && (response.rsp_code === 201 || response.rsp_code === 200)) {
+            let originFile = response.rsp_data;
             if(fileRequest.tempFileName)
                 NativeNPSync.MoveFile(originFile!, fileRequest.tempFileName);
             tracker.successDownloads.push(fileRequest);
             Logger.Event(`Successfully downloaded ${fileRequest.FILE_NAME}.`);
         } else {
-            let error = gHttpAsync.GetFileContent(response);
+            let error="";
+            if(response.type==="RESULT_RSP") {
+                let originFile = response.rsp_data;
+                error = gHttpAsync.GetFileContent(response);
+                NativeNPSync.DeleteFile(originFile!);
+            } else
+                error =response.error_desc;
+
             const maxAttempts = 3;
             fileRequest.numAttempts = (fileRequest.numAttempts??0) +1;
-            NativeNPSync.DeleteFile(originFile!);
             //todo: should delete file based on rsp type?
             //if (response.type === 'RESULT_ERR') {
             //    DeleteFile(`__http_request_working_${response.req_id}_rcv__.bin`);
@@ -303,6 +317,7 @@ export var gDownloadFilesManager = new class {
         let timeIdx = -1;
         let promise = new Promise<void>((resolve) => {
             resolved = resolve;
+            // @ts-ignore
             timeIdx = setTimeout(() => {
                 const now = Date.now() + 500;
                 this.retryRequests.forEach((retryRequest, index, object) => {
@@ -322,352 +337,352 @@ export var gDownloadFilesManager = new class {
     };
 };
 
-// export var gUploadFilesManager = new class {
-//     uploadRequests:FileRecU[] = [];
-//     retryRequests:FileRecU[] = [];
-//     dataInToken:DataInToken|null=null;
-//     commData:CommSector|null=null;
-//     progress:ProgressReportFunc|null=null;
-//     // downloadPath:string = "";
-//     txnTracker:Map<string,TrackingTableU> = new Map<string,TrackingTableU>();
-//
-//     init(progress:ProgressReportFunc, dataFromToken:DataInToken, manifest:Manifest){
-//         this.dataInToken = dataFromToken;
-//         this.commData = {
-//             TenantID: dataFromToken.CompanyId,
-//             AppID: dataFromToken.AppId,
-//             HardwareID: GetHardwareId(),
-//             EngVersion: GetEngineVersion(),
-//             AppVersion: GetAppVersion(),
-//             Type: 'TRANSACTION',
-//             RequestDT: new Date().toISOString(),
-//             MsgID:0,
-//             RefreshToken:gAuth.UserInfoJSON?.refresh_token||""
-//
-//         };
-//         this.progress = progress;
-//         // this.downloadPath = manifest.TRANSACTION.ObjectStoreService.replace('upload', 'download');
-//         // {txnDefName : {total, processedCount, rowTracker: {total, count}, inProgress: false, successUploads: []}}
-//         this.txnTracker.clear() ;
-//         //[{fileName, columnName, commsStatus, table, rowid, fileID, logicID, downloadPath, shortUrl, url, txnName, headerName, uploadStatus}]
-//         this.uploadRequests = [];
-//         this.retryRequests = [];
-//     };
-//     cleanup  (){
-//         this.txnTracker.clear();
-//         this.uploadRequests = [];
-//         this.retryRequests = [];
-//         this.progress = null;
-//         // this.downloadPath = '';
-//         this.commData = null;
-//         this.dataInToken = null;
-//     }
-//
-//     initTxnTracker (txnDefName:string, txnFiles:FileRecU[]){
-//         let tracker:TrackingTableU = {
-//             total: txnFiles.length,
-//             processedCount: 0,
-//             startedCount: 0,
-//             inProgress: false,
-//             rowTracker: new Map<string, FileUploadStatus>(),
-//             successUploads: []
-//         };
-//         this.txnTracker.set(txnDefName,tracker);
-//
-//         let rowidAndCount = countBy(txnFiles, 'strRowID') as {[strRowID:string]:number};
-//         for (let [rowid, count] of Object.entries(rowidAndCount)) {
-//             tracker.rowTracker.set(rowid, {
-//                 total: count as number,
-//                 count: 0
-//             });
-//         }
-//     }
-//
-//     appendTxnUploadingTasks (objstoreUrl:string, uploadFiles:FileRecU[], txn_def:TxnDefinition){
-//         //if (objstoreUrl && !objstoreUrl.endsWith('/'))
-//         //    objstoreUrl += '/';
-//         uploadFiles.forEach((file) => {
-//             file.strRowID = file.rowid + '_' + file.rowidHi;
-//             file.fileID = file.fileName.substr(file.fileName.lastIndexOf('/') + 1);
-//             file.LogicID = txn_def.ClientSchema.Header.LogicID || txn_def.ClientSchema.Header.Name;
-//             //still keep the extension name in url
-//             file.shortUrl = `${file.LogicID}/${file.columnName}/${file.fileID}`; // for s3 usage
-//             //file.url = `${objstoreUrl}${file.shortUrl}`; // default upload url
-//
-//             //remove externsion
-//             file.fileID = file.fileID.replace(/\.[^.]*$/, '');
-//             file.commsStatus = file.commsStatus === 'P' ? 'T' : file.commsStatus;
-//             file.txnDefName = txn_def.Name;
-//             file.headerName = txn_def.ClientSchema.Header.Name;
-//             file.numAttempts = 0;
-//             file.msToRetry =0;
-//         });
-//
-//         this.initTxnTracker(txn_def.Name, uploadFiles);
-//         this.uploadRequests = this.uploadRequests.concat(uploadFiles);
-//
-//     }
-//
-//     private setCommsStatus({ rowids = [], commsStatus = '', txnDefName, headerName }
-//                           :{rowids:[number,number][],commsStatus:string, txnDefName:string, headerName:string }){
-//         if (rowids.length > 0 && commsStatus) {
-//             let rowidsByteArray = convertRowIdsToByteArray(rowids);
-//             __Comm2CommitTxn(txnDefName, headerName, {hasError:false, rowIDs: rowidsByteArray }, commsStatus);
-//         }
-//     }
-//
-//     performRetryAsync() {
-//         let msToRetry = this.retryRequests.reduce((prevValue, request)=>{
-//             return Math.min(prevValue, request.msToRetry??Date.now());
-//         },Date.now()+2000);
-//         // let msToRetry = this.retryRequests[0].msToRetry;
-//         // for (let i = 1; i < this.retryRequests.length; i++) {
-//         //     if (this.retryRequests[i].msToRetry < msToRetry) {
-//         //         msToRetry = this.retryRequests[i].msToRetry;
-//         //     }
-//         // }
-//         msToRetry = msToRetry - Date.now();
-//         if (msToRetry < 1)
-//             msToRetry = 1;
-//         return new Promise<void>((resolve) => {
-//             SetTimeout(() => {
-//                 const now = Date.now() + 500;
-//                 this.retryRequests.forEach((retryRequest, index, object) => {
-//                     if (!retryRequest.msToRetry || retryRequest.msToRetry <= now) {
-//                         object.splice(index, 1);
-//                         this.uploadRequests.push(retryRequest);
-//                     }
-//                 });
-//                 resolve();
-//             }, msToRetry);
-//         });
-//     }
-//
-//     async uploadAllFilesAsync (){
-//         //alert("this.uploadRequests.length="+this.uploadRequests.length);
-//         while (this.uploadRequests.length > 0 || this.retryRequests.length > 0) {
-//             let tasks:Promise<void> [] = [];
-//             const max_task = 8;
-//             const num_task = this.uploadRequests.length > max_task ? max_task : this.uploadRequests.length;
-//             for (let i = 0; i < num_task; i++) {
-//                 tasks.push(this.uploadFileTask());
-//             }
-//             await Promise.all(tasks);
-//
-//             if (this.retryRequests.length > 0) {
-//                 await this.performRetryAsync();
-//             }
-//         }
-//     }
-//     async uploadTxnFilesPayload(txnDefName:string, progressLogger:ReducedReportFunc){
-//         let rec=this.txnTracker.get(txnDefName);
-//         if (!rec || rec.successUploads.length <= 0)
-//             return true;
-//         if(!this.commData || !this.dataInToken)
-//             return false;
-//         let emptyRec= new Array<[string,string,string,string]> ();
-//         // construct attachment payload structure
-//         let attachmentPayload = {
-//             Schema: {
-//                 Name: `${txnDefName}#FILE`,
-//                 Columns: ['ID', 'URL', 'TABLE_NAME', 'COLUMN_NAME']
-//             },
-//             Data: {
-//                 Name: `${txnDefName}#FILE`,
-//                 Records:emptyRec
-//             }
-//         };
-//         attachmentPayload.Data.Records = rec.successUploads
-//             .map ((record) => [record.fileID??"", record.shortUrl??"", record.table,record.columnName]);
-//
-//         // submit attachment payload to server
-//         let metadataPayload = { Comm: this.commData, Payload:attachmentPayload};
-//         metadataPayload.Comm.Name = attachmentPayload.Schema.Name;
-//         metadataPayload.Comm.MsgID = Math.ceil(Math.random() * 65536 + 1);
-//         //metadataPayload.Payload = attachmentPayload;
-//         //Logger.Data("Payload:---------\n" + JSON.stringify(metadataPayload,null,2) + "\n-------");
-//         let rsp = await gHttpDataSync.UploadTxnAsync(JSON.stringify(metadataPayload), (status) => {
-//             let statusText = status.total === status.done ? 'completed' : 'progress';
-//             progressLogger({ name: `${txnDefName}#PAYLOAD`, status: statusText, current: status.done, total: status.total });
-//         }, this.dataInToken);
-//         try {
-//             if (!rsp.rsp_code || rsp.rsp_code < 200 || rsp.rsp_code >= 300) {
-//                 Logger.Error(`Received bad reply:${JSON.stringify(rsp)} for ${txnDefName}#PAYLOAD`);
-//                 return false;
-//             }
-//             let rsp_data = JSON.parse(rsp.rsp_data);
-//             if (rsp_data && rsp_data.Comm.CorrelationMsgID === metadataPayload.Comm.MsgID) {
-//                 if (rsp_data.Response.Status === 'OK') {
-//                     Logger.Event(`Server accept the payload of ${txnDefName}#PAYLOAD`);
-//                     return true;
-//                 }
-//                 else {
-//                     //if(rsp_data.Response.Status.startWith("R")!==-1)
-//                     if (rsp_data.Response.FailReason)
-//                         Logger.Error(`Server reject the payload of ${txnDefName}#PAYLOAD with ${rsp_data.Response.Status}:${rsp_data.Response.FailReason}`);
-//                     else
-//                         Logger.Error(`Server reject the payload of ${txnDefName}#PAYLOAD with ${rsp_data.Response.Status}`);
-//                     return false;
-//                 }
-//             }
-//         } catch (e) {
-//             Logger.Error(`Received bad reply:${JSON.stringify(rsp)} for ${txnDefName}#PAYLOAD`);
-//             return false;
-//         }
-//     }
-//     async uploadSingleFileAsync(uploadRequest:FileRecU):Promise<void>{
-//         let headerName = uploadRequest.headerName??"";
-//         let txnDefName = uploadRequest.txnDefName??"";
-//         let progressLogger =(x:ReducedReportArg) => {
-//             if (this.progress){
-//                 let newObj = Object.assign({cat: 'UploadTxn', subCat: 'File', name: `${txnDefName}#FILE`}, x);
-//                 this.progress(newObj);
-//             }
-//         };
-//
-//         let fileName = uploadRequest.fileName;
-//         let shortUrl = uploadRequest.shortUrl??"";
-//         let strRowID = uploadRequest.strRowID;
-//         let tracker = this.txnTracker.get(txnDefName);
-//
-//         if(!tracker || !tracker.rowTracker || !strRowID || !this.dataInToken)
-//             return ;
-//
-//         if (!tracker.inProgress) {
-//             tracker.inProgress = true;
-//             progressLogger({ status: 'start', total: tracker.total });
-//         }
-//
-//         tracker.startedCount++;
-//         if (uploadRequest.numAttempts === 0)
-//             Logger.Event(`Start uploading ${fileName}. ${tracker.startedCount}/${tracker.total}`);
-//
-//         //# means the file has been uploaded already, but the #file doesn't get updated
-//         if (uploadRequest.commsStatus === '#') {
-//             let trackedInfo = tracker.rowTracker.get(strRowID);
-//             if(trackedInfo)
-//                 trackedInfo.count++;
-//             else {
-//                 Logger.Error(`Cannot find trackedInfo for row ${strRowID} for table ${uploadRequest.table}`);
-//             }
-//             tracker.successUploads.push(uploadRequest);
-//
-//             Logger.Event(`${fileName} already uploaded (commsStatus = #)`);
-//         } else if (uploadRequest.commsStatus === 'T') {
-//             if (!ExistFile(fileName) || fileName ==="") {
-//                 //uploadRequest.uploadStatus = "H";
-//                 if(fileName !=="") {
-//                     let errorDesc = `Failed to upload ${fileName} ( Rowid: ${strRowID} ). \nErr: File does not exist.`;
-//                     Logger.Error(errorDesc);
-//                 }
-//
-//                 let rowids:[[number,number]]=[[uploadRequest.rowid, uploadRequest.rowidHi]];
-//                 let commsStatus = 'S';
-//                 this.setCommsStatus({ rowids, commsStatus, txnDefName, headerName });
-//
-//                 Logger.Debug(`Updated row id ${strRowID} T => S.`);
-//             }
-//             else {
-//                 let param = {
-//                     filePath: fileName,
-//                     serverFilePath: shortUrl,
-//                     progress: progressLogger,
-//                     silentCallback: true,
-//                     skipRetry: true,
-//                     dataInToken: this.dataInToken
-//                 };
-//
-//                 let response = await gHttpMobileManager.UploadPackageFileAsync(param);
-//                 if (response && (response.rsp_code === 200 || response.rsp_code === 201)) { //200 is S3
-//                     //uploadRequest.uploadStatus = "S";
-//                     //uploadRequest.downloadUrl = `${this.downloadPath}${shortUrl}`;
-//                     //if(response.rsp_code === 201) {//object store
-//                     //	let payload = JSON.parse(response.rsp_data);
-//                     //	if(payload && payload.Location) {
-//                     //		uploadRequest.downloadUrl = payload.Location;
-//                     //	}
-//                     //}
-//                     tracker.successUploads.push(uploadRequest);
-//                     //tracker.rowTracker.get(strRowID).count++;
-//                     let trackedInfo = tracker.rowTracker.get(strRowID);
-//                     if(trackedInfo)
-//                         trackedInfo.count++;
-//                     else {
-//                         Logger.Error(`Cannot find trackedInfo for row ${strRowID} for table ${uploadRequest.table}`);
-//                         return;
-//                     }
-//                     Logger.Event(`Successfully uploaded ${fileName}.`);
-//
-//                     // update commsStatus T => # when all upload requests of same row id get uploaded
-//                     if (trackedInfo.count === trackedInfo.total) {
-//                         let rowids:[[number,number]] = [[uploadRequest.rowid, uploadRequest.rowidHi]];
-//                         let commsStatus = '#';
-//                         this.setCommsStatus({ rowids, commsStatus, txnDefName, headerName });
-//
-//                         Logger.Event(`Updated row id ${strRowID} T => #.`);
-//                     }
-//                 }
-//                 else {
-//                     let error_desc = JSON.stringify(response);
-//                     uploadRequest.numAttempts = (uploadRequest.numAttempts??0) +1;
-//                     const maxAttempts = 3;
-//                     if (uploadRequest.numAttempts < maxAttempts) {
-//                         uploadRequest.msToRetry = Date.now() + 2000;
-//                         this.retryRequests.push(uploadRequest);
-//                         Logger.Error(`Attempt ${uploadRequest.numAttempts}, failed to upload ${fileName} ( Rowid: ${strRowID} ), will retry in 2 seconds\nErr: ${error_desc}.`);
-//                         return;
-//                     } else {
-//                         Logger.Error(`Failed to upload ${fileName} ( Rowid: ${strRowID} ) after ${maxAttempts} attemps\nErr: ${error_desc}.`);
-//                     }
-//                 }
-//             }
-//         }
-//
-//         tracker.processedCount++;
-//         progressLogger({ status: 'progress', current: tracker.processedCount, total: tracker.total });
-//
-//         // update commsStatus # => S when all upload requests of same txn id get uploaded
-//         if (tracker.processedCount === tracker.total) {
-//             //Logger.Debug(`UploadTxnFilesPayload`);
-//             let success = await this.uploadTxnFilesPayload(txnDefName, progressLogger);
-//             let tempProgressObj:ReducedReportArg= {};
-//             if (success) {
-//                 let commsStatus = 'S';
-//                 let rowids:[number,number][] = [];
-//                 let strRowids = new Set();
-//                 tracker.successUploads.forEach((record) => {
-//                     if (!strRowids.has(record.strRowID)) {
-//                         strRowids.add(record.strRowID);
-//                         rowids.push([record.rowid, record.rowidHi]);
-//                     }
-//                 });
-//                 if (tracker.successUploads.length > 0) {
-//                     this.setCommsStatus({ rowids, commsStatus, txnDefName, headerName });
-//                     Logger.Debug(`Updated row id ${Array.from(strRowids).toString()} # => S.`);
-//                 }
-//                 if (tracker.successUploads.length < tracker.total) {
-//                     tempProgressObj.detail = `${tracker.total - tracker.successUploads.length} files failed to upload`;
-//                 }
-//                 tempProgressObj.current = tracker.successUploads.length;
-//                 tempProgressObj.total = tracker.total;
-//
-//             } else {
-//                 tempProgressObj.detail = 'fail to upload payload';
-//
-//             }
-//             tracker.inProgress = false;
-//             tempProgressObj.status = 'completed';
-//             progressLogger(tempProgressObj);
-//             //delete this.txnTracker[txnDefName];
-//             this.txnTracker.delete(txnDefName);
-//         }
-//     }
-//
-//     async uploadFileTask() {
-//         while (this.uploadRequests.length > 0) {
-//             let uploadRequest = this.uploadRequests.shift();
-//             if(uploadRequest)
-//                 await this.uploadSingleFileAsync(uploadRequest);
-//         }
-//     }
-// }();
+export var gUploadFilesManager = new class {
+    uploadRequests:FileRecU[] = [];
+    retryRequests:FileRecU[] = [];
+    dataInToken:DataInToken|null=null;
+    commData:CommSector|null=null;
+    progress:ProgressReportFunc|null=null;
+    // downloadPath:string = "";
+    txnTracker:Map<string,TrackingTableU> = new Map<string,TrackingTableU>();
+
+    init(progress:ProgressReportFunc, dataFromToken:DataInToken, _manifest:Manifest){
+        this.dataInToken = dataFromToken;
+        this.commData = {
+            TenantID: dataFromToken.CompanyId,
+            AppID: dataFromToken.AppId,
+            HardwareID: GetHardwareId(),
+            EngVersion: GetEngineVersion(),
+            AppVersion: GetAppVersion(),
+            Type: 'TRANSACTION',
+            RequestDT: new Date().toISOString(),
+            MsgID:0,
+            RefreshToken:gAuth.UserInfoJSON?.refresh_token||""
+
+        };
+        this.progress = progress;
+        // this.downloadPath = manifest.TRANSACTION.ObjectStoreService.replace('upload', 'download');
+        // {txnDefName : {total, processedCount, rowTracker: {total, count}, inProgress: false, successUploads: []}}
+        this.txnTracker.clear() ;
+        //[{fileName, columnName, commsStatus, table, rowid, fileID, logicID, downloadPath, shortUrl, url, txnName, headerName, uploadStatus}]
+        this.uploadRequests = [];
+        this.retryRequests = [];
+    };
+    cleanup  (){
+        this.txnTracker.clear();
+        this.uploadRequests = [];
+        this.retryRequests = [];
+        this.progress = null;
+        // this.downloadPath = '';
+        this.commData = null;
+        this.dataInToken = null;
+    }
+
+    initTxnTracker (txnDefName:string, txnFiles:FileRecU[]){
+        let tracker:TrackingTableU = {
+            total: txnFiles.length,
+            processedCount: 0,
+            startedCount: 0,
+            inProgress: false,
+            rowTracker: new Map<string, FileUploadStatus>(),
+            successUploads: []
+        };
+        this.txnTracker.set(txnDefName,tracker);
+
+        let rowidAndCount = countBy(txnFiles, 'strRowID') as {[strRowID:string]:number};
+        for (let [rowid, count] of Object.entries(rowidAndCount)) {
+            tracker.rowTracker.set(rowid, {
+                total: count as number,
+                count: 0
+            });
+        }
+    }
+
+    appendTxnUploadingTasks (objstoreUrl:string, uploadFiles:FileRecU[], txn_def:TxnDefinition){
+        //if (objstoreUrl && !objstoreUrl.endsWith('/'))
+        //    objstoreUrl += '/';
+        uploadFiles.forEach((file) => {
+            file.strRowID = file.rowid + '_' + file.rowidHi;
+            file.fileID = file.fileName.substr(file.fileName.lastIndexOf('/') + 1);
+            file.LogicID = txn_def.ClientSchema.Header.LogicID || txn_def.ClientSchema.Header.Name;
+            //still keep the extension name in url
+            file.shortUrl = `${file.LogicID}/${file.columnName}/${file.fileID}`; // for s3 usage
+            //file.url = `${objstoreUrl}${file.shortUrl}`; // default upload url
+
+            //remove externsion
+            file.fileID = file.fileID.replace(/\.[^.]*$/, '');
+            file.commsStatus = file.commsStatus === 'P' ? 'T' : file.commsStatus;
+            file.txnDefName = txn_def.Name;
+            file.headerName = txn_def.ClientSchema.Header.Name;
+            file.numAttempts = 0;
+            file.msToRetry =0;
+        });
+
+        this.initTxnTracker(txn_def.Name, uploadFiles);
+        this.uploadRequests = this.uploadRequests.concat(uploadFiles);
+
+    }
+
+    private setCommsStatus({ rowids = [], commsStatus = '', txnDefName, headerName }
+                          :{rowids:[number,number][],commsStatus:string, txnDefName:string, headerName:string }){
+        if (rowids.length > 0 && commsStatus) {
+            let rowidsByteArray = convertRowIdsToByteArray(rowids);
+            NativeNPSync.__Comm2CommitTxn(txnDefName, headerName, {hasError:false, rowIDs: rowidsByteArray }, commsStatus);
+        }
+    }
+
+    performRetryAsync() {
+        let msToRetry = this.retryRequests.reduce((prevValue, request)=>{
+            return Math.min(prevValue, request.msToRetry??Date.now());
+        },Date.now()+2000);
+        // let msToRetry = this.retryRequests[0].msToRetry;
+        // for (let i = 1; i < this.retryRequests.length; i++) {
+        //     if (this.retryRequests[i].msToRetry < msToRetry) {
+        //         msToRetry = this.retryRequests[i].msToRetry;
+        //     }
+        // }
+        msToRetry = msToRetry - Date.now();
+        if (msToRetry < 1)
+            msToRetry = 1;
+        return new Promise<void>((resolve) => {
+            setTimeout(() => {
+                const now = Date.now() + 500;
+                this.retryRequests.forEach((retryRequest, index, object) => {
+                    if (!retryRequest.msToRetry || retryRequest.msToRetry <= now) {
+                        object.splice(index, 1);
+                        this.uploadRequests.push(retryRequest);
+                    }
+                });
+                resolve();
+            }, msToRetry);
+        });
+    }
+
+    async uploadAllFilesAsync (){
+        //alert("this.uploadRequests.length="+this.uploadRequests.length);
+        while (this.uploadRequests.length > 0 || this.retryRequests.length > 0) {
+            let tasks:Promise<void> [] = [];
+            const max_task = 8;
+            const num_task = this.uploadRequests.length > max_task ? max_task : this.uploadRequests.length;
+            for (let i = 0; i < num_task; i++) {
+                tasks.push(this.uploadFileTask());
+            }
+            await Promise.all(tasks);
+
+            if (this.retryRequests.length > 0) {
+                await this.performRetryAsync();
+            }
+        }
+    }
+    async uploadTxnFilesPayload(txnDefName:string, progressLogger:ReducedReportFunc){
+        let rec=this.txnTracker.get(txnDefName);
+        if (!rec || rec.successUploads.length <= 0)
+            return true;
+        if(!this.commData || !this.dataInToken)
+            return false;
+        let emptyRec= new Array<[string,string,string,string]> ();
+        // construct attachment payload structure
+        let attachmentPayload = {
+            Schema: {
+                Name: `${txnDefName}#FILE`,
+                Columns: ['ID', 'URL', 'TABLE_NAME', 'COLUMN_NAME']
+            },
+            Data: {
+                Name: `${txnDefName}#FILE`,
+                Records:emptyRec
+            }
+        };
+        attachmentPayload.Data.Records = rec.successUploads
+            .map ((record) => [record.fileID??"", record.shortUrl??"", record.table,record.columnName]);
+
+        // submit attachment payload to server
+        let metadataPayload = { Comm: this.commData, Payload:attachmentPayload};
+        metadataPayload.Comm.Name = attachmentPayload.Schema.Name;
+        metadataPayload.Comm.MsgID = Math.ceil(Math.random() * 65536 + 1);
+        //metadataPayload.Payload = attachmentPayload;
+        //Logger.Data("Payload:---------\n" + JSON.stringify(metadataPayload,null,2) + "\n-------");
+        let rsp = await gHttpDataSync.UploadTxnAsync(JSON.stringify(metadataPayload), (status) => {
+            let statusText = status.total === status.done ? 'completed' : 'progress';
+            progressLogger({ name: `${txnDefName}#PAYLOAD`, status: statusText, current: status.done, total: status.total });
+        }, this.dataInToken);
+        try {
+            if (!(rsp.type==="RESULT_RSP" &&  rsp.rsp_code >= 200 && rsp.rsp_code < 300)) {
+                Logger.Error(`Received bad reply:${JSON.stringify(rsp)} for ${txnDefName}#PAYLOAD`);
+                return false;
+            }
+            let rsp_data = JSON.parse(rsp.rsp_data);
+            if (rsp_data && rsp_data.Comm.CorrelationMsgID === metadataPayload.Comm.MsgID) {
+                if (rsp_data.Response.Status === 'OK') {
+                    Logger.Event(`Server accept the payload of ${txnDefName}#PAYLOAD`);
+                    return true;
+                }
+                else {
+                    //if(rsp_data.Response.Status.startWith("R")!==-1)
+                    if (rsp_data.Response.FailReason)
+                        Logger.Error(`Server reject the payload of ${txnDefName}#PAYLOAD with ${rsp_data.Response.Status}:${rsp_data.Response.FailReason}`);
+                    else
+                        Logger.Error(`Server reject the payload of ${txnDefName}#PAYLOAD with ${rsp_data.Response.Status}`);
+                    return false;
+                }
+            }
+        } catch (e) {
+            Logger.Error(`Received bad reply:${JSON.stringify(rsp)} for ${txnDefName}#PAYLOAD`);
+            return false;
+        }
+    }
+    async uploadSingleFileAsync(uploadRequest:FileRecU):Promise<void>{
+        let headerName = uploadRequest.headerName??"";
+        let txnDefName = uploadRequest.txnDefName??"";
+        let progressLogger =(x:ReducedReportArg) => {
+            if (this.progress){
+                let newObj = Object.assign({cat: 'UploadTxn', subCat: 'File', name: `${txnDefName}#FILE`}, x);
+                this.progress(newObj);
+            }
+        };
+
+        let fileName = uploadRequest.fileName;
+        let shortUrl = uploadRequest.shortUrl??"";
+        let strRowID = uploadRequest.strRowID;
+        let tracker = this.txnTracker.get(txnDefName);
+
+        if(!tracker || !tracker.rowTracker || !strRowID || !this.dataInToken)
+            return ;
+
+        if (!tracker.inProgress) {
+            tracker.inProgress = true;
+            progressLogger({ status: 'start', total: tracker.total });
+        }
+
+        tracker.startedCount++;
+        if (uploadRequest.numAttempts === 0)
+            Logger.Event(`Start uploading ${fileName}. ${tracker.startedCount}/${tracker.total}`);
+
+        //# means the file has been uploaded already, but the #file doesn't get updated
+        if (uploadRequest.commsStatus === '#') {
+            let trackedInfo = tracker.rowTracker.get(strRowID);
+            if(trackedInfo)
+                trackedInfo.count++;
+            else {
+                Logger.Error(`Cannot find trackedInfo for row ${strRowID} for table ${uploadRequest.table}`);
+            }
+            tracker.successUploads.push(uploadRequest);
+
+            Logger.Event(`${fileName} already uploaded (commsStatus = #)`);
+        } else if (uploadRequest.commsStatus === 'T') {
+            if (!ExistFile(fileName) || fileName ==="") {
+                //uploadRequest.uploadStatus = "H";
+                if(fileName !=="") {
+                    let errorDesc = `Failed to upload ${fileName} ( Rowid: ${strRowID} ). \nErr: File does not exist.`;
+                    Logger.Error(errorDesc);
+                }
+
+                let rowids:[[number,number]]=[[uploadRequest.rowid, uploadRequest.rowidHi]];
+                let commsStatus = 'S';
+                this.setCommsStatus({ rowids, commsStatus, txnDefName, headerName });
+
+                Logger.Debug(`Updated row id ${strRowID} T => S.`);
+            }
+            else {
+                let param = {
+                    filePath: fileName,
+                    serverFilePath: shortUrl,
+                    progress: progressLogger,
+                    silentCallback: true,
+                    skipRetry: true,
+                    dataInToken: this.dataInToken
+                };
+
+                let response = await gHttpMobileManager.UploadPackageFileAsync(param);
+                if (response?.type==="RESULT_RSP" && (response.rsp_code === 200 || response.rsp_code === 201)) { //200 is S3
+                    //uploadRequest.uploadStatus = "S";
+                    //uploadRequest.downloadUrl = `${this.downloadPath}${shortUrl}`;
+                    //if(response.rsp_code === 201) {//object store
+                    //	let payload = JSON.parse(response.rsp_data);
+                    //	if(payload && payload.Location) {
+                    //		uploadRequest.downloadUrl = payload.Location;
+                    //	}
+                    //}
+                    tracker.successUploads.push(uploadRequest);
+                    //tracker.rowTracker.get(strRowID).count++;
+                    let trackedInfo = tracker.rowTracker.get(strRowID);
+                    if(trackedInfo)
+                        trackedInfo.count++;
+                    else {
+                        Logger.Error(`Cannot find trackedInfo for row ${strRowID} for table ${uploadRequest.table}`);
+                        return;
+                    }
+                    Logger.Event(`Successfully uploaded ${fileName}.`);
+
+                    // update commsStatus T => # when all upload requests of same row id get uploaded
+                    if (trackedInfo.count === trackedInfo.total) {
+                        let rowids:[[number,number]] = [[uploadRequest.rowid, uploadRequest.rowidHi]];
+                        let commsStatus = '#';
+                        this.setCommsStatus({ rowids, commsStatus, txnDefName, headerName });
+
+                        Logger.Event(`Updated row id ${strRowID} T => #.`);
+                    }
+                }
+                else {
+                    let error_desc = JSON.stringify(response);
+                    uploadRequest.numAttempts = (uploadRequest.numAttempts??0) +1;
+                    const maxAttempts = 3;
+                    if (uploadRequest.numAttempts < maxAttempts) {
+                        uploadRequest.msToRetry = Date.now() + 2000;
+                        this.retryRequests.push(uploadRequest);
+                        Logger.Error(`Attempt ${uploadRequest.numAttempts}, failed to upload ${fileName} ( Rowid: ${strRowID} ), will retry in 2 seconds\nErr: ${error_desc}.`);
+                        return;
+                    } else {
+                        Logger.Error(`Failed to upload ${fileName} ( Rowid: ${strRowID} ) after ${maxAttempts} attemps\nErr: ${error_desc}.`);
+                    }
+                }
+            }
+        }
+
+        tracker.processedCount++;
+        progressLogger({ status: 'progress', current: tracker.processedCount, total: tracker.total });
+
+        // update commsStatus # => S when all upload requests of same txn id get uploaded
+        if (tracker.processedCount === tracker.total) {
+            //Logger.Debug(`UploadTxnFilesPayload`);
+            let success = await this.uploadTxnFilesPayload(txnDefName, progressLogger);
+            let tempProgressObj:ReducedReportArg= {};
+            if (success) {
+                let commsStatus = 'S';
+                let rowids:[number,number][] = [];
+                let strRowids = new Set();
+                tracker.successUploads.forEach((record) => {
+                    if (!strRowids.has(record.strRowID)) {
+                        strRowids.add(record.strRowID);
+                        rowids.push([record.rowid, record.rowidHi]);
+                    }
+                });
+                if (tracker.successUploads.length > 0) {
+                    this.setCommsStatus({ rowids, commsStatus, txnDefName, headerName });
+                    Logger.Debug(`Updated row id ${Array.from(strRowids).toString()} # => S.`);
+                }
+                if (tracker.successUploads.length < tracker.total) {
+                    tempProgressObj.detail = `${tracker.total - tracker.successUploads.length} files failed to upload`;
+                }
+                tempProgressObj.current = tracker.successUploads.length;
+                tempProgressObj.total = tracker.total;
+
+            } else {
+                tempProgressObj.detail = 'fail to upload payload';
+
+            }
+            tracker.inProgress = false;
+            tempProgressObj.status = 'completed';
+            progressLogger(tempProgressObj);
+            //delete this.txnTracker[txnDefName];
+            this.txnTracker.delete(txnDefName);
+        }
+    }
+
+    async uploadFileTask() {
+        while (this.uploadRequests.length > 0) {
+            let uploadRequest = this.uploadRequests.shift();
+            if(uploadRequest)
+                await this.uploadSingleFileAsync(uploadRequest);
+        }
+    }
+}();

@@ -7,7 +7,7 @@ import {
     Manifest,
     NetProgressReportNativeFunc,
     ProgressReportFunc,
-    TblSyncContext,
+    TblSyncContext, TxnBulk,
     TxnDefinition,
 
 } from './Common';
@@ -18,82 +18,83 @@ import {
     BINARY_FILE_FOLDER,
     FileRecD,
     gDownloadFilesManager,
-    //gUploadFilesManager,
+    gUploadFilesManager,
     ReducedReportArg,
     ReducedReportFunc,
 } from './HttpFileSyncManager';
-import NativeNPSync from '../specs/NativeNPSync.ts';
+import NativeNPSync, {FileRecU} from '../specs/NativeNPSync.ts';
 import FileSystem from 'react-native-fs';
 //import {HttpCommStartUploadingTxn, HttpCommStopUploadingTxn} from "./HttpCommSyncAPI";
 
 export type TxnUploadParam = boolean|string [];
 
-// class BGTxnUploadingContext {
-//     cb4TxnUploading: ProgressReportFunc=()=>{};
-//
-//     //element with value "" means all txns defined in manifest file
-//     txnBatch: string[] =[];
-//
-//     //txn uploading retry interval
-//     intervalInMsForTxnUploading :number=60000;
-//
-//     timerIdForBGTxnUploading :number=0;
-//
-//     prepareTaskForAllTxns(cb:ProgressReportFunc, intervalInMs:number ) {
-//        this.cb4TxnUploading=cb;
-//         this.txnBatch = [""];
-//         if(intervalInMs >0 )
-//             this.intervalInMsForTxnUploading = intervalInMs;
-//
-//         //else
-//         //this.intervalInMsForTxnUploading= 60000;
-//     }
-//     cleanTimerId(){
-//         this.timerIdForBGTxnUploading = 0;
-//     }
-//     hasPendingTasks(){
-//         return this.txnBatch.length>0;
-//     }
-//     // appendTask(txnNames:string){
-//     //     this.txnBatch.push(txnNames);
-//     // }
-//     consolidateTxnTasks():void{
-//         //this.txnBatch will be something like ["", "txn_tbl1|txn_tbl2", "txn_tbl1|txn_tbl2"]
-//         if(!this.hasPendingTasks())
-//             return;
-//         if(this.txnBatch.indexOf("")>=0){
-//             //"" means all txns defined in manifest file,
-//             //any "" in the batch list will collapse the whole txn batch task,
-//             //    and discard the other pending txn uploading task
-//             Logger.Event(`${this.txnBatch.length} tasks have been consolidated into single and full txn uploading task` );
-//             this.txnBatch=[""];
-//         }else{
-//             //I don't want to produce an array with one long string element like
-//             //["txn_tbl1|txn_tbl2|txn_tbl1|txn_tbl2|txn_tbl1"]
-//             //instead, I want to distincted string like ["tbl1|tbl2|tbl3"]
-//             //this.txnBatch= [this.txnBatch.join('|')];
-//             let tblSet= new Set(this.txnBatch.join('|').split("|"));
-//             let allTxnTblNames = [... tblSet].join('|');
-//             Logger.Event(`${this.txnBatch.length} tasks have been consolidated, the txn name is ${allTxnTblNames}` );
-//             this.txnBatch = [allTxnTblNames];
-//         }
-//     }
-//     //return null for all
-//     getTopTxnTask():(string[]|null){
-//         return  this.txnBatch[0]===""? null:this.txnBatch[0].split('|');
-//     }
-//     discardTopTxnTask(){
-//         if(this.txnBatch.length>0)
-//             this.txnBatch.pop();
-//     }
-//     stopTimer(){
-//         if(this.timerIdForBGTxnUploading!=0) {
-//             ClearTimeout(this.timerIdForBGTxnUploading);
-//             this.timerIdForBGTxnUploading = 0;
-//         }
-//     }
-//
-// }
+class BGTxnUploadingContext {
+  cb4TxnUploading: ProgressReportFunc = () => {};
+
+  //element with value "" means all txns defined in manifest file
+  txnBatch: string[] = [];
+
+  //txn uploading retry interval
+  intervalInMsForTxnUploading: number = 60000;
+
+  timerIdForBGTxnUploading: number = 0;
+
+  prepareTaskForAllTxns(cb: ProgressReportFunc, intervalInMs: number) {
+    this.cb4TxnUploading = cb;
+    this.txnBatch = [''];
+    if (intervalInMs > 0) this.intervalInMsForTxnUploading = intervalInMs;
+
+    //else
+    //this.intervalInMsForTxnUploading= 60000;
+  }
+  cleanTimerId() {
+    this.timerIdForBGTxnUploading = 0;
+  }
+  hasPendingTasks() {
+    return this.txnBatch.length > 0;
+  }
+  // appendTask(txnNames:string){
+  //     this.txnBatch.push(txnNames);
+  // }
+  consolidateTxnTasks(): void {
+    //this.txnBatch will be something like ["", "txn_tbl1|txn_tbl2", "txn_tbl1|txn_tbl2"]
+    if (!this.hasPendingTasks()) return;
+    if (this.txnBatch.indexOf('') >= 0) {
+      //"" means all txns defined in manifest file,
+      //any "" in the batch list will collapse the whole txn batch task,
+      //    and discard the other pending txn uploading task
+      Logger.Event(
+        `${this.txnBatch.length} tasks have been consolidated into single and full txn uploading task`,
+      );
+      this.txnBatch = [''];
+    } else {
+      //I don't want to produce an array with one long string element like
+      //["txn_tbl1|txn_tbl2|txn_tbl1|txn_tbl2|txn_tbl1"]
+      //instead, I want to distincted string like ["tbl1|tbl2|tbl3"]
+      //this.txnBatch= [this.txnBatch.join('|')];
+      let tblSet = new Set(this.txnBatch.join('|').split('|'));
+      let allTxnTblNames = [...tblSet].join('|');
+      Logger.Event(
+        `${this.txnBatch.length} tasks have been consolidated, the txn name is ${allTxnTblNames}`,
+      );
+      this.txnBatch = [allTxnTblNames];
+    }
+  }
+  //return null for all
+  getTopTxnTask(): string[] | null {
+    return this.txnBatch[0] === '' ? null : this.txnBatch[0].split('|');
+  }
+  discardTopTxnTask() {
+    if (this.txnBatch.length > 0) this.txnBatch.pop();
+  }
+
+  stopTimer() {
+    if (this.timerIdForBGTxnUploading != 0) {
+      clearTimeout(this.timerIdForBGTxnUploading);
+      this.timerIdForBGTxnUploading = 0;
+    }
+  }
+}
 
 const TblSyncVersionFile = `${FirstCheckDir}/FirstCheck/TblSyncVersion.json`;
 const LastTxnSubmittedTimeStampFile =  `${FirstCheckDir}/FirstCheck/LastTxnSubmittedTimeStamp.json`;
@@ -101,8 +102,8 @@ const LastTxnSubmittedTimeStampFile =  `${FirstCheckDir}/FirstCheck/LastTxnSubmi
 let MaxNumRetries = 5;
 let bSyncDataGoingOn = false;
 let bSyncStopRequested = false;
-// let bUploadingTxn= false;
-// let bAutoUploadTxn = false;
+let bUploadingTxn= false;
+let bAutoUploadTxn = false;
 let tempFolderNames = new Set<string>();
 function ISOString() {
     return new Date().toISOString();
@@ -182,56 +183,58 @@ async function TableSyncAsync(dataFromToken:DataInToken, manifestObj:any,
             NewSyncVersion: '',
             CorrelationMsgID: '',
             RequestDT:"",
-            RefreshToken:gAuth.UserInfoJSON?.refresh_token||""
-
+            RefreshToken:gAuth.UserInfoJSON?.refresh_token || '',
         },
         Data: {
             DIST_ID: dataFromToken.DistCd,
-            REQUEST_DIST_ID: distCd??"",
+            REQUEST_DIST_ID: distCd ?? '',
             SLSMAN_ID: dataFromToken.SlsmanCd,
             SLSMAN_TYPE: dataFromToken.SlsmanType //"V"
-        }
+        },
     };
-    let emptyMap =new Map<number,string>();
-    let tblSyncContext :TblSyncContext= {
-        StartMsgID: msgId,
-        prevGroupName:"",
-        req: body, numAttempts: 0,
-        syncName: syncName,
-        groupNames:emptyMap,
-        'dataFromToken': dataFromToken,
-        preserveFile: function (originFile:string, seqID:number) {
-            let destFile = this.getPreservedFilePath(seqID);
-            NativeNPSync.MoveFile(originFile, destFile);
-            return destFile;
-        },
-        getPreservedFilePath: function (seqID:number) {
-            return GetHttpTmpFolder() + '/tbsyn_result_' + seqID.toString() + '.json';
-        },
-        //getBackupFilePath: function (seqID) {
-        //    return __GetHttpTmpFolder() + '/backup_' + seqID + '.json';
-        //},
-        backupForDebug: function (seqID:number) {
-            //need'nt backup file, just let it be alias of "DeleteFile"
+    let emptyMap  = new Map<number,string>();
+    let tblSyncContext: TblSyncContext = {
+      StartMsgID: msgId,
+      prevGroupName: '',
+      req: body,
+      numAttempts: 0,
+      syncName: syncName,
+      groupNames: emptyMap,
+      dataFromToken: dataFromToken,
+      preserveFile: function (originFile: string, seqID: number) {
+        let destFile = this.getPreservedFilePath(seqID);
+        NativeNPSync.MoveFile(originFile, destFile);
+        return destFile;
+      },
+      getPreservedFilePath: function (seqID: number) {
+        return (
+          GetHttpTmpFolder() + '/tbsyn_result_' + seqID.toString() + '.json'
+        );
+      },
+      //getBackupFilePath: function (seqID) {
+      //    return __GetHttpTmpFolder() + '/backup_' + seqID + '.json';
+      //},
+      backupForDebug: function (seqID: number) {
+        //need'nt backup file, just let it be alias of "DeleteFile"
 
-            //let destFile = this.getBackupFilePath(seqID);
-            //let srcFile = this.getPreservedFilePath(seqID);
-            //MoveFile(srcFile, destFile);
-            //return destFile;
-            let srcFile = this.getPreservedFilePath(seqID);
-            NativeNPSync.DeleteFile(srcFile);
-        },
-        retryInterval:5,
-        resetRetryInterval:function(){ this.retryInterval = 5;},
-        getRetryInterval:function(){
-            let p= this.retryInterval;
-            this.retryInterval*=2;
-            if(this.retryInterval>=30)
-                this.retryInterval=30;
-            return p;
-        },
-        //numByPassError:0
-
+        //let destFile = this.getBackupFilePath(seqID);
+        //let srcFile = this.getPreservedFilePath(seqID);
+        //MoveFile(srcFile, destFile);
+        //return destFile;
+        let srcFile = this.getPreservedFilePath(seqID);
+        NativeNPSync.DeleteFile(srcFile);
+      },
+      retryInterval: 5,
+      resetRetryInterval: function () {
+        this.retryInterval = 5;
+      },
+      getRetryInterval: function () {
+        let p = this.retryInterval;
+        this.retryInterval *= 2;
+        if (this.retryInterval >= 30) this.retryInterval = 30;
+        return p;
+      },
+      //numByPassError:0
     };
     // Clear all files before starting table sync
     NativeNPSync.DeleteFileAll(GetHttpTmpFolder(), 'result_*.json');
@@ -284,13 +287,13 @@ async function TableSyncAsync(dataFromToken:DataInToken, manifestObj:any,
 }
 type SuccessOrErrorDesc = {success:boolean, error?:string};
 
+
 function ExistFolder(table: string) {
     return NativeNPSync.Exists(`${BINARY_FILE_FOLDER}/${table}`);
 }
 function MoveFolder(src: string, dst:string) {
     return NativeNPSync.MoveFile(`${BINARY_FILE_FOLDER}/${src}`, `${BINARY_FILE_FOLDER}/${dst}`);
 }
-
 function DeleteFolder(folder: string) {
 
     return NativeNPSync.DeleteFolder(`${BINARY_FILE_FOLDER}/${folder}`);
@@ -351,29 +354,35 @@ async function TableSyncAsyncImpl(tblSyncContext:TblSyncContext, progress:Progre
                 tblSyncContext.dataFromToken);
 
             Logger.Event(`Get response of tblsync request, MsgId:${tblSyncContext.req.Comm.MsgID}`);
-            let file = response.rsp_data;
-            if (response.rsp_code !== 200) {
-                let error = '';
-                if (response.error_desc) {
-                    error = 'Error: ' + response.error_desc;
-                } else {
-                    let fileData = gHttpAsync.GetFileContent(response);
-                    error = 'Error: ' + response.rsp_code + ', data: ' + fileData;
-                }
-                tblSyncContext.numAttempts += 1;
-                retry =((response.rsp_code??0) < 500) && tblSyncContext.numAttempts < MaxNumRetries;
+            if (response.type === 'RESULT_ERR' || response.rsp_code !== 200) {
+              let error = '';
+              if (response.type === 'RESULT_ERR') {
+                error = 'Error: ' + response.error_desc;
+              } else {
+                let fileData = gHttpAsync.GetFileContent(response);
+                error = 'Error: ' + response.rsp_code + ', data: ' + fileData;
+              }
+              tblSyncContext.numAttempts += 1;
+              if (response.type !== 'RESULT_ERR') {
+                let file = response.rsp_data;
                 NativeNPSync.DeleteFile(file!);
-                if (retry) {
-                    let retryInterval= tblSyncContext.getRetryInterval();
-                    Logger.Warn(`Received bad rsp of tblsync,${error}, will retry it after ${retryInterval} sec.`);
-                    throw retryInterval;
-                } else {
-                    //Logger.Error("Received too much bad rsp of tblsync:" + error + ", will abort");
-                    throw error;
-                }
-            }
-            else
-                tblSyncContext.resetRetryInterval();
+              }
+              retry =
+                (response.type === 'RESULT_ERR' ? 0 : response.rsp_code) <
+                  500 && tblSyncContext.numAttempts < MaxNumRetries;
+              if (retry) {
+                let retryInterval = tblSyncContext.getRetryInterval();
+                Logger.Warn(
+                  `Received bad rsp of tblsync,${error}, will retry it after ${retryInterval} sec.`,
+                );
+                throw retryInterval;
+              } else {
+                //Logger.Error("Received too much bad rsp of tblsync:" + error + ", will abort");
+                throw error;
+              }
+            } else tblSyncContext.resetRetryInterval();
+
+            let file = response.rsp_data;
             let str_comm_rsp = NativeNPSync.Comm2ProcessTblSync(file!, true);
             let comm_rsp = str_comm_rsp === "" ? null : JSON.parse(str_comm_rsp);
             if (!comm_rsp) {
@@ -475,23 +484,24 @@ async function TableSyncAsyncImpl(tblSyncContext:TblSyncContext, progress:Progre
         if (retry && (typeof error) === 'number' && tblSyncContext.numAttempts < MaxNumRetries) {
             Logger.Event(`Will re-download tablesync:${tblSyncContext.syncName} in ${error} seconds`);
             resolveResult = await new Promise((resolve2) => {
+                // @ts-ignore
+                let timeoutInSec:number = error;
                 setTimeout(() => {
                     TableSyncAsyncImpl(tblSyncContext, progress, resolve2);
-                }, error * 1000);
+                }, timeoutInSec * 1000);
             });
 
         } else {
-            if ((typeof error) === 'number' && tblSyncContext.numAttempts >= MaxNumRetries) {
-                let errmsg = 'Failed to download tblsync after ' + tblSyncContext.numAttempts + ' attempts';
-                Logger.Error(errmsg);
-                resolveResult = { success: false, error: errmsg };
-            } else {
-                if(bSyncStopRequested)
-                    Logger.Event(error);
-                else
-                    Logger.Error('Encounter tblsync error:' + JSON.stringify(error));
-                resolveResult = { success: false, error: error };
-            }
+          if ( typeof error === 'number' && tblSyncContext.numAttempts >= MaxNumRetries ) {
+            let errmsg = 'Failed to download tblsync after ' + tblSyncContext.numAttempts + ' attempts';
+            Logger.Error(errmsg);
+            resolveResult = {success: false, error: errmsg};
+          } else {
+            if (bSyncStopRequested) Logger.Event(error);
+            else
+              Logger.Error('Encounter tblsync error:' + JSON.stringify(error));
+            resolveResult = {success: false, error: '' + error};
+          }
         }
     }
     if (resolve)
@@ -510,7 +520,7 @@ function DiscardTableSync(tblSyncContext:TblSyncContext, progress:ProgressReport
     let sequenceID = tblSyncContext.StartMsgID;
     let success = false;
     for (; ;) {
-        let groupName = tblSyncContext.groupNames.get(sequenceID)??"";
+        let groupName = tblSyncContext.groupNames.get(sequenceID) ?? '';
         let file = tblSyncContext.getPreservedFilePath(sequenceID);
         if(!ExistAbsFile(file))
             break;
@@ -557,7 +567,7 @@ async function ProcessTableSyncAsync(tblSyncContext:TblSyncContext, progress:Pro
             let comm_rsp = JSON.parse(comm_rsp_str);
             //dev engine will continue to process the rest tablesyncs
             //so, it should not be "", which means fatal error,
-            //instead, it will return an rsp object with error message
+            //instead, it will return a rsp object with error message
             //hence, here need to handle Error message,
             if (comm_rsp.Error) {
                 //dev engine should not block tablesync even if error exists,
@@ -614,197 +624,202 @@ async function ProcessTableSyncAsync(tblSyncContext:TblSyncContext, progress:Pro
 }
 
 export let gHttpDataSync = new class {
-    // async UploadAllTxnsAsync (arrTxnNames:string[]|null,numAttempts:number, dataFromToken:DataInToken, manifest:Manifest,
-    //                           progress:ProgressReportFunc, resolve?:resolve_t) :Promise<SuccessOrErrorDesc>{
-    //     let resolveResult:SuccessOrErrorDesc = { success: true };
-    //
-    //     if (!manifest.TRANSACTION) {
-    //         if (resolve) resolve(resolveResult);
-    //         return resolveResult;
-    //     }
-    //     let txn_blk :TxnBulk|null = null;
-    //     let txn_def:TxnDefinition|null =null;
-    //     try {
-    //         gUploadFilesManager.init(progress, dataFromToken, manifest);
-    //         let max_msg_size = 1024 * 1024;
-    //         if (manifest.TRANSACTION.MaxMessageSize) {
-    //             max_msg_size = parseInt(manifest.TRANSACTION.MaxMessageSize);
-    //
-    //             if (manifest.TRANSACTION.MaxMessageSize.indexOf('M') > 0) {
-    //                 max_msg_size *= 1024 * 1024;
-    //             } else if (manifest.TRANSACTION.MaxMessageSize.indexOf('K') > 0) {
-    //                 max_msg_size *= 1024;
-    //             }
-    //         }
-    //         let txn_defs = manifest.TRANSACTION.Definitions;
-    //
-    //         for (txn_def of txn_defs) {
-    //             let client_schema = txn_def.ClientSchema;
-    //             let txnName = txn_def.Name;
-    //
-    //             if (!client_schema || !txnName || txnName.substr(-5) === '#FILE')
-    //                 continue;
-    //             //null or empty array mean to upload all txns
-    //             if(arrTxnNames && arrTxnNames.length>=0 && arrTxnNames.indexOf(txnName)<0)
-    //                 continue;
-    //
-    //             let txnBlkUploadFiles:FileRecU[] = [];
-    //             //will be null, or object like {hasError:true, errorMsg:"", arrayFiles};
-    //             let hangingTxn = __Comm2GetTxnHangingFiles(txn_def.Name, JSON.stringify(client_schema));
-    //             if (hangingTxn && hangingTxn.hasError) {
-    //                 //let err=hangingTxn.errorMsg;
-    //                 let err = `Fail to compose txn(${txnName}), ${hangingTxn.errorMsg}`;
-    //                 Logger.Warn(err);
-    //                 //if (IsDevEngine()) alert(err, 'Warning');
-    //                 continue;
-    //             }
-    //             if (hangingTxn) txnBlkUploadFiles = hangingTxn.arrayFiles || [];
-    //             if (txnBlkUploadFiles.length > 0) {
-    //                 Logger.Debug(`get hanging ${txnBlkUploadFiles.length} files for txn(${txnName})`);
-    //             }
-    //             for (; ;) {
-    //                 //null, {hasError:true, errorMsg:""} or {hasNext:true/false, byteArray:,msgID:555, rowIDs: }
-    //                 txn_blk = __Comm2MakeTxn(dataFromToken.CompanyId, dataFromToken.AppId,gAuth.UserInfoJSON?.refresh_token||"",
-    //                     max_msg_size, txnName, JSON.stringify(client_schema));
-    //
-    //                 if (txn_blk && txn_blk.hasError) {
-    //                     let err = `Fail to compose txn(${txnName}), ${txn_blk.errorMsg}`;
-    //                     Logger.Warn(err);
-    //                     txnBlkUploadFiles = [];
-    //                     break;
-    //                 }
-    //
-    //                 if (txn_blk && txn_blk.byteArray && txn_blk.byteArray.byteLength > 0) {
-    //                     Logger.Event('Composed transaction (' + txn_def.Name + '), MsgId=' + txn_blk.msgID + ', length=' + txn_blk.byteArray.byteLength);
-    //
-    //                     progress({ cat: 'UploadTxn', subCat: 'Data', name: txn_def.Name, status: 'start' });
-    //                     //WriteFile("txn_payload.txt", txn_blk.byteArray);
-    //                     //alert("txn_payload.txt");
-    //                     let uploadRequest = await gHttpDataSync.UploadTxnAsync(txn_blk.byteArray, (status) => {
-    //                         progress({ cat: 'UploadTxn', subCat: 'Data', name: txnName, status: 'progress', current: status.done, total: status.total });
-    //                     }, dataFromToken);
-    //                     if (/*uploadRequest.type != "RESULT_RSP" &&*/ uploadRequest.rsp_code !== 200) {
-    //                         Logger.Error('tried to upload txn(' + txn_def.Name + '), MsgId=' + txn_blk.msgID + ', length=' + txn_blk.byteArray.byteLength + ', but got error_desc=' + uploadRequest.error_desc);
-    //                         numAttempts++;
-    //                         throw 2;
-    //                     }
-    //
-    //                     let rsp_data = JSON.parse(uploadRequest.rsp_data);
-    //                     if (rsp_data.Response && rsp_data.Response.Status !== 'OK') {
-    //                         let error = '';
-    //                         if (rsp_data.Response.FailReason)
-    //                             error = `Server reject txn(${txn_def.Name}), MsgId=${txn_blk.msgID} with ${rsp_data.Response.Status}:${rsp_data.Response.FailReason}`;
-    //                         else
-    //                             error = `Server reject txn(${txn_def.Name}), MsgId=${txn_blk.msgID} with ${rsp_data.Response.Status}`;
-    //                         throw error;
-    //                         //set hasNext to true to skip the file uploading
-    //                         //txn_blk.hasNext = true;
-    //                         //break;
-    //
-    //                     } else if (rsp_data.Response.hasOwnProperty("Status") && rsp_data.Response.hasOwnProperty("Detail")) {
-    //                         let status = rsp_data.Response.Status;
-    //                         let detail = rsp_data.Response.Detail;
-    //                         if (status === "FAIL" && detail === "Reach maximum of connections") {
-    //                             numAttempts++;
-    //                             throw 5;
-    //                         }
-    //                     } else if (rsp_data.Comm.CorrelationMsgID === txn_blk.msgID) {
-    //                         Logger.Event('Uploaded transaction (' + txn_def.Name + '), MsgId='
-    //                             + txn_blk.msgID + ', length=' + txn_blk.byteArray.byteLength);
-    //                         txn_blk.byteArray = null;
-    //                         txn_blk.bufferPtr = null;
-    //                         let totalTxnRows = 0;
-    //                         if(txn_blk.rowIDs)
-    //                             totalTxnRows= txn_blk.rowIDs.byteLength / 8;
-    //                         // update COMM_STATUS to T or S accordingly
-    //                         let commStatus = (txnBlkUploadFiles && txnBlkUploadFiles.length > 0) ? 'T' : 'S';
-    //                         __Comm2CommitTxn(txn_def.Name, client_schema.Header.Name, txn_blk, commStatus);
-    //                         let progressDetail = `${totalTxnRows} Txn status set to ${commStatus}.`;
-    //                         progress({
-    //                             cat: 'UploadTxn', subCat: 'Data', name: txn_def.Name, status: 'completed',
-    //                             detail: progressDetail, total: totalTxnRows
-    //                         });
-    //                         Logger.Event('Transaction committed (' + txn_def.Name + '), MsgId=' + txn_blk.msgID);
-    //                     } else {
-    //                         Logger.Error('Received unmatched MsgId');
-    //                     }
-    //                 }
-    //
-    //                 if (txn_blk && txn_blk.hasNext) {
-    //                     continue;
-    //                 }
-    //                 break;
-    //             }
-    //             if (txnBlkUploadFiles.length > 0 && (!txn_blk || !txn_blk.hasNext)) {
-    //                 gUploadFilesManager.appendTxnUploadingTasks(
-    //                     manifest.TRANSACTION.ObjectStoreService,
-    //                     txnBlkUploadFiles, txn_def);
-    //             }
-    //             txnBlkUploadFiles = [];
-    //
-    //         }
-    //         await gUploadFilesManager.uploadAllFilesAsync();
-    //     } catch (error) {
-    //         if (txn_blk !== null && txn_def !== null && (typeof error) !== 'number') {
-    //             //var err_msg = "Upload transaction failed " + JSON.stringify(error);
-    //             let err_msg = 'Upload transaction (' + txn_def.Name + '), MsgId=' + txn_blk.msgID + ', error: ' + JSON.stringify(error);
-    //             Logger.Error(err_msg);
-    //             progress({ cat: 'UploadTxn', subCat: '', name: txn_def.Name, status: 'failed', detail: err_msg });
-    //
-    //         } else if ((typeof error) === 'number' && numAttempts < MaxNumRetries) {
-    //             //progress({ cat: 'UploadTxn', subCat: '', name: txn_def.Name, status: 'progress', detail: 'Error: retrying in ' + error + ' seconds' });
-    //             if(txn_def)
-    //                 Logger.Event(`Will re-upload txn:${txn_def.Name} in ${error} seconds`);
-    //             resolveResult = await new Promise((resolve2) => {
-    //                 SetTimeout(() => {
-    //                     this.UploadAllTxnsAsync(arrTxnNames, numAttempts, dataFromToken, manifest, progress, resolve2);
-    //                 }, error * 1000);
-    //             });
-    //         } else {
-    //             if ((typeof error) === 'number' && numAttempts >= MaxNumRetries) {
-    //                 let errmsg = 'Failed to upload transaction after ' + numAttempts + ' attempts';
-    //                 Logger.Error(errmsg);
-    //                 resolveResult = { success: false, error: errmsg };
-    //             } else {
-    //                 Logger.Error('Encounter upload transaction error:' + error);
-    //                 resolveResult = { success: false, error: error };
-    //             }
-    //         }
-    //     }
-    //     if (txn_blk) txn_blk.byteArray = null;
-    //     gUploadFilesManager.cleanup();
-    //     if (resolve) resolve(resolveResult);
-    //
-    //     return resolveResult;
-    // };
-    //
-    // async UploadTxnAsync(arrayBuffer:Uint8Array|string, progress:NetProgressReportNativeFunc, dataInToken:DataInToken) {
-    //     let url = gHttpMobileManager.CommServiceURL() + 'transaction';
-    //     //let header = await gHttpMobileManager.HttpHeader(token);
-    //     return await gHttpAsync.SendWebReqWithTokenAsync(url, 'POST', dataInToken, arrayBuffer, progress);
-    // };
+    async UploadAllTxnsAsync (arrTxnNames:string[]|null,numAttempts:number, dataFromToken:DataInToken, manifest:Manifest,
+                              progress:ProgressReportFunc, resolve?:resolve_t) :Promise<SuccessOrErrorDesc>{
+        let resolveResult:SuccessOrErrorDesc = { success: true };
 
-    async SyncDataAsync2(progress: ProgressReportFunc, syncNames: string[], firstCheck: boolean,
-                         distCd:string, txnUpload:TxnUploadParam):Promise<SuccessOrErrorDesc>{
-        if (bSyncDataGoingOn) {
-            // if ((syncNames === null || syncNames.length == 0) && txnUpload != false) {
-            //     let smartTxnEnabled = HttpCommStopUploadingTxn();
-            //     let ret = await gHttpDataSync.UploadAllTxnsNowAsyncFromCommSync2(progress, -1);
-            //     if(smartTxnEnabled)
-            //         HttpCommStartUploadingTxn(progress, -1);
-            //     return ret;
-            // }
-            return { success: false, error: 'Previous data sync is going on' };
+        if (!manifest.TRANSACTION) {
+            if (resolve) resolve(resolveResult);
+            return resolveResult;
         }
+        let txn_blk :TxnBulk|null = null;
+        let txn_def:TxnDefinition|null =null;
+        try {
+            gUploadFilesManager.init(progress, dataFromToken, manifest);
+            let max_msg_size = 1024 * 1024;
+            if (manifest.TRANSACTION.MaxMessageSize) {
+                max_msg_size = parseInt(manifest.TRANSACTION.MaxMessageSize);
 
-        bSyncDataGoingOn = true;
-        bSyncStopRequested = false;
-        let success = await this.SyncDataAsyncImpl2(progress, syncNames, firstCheck, distCd, txnUpload);
-        // let success = await this.SyncDataAsyncImpl(progress, ["profile-cust"], firstCheck, "D02");
-        // let success = await this.SyncDataAsyncImpl(progress, ["SYNC"], firstCheck);
-        bSyncDataGoingOn = false;
-        return success;
-    }
+                if (manifest.TRANSACTION.MaxMessageSize.indexOf('M') > 0) {
+                    max_msg_size *= 1024 * 1024;
+                } else if (manifest.TRANSACTION.MaxMessageSize.indexOf('K') > 0) {
+                    max_msg_size *= 1024;
+                }
+            }
+            let txn_defs = manifest.TRANSACTION.Definitions;
+
+            for (txn_def of txn_defs) {
+                let client_schema = txn_def.ClientSchema;
+                let txnName = txn_def.Name;
+
+                if (!client_schema || !txnName || txnName.substr(-5) === '#FILE')
+                    continue;
+                //null or empty array mean to upload all txns
+                if(arrTxnNames && arrTxnNames.length>=0 && arrTxnNames.indexOf(txnName)<0)
+                    continue;
+
+                let txnBlkUploadFiles:FileRecU[] = [];
+                //will be null, or object like {hasError:true, errorMsg:"", arrayFiles};
+                let hangingTxn = NativeNPSync.__Comm2GetTxnHangingFiles(txn_def.Name, JSON.stringify(client_schema));
+                if (hangingTxn && hangingTxn.hasError) {
+                    //let err=hangingTxn.errorMsg;
+                    let err = `Fail to compose txn(${txnName}), ${hangingTxn.errorMsg}`;
+                    Logger.Warn(err);
+                    //if (IsDevEngine()) alert(err, 'Warning');
+                    continue;
+                }
+                if (hangingTxn) txnBlkUploadFiles = hangingTxn.arrayFiles || [];
+                if (txnBlkUploadFiles.length > 0) {
+                    Logger.Debug(`get hanging ${txnBlkUploadFiles.length} files for txn(${txnName})`);
+                }
+                for (; ;) {
+                    //null, {hasError:true, errorMsg:""} or {hasNext:true/false, byteArray:,msgID:555, rowIDs: }
+                    let txn_blkObj = NativeNPSync.__Comm2MakeTxn(dataFromToken.CompanyId,
+                          dataFromToken.AppId,gAuth.UserInfoJSON?.refresh_token||"",
+                          max_msg_size, txnName, JSON.stringify(client_schema));
+
+                    txn_blk = txn_blkObj as TxnBulk;
+
+                    if (txn_blk && txn_blk.hasError) {
+                        let err = `Fail to compose txn(${txnName}), ${txn_blk.errorMsg}`;
+                        Logger.Warn(err);
+                        txnBlkUploadFiles = [];
+                        break;
+                    }
+                    if (txn_blk && txn_blk.byteArray && txn_blk.byteArray.byteLength > 0) {
+                        Logger.Event('Composed transaction (' + txn_def.Name + '), MsgId=' + txn_blk.msgID + ', length=' + txn_blk.byteArray.byteLength);
+
+                        progress({ cat: 'UploadTxn', subCat: 'Data', name: txn_def.Name, status: 'start' });
+                        //WriteFile("txn_payload.txt", txn_blk.byteArray);
+                        //alert("txn_payload.txt");
+                        let uplRsp= await gHttpDataSync.UploadTxnAsync(txn_blk.byteArray, (status) => {
+                            progress({ cat: 'UploadTxn', subCat: 'Data', name: txnName, status: 'progress', current: status.done, total: status.total });
+                        }, dataFromToken);
+                        if (uplRsp.type != "RESULT_RSP" ||  uplRsp.rsp_code !== 200) {
+                            if(uplRsp.type == "RESULT_ERR")
+                                Logger.Error(`tried to upload txn(${txn_def.Name }), MsgId={$txn_blk.msgID}, length=${txn_blk.byteArray.byteLength}, but got error_desc=${uplRsp.error_desc}`);
+                            else
+                                Logger.Error(`tried to upload txn(${txn_def.Name }), MsgId={$txn_blk.msgID}, length=${txn_blk.byteArray.byteLength}, but got error_desc=${JSON.stringify(uplRsp)}`);
+                            numAttempts++;
+                            throw 2;
+                        }
+
+                        let rsp_data = JSON.parse(uplRsp.rsp_data);
+                        if (rsp_data.Response && rsp_data.Response.Status !== 'OK') {
+                            let error = '';
+                            if (rsp_data.Response.FailReason)
+                                error = `Server reject txn(${txn_def.Name}), MsgId=${txn_blk.msgID} with ${rsp_data.Response.Status}:${rsp_data.Response.FailReason}`;
+                            else
+                                error = `Server reject txn(${txn_def.Name}), MsgId=${txn_blk.msgID} with ${rsp_data.Response.Status}`;
+                            throw error;
+                            //set hasNext to true to skip the file uploading
+                            //txn_blk.hasNext = true;
+                            //break;
+
+                        } else if (rsp_data.Response.hasOwnProperty("Status") && rsp_data.Response.hasOwnProperty("Detail")) {
+                            let status = rsp_data.Response.Status;
+                            let detail = rsp_data.Response.Detail;
+                            if (status === "FAIL" && detail === "Reach maximum of connections") {
+                                numAttempts++;
+                                throw 5;
+                            }
+                        } else if (rsp_data.Comm.CorrelationMsgID === txn_blk.msgID) {
+                            Logger.Event('Uploaded transaction (' + txn_def.Name + '), MsgId='
+                                + txn_blk.msgID + ', length=' + txn_blk.byteArray.byteLength);
+                            txn_blk.byteArray = null;
+                            txn_blk.bufferPtr = null;
+                            let totalTxnRows = 0;
+                            if(txn_blk.rowIDs)
+                                totalTxnRows= txn_blk.rowIDs.byteLength / 8;
+                            // update COMM_STATUS to T or S accordingly
+                            let commStatus = (txnBlkUploadFiles && txnBlkUploadFiles.length > 0) ? 'T' : 'S';
+                            NativeNPSync.__Comm2CommitTxn(txn_def.Name, client_schema.Header.Name, txn_blk, commStatus);
+                            let progressDetail = `${totalTxnRows} Txn status set to ${commStatus}.`;
+                            progress({
+                                cat: 'UploadTxn', subCat: 'Data', name: txn_def.Name, status: 'completed',
+                                detail: progressDetail, total: totalTxnRows
+                            });
+                            Logger.Event('Transaction committed (' + txn_def.Name + '), MsgId=' + txn_blk.msgID);
+                        } else {
+                            Logger.Error('Received unmatched MsgId');
+                        }
+                    }
+
+                    if (txn_blk && txn_blk.hasNext) {
+                        continue;
+                    }
+                    break;
+                }
+                if (txnBlkUploadFiles.length > 0 && (!txn_blk || !txn_blk.hasNext)) {
+                    gUploadFilesManager.appendTxnUploadingTasks(
+                        manifest.TRANSACTION.ObjectStoreService,
+                        txnBlkUploadFiles, txn_def);
+                }
+                txnBlkUploadFiles = [];
+
+            }
+            await gUploadFilesManager.uploadAllFilesAsync();
+        } catch (error) {
+            if (txn_blk !== null && txn_def !== null && (typeof error) !== 'number') {
+                //var err_msg = "Upload transaction failed " + JSON.stringify(error);
+                let err_msg = 'Upload transaction (' + txn_def.Name + '), MsgId=' + txn_blk.msgID + ', error: ' + JSON.stringify(error);
+                Logger.Error(err_msg);
+                progress({ cat: 'UploadTxn', subCat: '', name: txn_def.Name, status: 'failed', detail: err_msg });
+
+            } else if ((typeof error) === 'number' && numAttempts < MaxNumRetries) {
+                //progress({ cat: 'UploadTxn', subCat: '', name: txn_def.Name, status: 'progress', detail: 'Error: retrying in ' + error + ' seconds' });
+                if(txn_def)
+                    Logger.Event(`Will re-upload txn:${txn_def.Name} in ${error} seconds`);
+                resolveResult = await new Promise((resolve2) => {
+                    setTimeout(() => {
+                        this.UploadAllTxnsAsync(arrTxnNames, numAttempts, dataFromToken, manifest, progress, resolve2);
+                    }, (error as number) * 1000);
+                });
+            } else {
+                if ((typeof error) === 'number' && numAttempts >= MaxNumRetries) {
+                    let errmsg = 'Failed to upload transaction after ' + numAttempts + ' attempts';
+                    Logger.Error(errmsg);
+                    resolveResult = { success: false, error: errmsg };
+                } else {
+                    Logger.Error('Encounter upload transaction error:' + error);
+                    resolveResult = { success: false, error: ""+error };
+                }
+            }
+        }
+        if (txn_blk) txn_blk.byteArray = null;
+        gUploadFilesManager.cleanup();
+        if (resolve) resolve(resolveResult);
+
+        return resolveResult;
+    };
+
+    async UploadTxnAsync(arrayBuffer:Uint8Array|string, progress:NetProgressReportNativeFunc, dataInToken:DataInToken) {
+        let url = gHttpMobileManager.CommServiceURL() + 'transaction';
+        //let header = await gHttpMobileManager.HttpHeader(token);
+        return await gHttpAsync.SendWebReqWithTokenAsync(url, 'POST', dataInToken, arrayBuffer, progress);
+    };
+
+    // async SyncDataAsync2(progress: ProgressReportFunc, syncNames: string[], firstCheck: boolean,
+    //                      distCd:string, txnUpload:TxnUploadParam):Promise<SuccessOrErrorDesc>{
+    //     if (bSyncDataGoingOn) {
+    //         if ((syncNames === null || syncNames.length == 0) && txnUpload != false) {
+    //             let smartTxnEnabled = HttpCommStopUploadingTxn();
+    //             let ret = await gHttpDataSync.UploadAllTxnsNowAsyncFromCommSync2(progress, -1);
+    //             if(smartTxnEnabled)
+    //                 HttpCommStartUploadingTxn(progress, -1);
+    //             return ret;
+    //         }
+    //         return { success: false, error: 'Previous data sync is going on' };
+    //     }
+    //
+    //     bSyncDataGoingOn = true;
+    //     bSyncStopRequested = false;
+    //     let success = await this.SyncDataAsyncImpl2(progress, syncNames, firstCheck, distCd, txnUpload);
+    //     // let success = await this.SyncDataAsyncImpl(progress, ["profile-cust"], firstCheck, "D02");
+    //     // let success = await this.SyncDataAsyncImpl(progress, ["SYNC"], firstCheck);
+    //     bSyncDataGoingOn = false;
+    //     return success;
+    // }
 
 
     StopCommSync () {
@@ -869,13 +884,13 @@ export let gHttpDataSync = new class {
             progress({ cat: 'TblSync', subCat: '', name: '', status: 'failed', detail: "" + e });
             return { success: false, error: err };
         }
-    };
+    }
 
     private async SyncDataWithTokenAsync(dataInToken: DataInToken, progress: ProgressReportFunc,
                           firstCheck: boolean, syncNames: string[], distCd: string, txnUpload:TxnUploadParam)
     {
         let firstCheckReply:FirstCheckResult|undefined;
-        if(firstCheck && (txnUpload===true || txnUpload ===false)) {
+        if(firstCheck && (txnUpload === true || txnUpload === false)) {
             let validation = await gHttpMobileManager.FirstCheckValidationAsync('COMM_START', dataInToken);
             if (!validation.success) {
                 let err = 'SyncData Fail: Cannot pass first check validation';
@@ -887,34 +902,34 @@ export let gHttpDataSync = new class {
         let uploadResult: SuccessOrErrorDesc = {success: true, error: ''};
         let manifestObj = await gHttpMobileManager.LoadManifestFile();
         if (manifestObj) {
-            // if(txnUpload===true || Array.isArray(txnUpload)) {
-            //     progress({cat: 'UploadTxn', subCat: '', name: '', status: 'start'});
-            //     if(!bUploadingTxn) {
-            //         bUploadingTxn = true;
-            //         if (txnUpload === true)
-            //             uploadResult = await this.UploadAllTxnsAsync(null, 0, dataInToken, manifestObj, progress);
-            //         else
-            //             uploadResult = await this.UploadAllTxnsAsync(txnUpload, 0, dataInToken, manifestObj, progress);
-            //         bUploadingTxn = false;
-            //     }else
-            //         uploadResult = {success: false, error: 'previous txn uploading is going on'};
-            //     if (uploadResult.success) {
-            //         RecordLastSubmittedTimeStamp();
-            //         progress({cat: 'UploadTxn', subCat: '', name: '', status: 'completed'});
-            //     } else {
-            //         progress({
-            //             cat: 'UploadTxn',
-            //             subCat: '',
-            //             name: '',
-            //             status: 'failed',
-            //             detail: uploadResult.error??""
-            //         });
-            //         let timestamp = GetLastSubmittedTimeStamp();
-            //         if (!timestamp)
-            //             RecordLastSubmittedTimeStamp();
-            //         //have to continue, thus app will have a chance to update wrong manifest file.
-            //     }
-            // }
+            if(txnUpload===true || Array.isArray(txnUpload)) {
+                progress({cat: 'UploadTxn', subCat: '', name: '', status: 'start'});
+                if(!bUploadingTxn) {
+                    bUploadingTxn = true;
+                    if (txnUpload === true)
+                        uploadResult = await this.UploadAllTxnsAsync(null, 0, dataInToken, manifestObj, progress);
+                    else
+                        uploadResult = await this.UploadAllTxnsAsync(txnUpload, 0, dataInToken, manifestObj, progress);
+                    bUploadingTxn = false;
+                }else
+                    uploadResult = {success: false, error: 'previous txn uploading is going on'};
+                if (uploadResult.success) {
+                    RecordLastSubmittedTimeStamp();
+                    progress({cat: 'UploadTxn', subCat: '', name: '', status: 'completed'});
+                } else {
+                    progress({
+                        cat: 'UploadTxn',
+                        subCat: '',
+                        name: '',
+                        status: 'failed',
+                        detail: uploadResult.error ?? '',
+                    });
+                    let timestamp = GetLastSubmittedTimeStamp();
+                    if (!timestamp)
+                        RecordLastSubmittedTimeStamp();
+                    //have to continue, thus app will have a chance to update wrong manifest file.
+                }
+            }
         } else {
             if (gHttpMobileManager.GetVersionInfo('MANIFEST_VER')) {
                 let ret = {success: false, error: 'TableSyncAsync Fail: Cannot load manifest file'};
@@ -984,128 +999,133 @@ export let gHttpDataSync = new class {
             return { success: false, error: err };
         }
     };
-    // async DoUploadTxnAsync (progress:ProgressReportFunc, arrTxnNames:string[]|null) {
-    //     let dataInToken = await gAuth.GetTokenInfoAsync(progress);
-    //     if(!dataInToken){
-    //         Logger.Error('BGTxn: Fail to get token');
-    //         return { success: false , error: "cannot get token" };
-    //     }
-    //     NativeNPSync.DeleteFileAll(GetHttpTmpFolder(), '__http_request*');
-    //     let manifestObj = gHttpMobileManager.LoadManifestFile();
-    //     if (manifestObj) {
-    //         progress({ cat: 'UploadTxn', subCat: '', name: '', status: 'start' });
-    //         //await gHttpDataSync.UploadAllTxnsAsync(0, dataInToken, manifestObj, progress);
-    //         let uploadResult = await this.UploadAllTxnsAsync(arrTxnNames,0, dataInToken, manifestObj, progress);
-    //         if (uploadResult.success) {
-    //             RecordLastSubmittedTimeStamp();
-    //             progress({ cat: 'UploadTxn', subCat: '', name: '', status: 'completed' });
-    //         } else {
-    //             progress({ cat: 'UploadTxn', subCat: '', name: '', status: 'failed', detail: uploadResult.error??"" });
-    //             let timestamp = GetLastSubmittedTimeStamp();
-    //             if (!timestamp)
-    //                 RecordLastSubmittedTimeStamp();
-    //             else{
-    //                 timestamp.setDate(timestamp.getDate() + 7);
-    //                 if(timestamp< new Date())
-    //                     //The txn has not been transferred to server in 7 days, please contact administrator.
-    //                     alert(NPGetText(IDS_HTTPCOMM_FAIL_TO_SUBMIT_TXN_IN_7DAYS));
-    //             }
-    //         }
-    //         return uploadResult;
-    //     } else {
-    //         //has version , but failed to load manifest file
-    //         if(gHttpMobileManager.GetVersionInfo('MANIFEST_VER') )
-    //             Logger.Error('BGTxn: cannot load manifest file');
-    //         else {
-    //             //no version, no manifest file, it may be first time after a clean installation
-    //             //keep silience?
-    //             // if(IsDevEngine()){
-    //             //     alert('UploadBgTxnImplAsync Fail: Cannot load manifest file');
-    //             // }
-    //         }
-    //         //should treat it as success if no manifest file
-    //         return { success: true, error: "" };
-    //     }
-    // };
+    async DoUploadTxnAsync (progress:ProgressReportFunc, arrTxnNames:string[]|null) {
+        let dataInToken = await gAuth.GetTokenInfoAsync(progress);
+        if(!dataInToken){
+            Logger.Error('BGTxn: Fail to get token');
+            return { success: false , error: "cannot get token" };
+        }
+        NativeNPSync.DeleteFileAll(GetHttpTmpFolder(), '__http_request*');
+        let manifestObj = gHttpMobileManager.LoadManifestFile();
+        if (manifestObj) {
+            progress({ cat: 'UploadTxn', subCat: '', name: '', status: 'start' });
+            //await gHttpDataSync.UploadAllTxnsAsync(0, dataInToken, manifestObj, progress);
+            let uploadResult = await this.UploadAllTxnsAsync(arrTxnNames,0, dataInToken, manifestObj, progress);
+            if (uploadResult.success) {
+                RecordLastSubmittedTimeStamp();
+                progress({ cat: 'UploadTxn', subCat: '', name: '', status: 'completed' });
+            } else {
+                progress({ cat: 'UploadTxn', subCat: '', name: '', status: 'failed', detail: uploadResult.error??"" });
+                let timestamp = GetLastSubmittedTimeStamp();
+                if (!timestamp)
+                    RecordLastSubmittedTimeStamp();
+                else{
+                    timestamp.setDate(timestamp.getDate() + 7);
+                    if(timestamp< new Date())
+                        //The txn has not been transferred to server in 7 days, please contact administrator.
+                        await CommAlertAsync("Error","IDS_HTTPCOMM_FAIL_TO_SUBMIT_TXN_IN_7DAYS");
+                }
+            }
+            return uploadResult;
+        } else {
+            //has version , but failed to load manifest file
+            if(gHttpMobileManager.GetVersionInfo('MANIFEST_VER') )
+                Logger.Error('BGTxn: cannot load manifest file');
+            else {
+                //no version, no manifest file, it may be first time after a clean installation
+                //keep silience?
+                // if(IsDevEngine()){
+                //     alert('UploadBgTxnImplAsync Fail: Cannot load manifest file');
+                // }
+            }
+            //should treat it as success if no manifest file
+            return { success: true, error: "" };
+        }
+    }
 
 
 
-    // ctxForBgTxnUploading:BGTxnUploadingContext= new BGTxnUploadingContext();
-    // async UploadAllTxnsNowAsyncFromCommSync2(progress:ProgressReportFunc, intervalInMs:number):Promise<SuccessOrErrorDesc> {
-    //     if (bAutoUploadTxn)
-    //         return {success:false, error:"AutoUploadTxn is going on"};
-    //     bAutoUploadTxn= true;
-    //     this.ctxForBgTxnUploading.stopTimer();
-    //     this.ctxForBgTxnUploading.prepareTaskForAllTxns(progress,intervalInMs);
-    //     return await this.UploadTxnNowAsync(true);
-    // };
-    // UploadAllTxnsNow(progress:ProgressReportFunc, intervalInMs:number) {
-    //     if (bAutoUploadTxn)
-    //         return ;
-    //     bAutoUploadTxn= true;
-    //     this.ctxForBgTxnUploading.stopTimer();
-    //     this.ctxForBgTxnUploading.prepareTaskForAllTxns(progress,intervalInMs);
-    //     this.UploadTxnNowAsync(false);
-    // };
-    // async UploadTxnNowAsync(bFromCommSyncApi:boolean):Promise<SuccessOrErrorDesc> {
-    //     this.ctxForBgTxnUploading.cleanTimerId();
-    //     if (!bUploadingTxn){
-    //         this.ctxForBgTxnUploading.consolidateTxnTasks();
-    //         if(!this.ctxForBgTxnUploading.hasPendingTasks())
-    //             return {success:true};
-    //         bUploadingTxn = true;
-    //         let arrTxnNames = this.ctxForBgTxnUploading.getTopTxnTask();//  this.txnBatch[0]===""? null:this.txnBatch[0].split('|');
-    //         if(arrTxnNames!==null)
-    //             Logger.Event('BGTxn: start to upload txn for '+arrTxnNames.join(","));
-    //         else
-    //             Logger.Event('BGTxn: start to upload all txns');
-    //         MaxNumRetries = bFromCommSyncApi?5:1;
-    //         let ret = await this.DoUploadTxnAsync(this.ctxForBgTxnUploading.cb4TxnUploading, arrTxnNames);
-    //         MaxNumRetries = 5;
-    //         bUploadingTxn = false ;
-    //         if(ret.success) {
-    //             Logger.Event("BGTxn: finished uploading txn");
-    //             this.ctxForBgTxnUploading.discardTopTxnTask();
-    //             if(bFromCommSyncApi)
-    //                 return ret;
-    //             if(this.ctxForBgTxnUploading.hasPendingTasks())
-    //                 return await this.UploadTxnNowAsync(false);
-    //             return ret;
-    //         }else {
-    //             if(bFromCommSyncApi) {
-    //                 Logger.Event('BGTxn: failed to upload txn');
-    //                 return ret;
-    //             }
-    //             //fail, retry
-    //             let p = new Promise<SuccessOrErrorDesc>((resolve2) => {
-    //                 this.ctxForBgTxnUploading.timerIdForBGTxnUploading=SetTimeout(() => {
-    //                      Logger.Event(`BGTxn: timer "${this.ctxForBgTxnUploading.timerIdForBGTxnUploading}" gets fired`);
-    //                      this.UploadTxnNowAsync(false).then(v=>{resolve2(v)});
-    //                  },  this.ctxForBgTxnUploading.intervalInMsForTxnUploading)});
-    //             Logger.Event(`BGTxn: failed to upload txn, created timer "${this.ctxForBgTxnUploading.timerIdForBGTxnUploading}" to resume txn uploading in ${this.ctxForBgTxnUploading.intervalInMsForTxnUploading} ms`);
-    //             return await p;
-    //         }
-    //     }else{
-    //         //busy,
-    //         let p = new Promise<SuccessOrErrorDesc>((resolve2) => {
-    //             this.ctxForBgTxnUploading.timerIdForBGTxnUploading=SetTimeout(() => {
-    //                     Logger.Event(`BGTxn: timer "${this.ctxForBgTxnUploading.timerIdForBGTxnUploading}" gets fired`);
-    //                     this.UploadTxnNowAsync(bFromCommSyncApi).then(v=>{resolve2(v)});
-    //                 } , 15*1000)});
-    //         Logger.Event(`BGTxn: busy, created timer "${this.ctxForBgTxnUploading.timerIdForBGTxnUploading}" to resume txn uploading in 15 seconds`);
-    //         return await p;
-    //     }
-    // };
-    // StopBgTxnUploading () {
-    //     bAutoUploadTxn = false;
-    //     this.ctxForBgTxnUploading.stopTimer();
-    //     this.ctxForBgTxnUploading = new BGTxnUploadingContext();
-    // };
+    ctxForBgTxnUploading:BGTxnUploadingContext= new BGTxnUploadingContext();
+
+    async UploadAllTxnsNowAsyncFromCommSync2(progress:ProgressReportFunc, intervalInMs:number):Promise<SuccessOrErrorDesc> {
+        if (bAutoUploadTxn)
+            return {success:false, error:"AutoUploadTxn is going on"};
+        bAutoUploadTxn = true;
+        this.ctxForBgTxnUploading.stopTimer();
+        this.ctxForBgTxnUploading.prepareTaskForAllTxns(progress,intervalInMs);
+        return await this.UploadTxnNowAsync(true);
+    };
+    async UploadAllTxnsNowAsync(progress:ProgressReportFunc, intervalInMs:number) {
+        if (bAutoUploadTxn)
+            return ;
+        bAutoUploadTxn = true;
+        this.ctxForBgTxnUploading.stopTimer();
+        this.ctxForBgTxnUploading.prepareTaskForAllTxns(progress,intervalInMs);
+        await this.UploadTxnNowAsync(false);
+    };
+    async UploadTxnNowAsync(bFromCommSyncApi:boolean):Promise<SuccessOrErrorDesc> {
+        this.ctxForBgTxnUploading.cleanTimerId();
+        if (!bUploadingTxn){
+            this.ctxForBgTxnUploading.consolidateTxnTasks();
+            if(!this.ctxForBgTxnUploading.hasPendingTasks())
+                return {success:true};
+            bUploadingTxn = true;
+            let arrTxnNames = this.ctxForBgTxnUploading.getTopTxnTask();//  this.txnBatch[0]===""? null:this.txnBatch[0].split('|');
+            if(arrTxnNames!==null)
+                Logger.Event('BGTxn: start to upload txn for ' + arrTxnNames.join(','));
+            else
+                Logger.Event('BGTxn: start to upload all txns');
+            MaxNumRetries = bFromCommSyncApi?5:1;
+            let ret = await this.DoUploadTxnAsync(this.ctxForBgTxnUploading.cb4TxnUploading, arrTxnNames);
+            MaxNumRetries = 5;
+            bUploadingTxn = false;
+            if(ret.success) {
+                Logger.Event('BGTxn: finished uploading txn');
+                this.ctxForBgTxnUploading.discardTopTxnTask();
+                if(bFromCommSyncApi)
+                    return ret;
+                if(this.ctxForBgTxnUploading.hasPendingTasks())
+                    return await this.UploadTxnNowAsync(false);
+                return ret;
+            }else {
+                if(bFromCommSyncApi) {
+                    Logger.Event('BGTxn: failed to upload txn');
+                    return ret;
+                }
+                //fail, retry
+                let p = new Promise<SuccessOrErrorDesc>((resolve2) => {
+                    // @ts-ignore
+                  this.ctxForBgTxnUploading.timerIdForBGTxnUploading = setTimeout(() => {
+                         Logger.Event(`BGTxn: timer "${this.ctxForBgTxnUploading.timerIdForBGTxnUploading}" gets fired`);
+                         this.UploadTxnNowAsync(false).then(v=>{resolve2(v);});
+                     },  this.ctxForBgTxnUploading.intervalInMsForTxnUploading);
+                });
+                Logger.Event(`BGTxn: failed to upload txn, created timer "${this.ctxForBgTxnUploading.timerIdForBGTxnUploading}" to resume txn uploading in ${this.ctxForBgTxnUploading.intervalInMsForTxnUploading} ms`);
+                return await p;
+            }
+        }else{
+            //busy,
+            let p = new Promise<SuccessOrErrorDesc>((resolve2) => {
+                // @ts-ignore
+              this.ctxForBgTxnUploading.timerIdForBGTxnUploading = setTimeout(() => {
+                        Logger.Event(`BGTxn: timer "${this.ctxForBgTxnUploading.timerIdForBGTxnUploading}" gets fired`);
+                        this.UploadTxnNowAsync(bFromCommSyncApi).then(v=>{resolve2(v);});
+                    } , 15 * 1000);
+            });
+            Logger.Event(`BGTxn: busy, created timer "${this.ctxForBgTxnUploading.timerIdForBGTxnUploading}" to resume txn uploading in 15 seconds`);
+            return await p;
+        }
+    }
+    StopBgTxnUploading () {
+        bAutoUploadTxn = false;
+        this.ctxForBgTxnUploading.stopTimer();
+        this.ctxForBgTxnUploading = new BGTxnUploadingContext();
+    }
     // StartSmartTxnUploading () {
     //     if(!bAutoUploadTxn)
     //         return ;
     //     try {
-    //         SetTimeout(
+    //         setTimeout(
     //                 () => {
     //                     let txnNames=__Comm2GetAndResetSmartTxnTables(true);
     //                     if(!bAutoUploadTxn)

@@ -1,7 +1,7 @@
 import FileSystem from 'react-native-fs';
 import {Alert} from 'react-native';
 
-export const WorkDir= FileSystem.DocumentDirectoryPath ;
+export const WorkDir = FileSystem.DocumentDirectoryPath;
 export const FirstCheckDir = WorkDir + '/FirstCheck';
 
 const error_lvl =  0x01;
@@ -11,24 +11,25 @@ const data_lvl =   0x08;
 const debug_lvl =  0x10;
 
 import NPLogger from '../specs/NativeNPLogger';
+import NativeNPSync, {HttpMethod, SendHttpRequestCB_t} from '../specs/NativeNPSync.ts';
 
 
 class NPLoggerC {
     // WriteLog(lvl:number, m:string):void {
     //     NPLogger.WriteLog(lvl, m);
     //}
-    readonly Error = this.ReturnWritter(console.error, error_lvl,true);
-    readonly Warn = this.ReturnWritter(console.warn, warn_lvl,true);
-    readonly Event = this.ReturnWritter(console.info,event_lvl,false);
-    readonly Data = this.ReturnWritter(console.log,data_lvl, false);
-    readonly Debug = this.ReturnWritter(console.debug, debug_lvl, false);
+    readonly Error = this.ReturnWriter(console.error, error_lvl,true);
+    readonly Warn = this.ReturnWriter(console.warn, warn_lvl,true);
+    readonly Event = this.ReturnWriter(console.info,event_lvl,false);
+    readonly Data = this.ReturnWriter(console.log,data_lvl, false);
+    readonly Debug = this.ReturnWriter(console.debug, debug_lvl, false);
     constructor(fileName:string){
         NPLogger.Close();
         NPLogger.Recreate(fileName, 0, -1);
         this.logFileName = fileName;
     }
     logFileName:string;
-    private ReturnWritter(log:(data:any)=>void,lvl: number, bMsgBox:boolean) {
+    private ReturnWriter(_log:(data:any)=>void,lvl: number, bMsgBox:boolean) {
         if(bMsgBox)
             return function (msg: any) {
                 //log(msg);
@@ -36,14 +37,14 @@ class NPLoggerC {
                 if (msg instanceof Object)
                     m = JSON.stringify(msg);
                 NPLogger.WriteLog(lvl, m);
-                if(lvl===warn_lvl || lvl === error_lvl)
+                if(lvl === warn_lvl || lvl === error_lvl)
                 {
                     //if (IsDevEngine()) alert(m,lvl===warn_lvl? 'DEV:Warning':'DEV:Error');
                 }
             };
         else
             return function (msg: any) {
-                //log(msg);
+                //_log(msg);
                 let m = msg;
                 if(msg instanceof Uint8Array )
                     NPLogger.WriteLog(lvl,m);
@@ -52,7 +53,7 @@ class NPLoggerC {
                         m = JSON.stringify(msg);
                     NPLogger.WriteLog(lvl, m);
                 }
-            }
+            };
     }
 }
 export var Logger = new NPLoggerC(`${WorkDir}/logs/HTTPComm.log`);
@@ -143,23 +144,51 @@ export function convertRowIdsToByteArray(rowids: rowids_t) {
     }
     return new Uint8Array(buf.buffer);
 }
+export type TxnBulk={
+    hasError:boolean,
+    errorMsg?:string,
+    hasNext?:boolean,
+    byteArray:Uint8Array|null,
+    bufferPtr:Uint8Array|null,//should not change any content of this field
+    msgID?:number,
+    rowIDs?:Uint8Array
+};
+
+// export type FileRecU = {
+//     fileName:string;
+//     columnName:string;
+//     commsStatus:string;
+//     table:string;
+//     rowid:number;
+//     rowidHi:number;
+//
+//     //used by app
+//     strRowID?:string;
+//     fileID?:string;
+//     LogicID?:string;
+//     shortUrl?:string;
+//     txnDefName?:string;
+//     headerName?:string;
+//     numAttempts?:number;
+//     msToRetry?:number;
+// }
 
 
 export function make_progress_reporter(progress?: ProgressReportFunc):ProgressReportFunc {
-    return progress?(x: ReportArg) => {
+    return progress ? (x: ReportArg) => {
         Logger.Event(x);
         try {
             progress(x);
         } catch (exxxx) {
-            if(exxxx === "NPEngine is quitting")
+            if(exxxx === 'NPEngine is quitting')
                 Logger.Warn('Abort HttpCommSync callback: ' + exxxx);
             else
                 Logger.Error('There is something wrong in HttpCommSync callback: ' + exxxx);
 
         }
-    }:(x: ReportArg) => {
+    } : (x: ReportArg) => {
         Logger.Event(x);
-    }
+    };
 }
 export type DataInToken={
     UserId: string;
@@ -266,6 +295,7 @@ export type LoginModeResult = {
     clientId?:string
 };
 
+
 // function FancyText({title, text}:{title:boolean, text?:string}) {
 //     return title
 //       ? <h1 className='fancy title'>{text}</h1>
@@ -291,6 +321,28 @@ export type LoginModeResult = {
 //     );
 //     }
 // });
+
+function ArrayBufferToString( buffer ) {
+    var binary = '';
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+    }
+    return binary
+}
+
+export function SendHttpRequest(cb: SendHttpRequestCB_t, reqId: string,
+                     method: HttpMethod, url: string, header: string,
+                     content: string|Uint8Array, savedFileName/*don't save file if empty*/: string, nTimeoutMs?:number):void
+{
+   if(content instanceof ArrayBuffer) {
+       //console.log("**********got blob***********:"+ArrayBufferToString( content));
+       NativeNPSync.SendHttpRequestBlob(cb, reqId, method, url, header, content as Object, savedFileName, nTimeoutMs);
+   } else {
+       NativeNPSync.SendHttpRequestStr(cb, reqId, method,url, header, content as string, savedFileName, nTimeoutMs );
+   }
+}
 export type ChangeCommPromptT = (title:string, desc:string, visible:boolean )=>void;
 export let ChangeCommPrompt:ChangeCommPromptT;
 export function SetCommPromptChanger(changer:ChangeCommPromptT)
@@ -427,7 +479,7 @@ export async function WaitForPromiseT<T>(title:string, desc:string , p:Promise<T
 
 export function GetHardwareId()
 {
-    return "KY_TEST_111_222"
+    return "KY_TEST_111_222_001";
 }
 export function GetEngineVersion()
 {

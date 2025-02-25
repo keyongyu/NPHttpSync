@@ -1,14 +1,15 @@
-import {DataInToken, Logger, NetProgressReportNativeFunc} from './Common';
-import NPSyncSpec, {HttpMethod, IHttpResponse} from '../specs/NativeNPSync';
+import {DataInToken, Logger, NetProgressReportNativeFunc, SendHttpRequest} from './Common';
+import NPSyncSpec, {HttpMethod, IHttpResponse, IHttpResponseErr, IHttpResponseRsp} from '../specs/NativeNPSync';
 import {gAuth} from './OAuth';
 //import RNFS from 'react-native-fs';
 import {GetHttpTmpFolder} from './HttpDataSync.ts';
+import NativeNPSync from '../specs/NativeNPSync';
 export const NoNetwork = 92;
 export const ConnectionError = 91;
 export function isTimeoutResponse(rsp:IHttpResponse):boolean
 {
    //{"req_id":"15","type":"RESULT_ERR","error_code":91,"error_desc":"Code(-1001): Time out"}
-  if(rsp.error_code === ConnectionError && rsp.error_desc)
+  if(rsp.type === 'RESULT_ERR' && rsp.error_code === ConnectionError && rsp.error_desc)
       {return rsp.error_desc.indexOf('-1001') >= 0;}
   return false;
 }
@@ -21,7 +22,7 @@ export var gHttpAsync = new class{
         return 'Accept:application/json;\nContent-Type:application/json; charset=utf-8\nAuthorization:Bearer ' + token;
     }
     async SendWebReqWithTokenAsync(url:string, method:HttpMethod, dataInToken:DataInToken,
-                          content:string/*|Uint8Array*/, progress_reporter?:NetProgressReportNativeFunc, timeoutInSec = -1):Promise<IHttpResponse> {
+                          content:string|Uint8Array, progress_reporter?:NetProgressReportNativeFunc, timeoutInSec = -1):Promise<IHttpResponse> {
         /*if(this.HttpReqID%3==2) {
             Logger.Error("Refreshing Access token");
             dataInToken.AcessToken = await gAuth.RegenerateAccessTokenAsync() ?? dataInToken.AcessToken;
@@ -29,25 +30,26 @@ export var gHttpAsync = new class{
         }*/
         await gAuth.UpdateAccessTokenIfGettingExpiredAsync(dataInToken);
         let reply = await this.SendWebReqAsync(url,method, this.HttpHeader(dataInToken.AcessToken), content, progress_reporter, timeoutInSec);
-        if(reply && reply.rsp_data && (reply.rsp_code === 403 || reply.rsp_code === 401)){
+        if(reply && reply.type === 'RESULT_RSP' && reply.rsp_data && (reply.rsp_code === 403 || reply.rsp_code === 401)){
              //dataInToken.AcessToken = await gAuth.RegenerateAccessTokenAsync()??dataInToken.AcessToken;
              await gAuth.UpdateAccessTokenIfGettingExpiredAsync(dataInToken, true);
              reply = await this.SendWebReqAsync(url,method, this.HttpHeader(dataInToken.AcessToken), content, progress_reporter, timeoutInSec );
         }
         return reply;
     }
+
     async SendWebReqAsync(url:string, method:HttpMethod, header:string,
-                          content:string/*|Uint8Array*/, progress_reporter?:NetProgressReportNativeFunc, timeoutInSec = -1):Promise<IHttpResponse> {
-        return new Promise<IHttpResponse>((resolve) => {
+                          content:string|Uint8Array, progress_reporter?:NetProgressReportNativeFunc, timeoutInSec = -1):Promise<IHttpResponseRsp|IHttpResponseErr> {
+        return new Promise<IHttpResponseRsp|IHttpResponseErr>((resolve) => {
             const new_header = header.replace(/Authorization:Bearer .*/, 'Authorization:Bearer ****');
             if (typeof content === 'string')
-                {Logger.Data('SendWebReqAsync url: ' + url + '\nHEADER: ' + new_header + '\nBODY: ' + content);}
-            else {
+                Logger.Data('SendWebReqAsync url: ' + url + '\nHEADER: ' + new_header + '\nBODY: ' + content);
+            else{
                 Logger.Data('SendWebReqAsync url: ' + url + '\nHEADER: ' + new_header);
                 Logger.Data(content);
             }
             //return {type:RESULT_ERR, error_code, error_desc} if something wrong
-            NPSyncSpec.SendHttpRequest(
+            SendHttpRequest(
                 result => {
                     if (/*result.type == "RECEIVING" || */result.type === 'SENDING') {
                         if (progress_reporter)
@@ -104,63 +106,73 @@ export var gHttpAsync = new class{
         });
     }
 
-    // async UploadMultipartFileWithTokenAsync(url: string, method: HttpMethod, contentFile: string,
-    //                 progress_reporter: NetProgressReportNativeFunc, dataInToken: DataInToken): Promise<IHttpResponse> {
-    //     await gAuth.UpdateAccessTokenIfGettingExpiredAsync(dataInToken);
-    //     let reply= await this.UploadMultipartFileAsync(url, method, contentFile,  progress_reporter, dataInToken.AcessToken );
-    //     if(reply && reply.rsp_data && reply.rsp_code === 403){
-    //         //dataInToken.AcessToken = await gAuth.RegenerateAccessTokenAsync()??dataInToken.AcessToken;
-    //         await gAuth.UpdateAccessTokenIfGettingExpiredAsync(dataInToken, true);
-    //         return await this.UploadMultipartFileAsync(url, method, contentFile,  progress_reporter, dataInToken.AcessToken );
-    //     }
-    //     return reply;
-    //
-    //
-    // }
-    // private async UploadMultipartFileAsync(url: string, method: HttpMethod, contentFile: string,
-    //     progress_reporter: NetProgressReportNativeFunc, bearer: string): Promise<IHttpResponse> {
-    //     let boundary = this.GenerateBoundary();
-    //     let tempPath = __GetHttpTmpFolder();
-    //     let filename = '/upload_file_' + boundary;
-    //     //let header = this.makeMultipartHttpHeader(boundary, dataInToken.TokenForComm);
-    //     let header = this.makeMultipartHttpHeader(boundary, bearer);
-    //     let tmpFile = tempPath + filename;
-    //     let npFile = new NPFile(tmpFile, 'wb');
-    //     npFile.write('----------------------------' + boundary + '\r\n');
-    //     npFile.write('Content-Disposition: form-data; name="file"; filename="' + contentFile + '"\r\n');
-    //     npFile.write('Content-Type: application/octet-stream\r\n\r\n');
-    //     npFile.writeFrom(contentFile);
-    //     npFile.write('\r\n');
-    //     npFile.write('----------------------------' + boundary + '--');
-    //     npFile.close();
-    //     return new Promise<IHttpResponse>((resolve) => {
-    //         const new_header = header.replace(/Authorization:Bearer .*/, 'Authorization:Bearer ****');
-    //         Logger.Data('UploadMultipartFileAsync url: ' + url + '\nHEADER: ' + new_header + '\nBODY: ' + contentFile);
-    //         let ret = SendHttpRequest(result => {
-    //             if (/*result.type == "RECEIVING" || */result.type === 'SENDING') {
-    //                 if (progress_reporter)
-    //                     progress_reporter({ total: result.total??1, done: result.done??1 });
-    //                 return;
-    //             } else if (result.type === 'RESULT_RSP') {
-    //                 Logger.Data('Received UploadMultipartFileAsync url: ' + url + '\nRsp: ' + JSON.stringify(result));
-    //                 DeleteFile(tmpFile);
-    //                 resolve(result);
-    //             } else if (result.type === 'RESULT_ERR') {
-    //                 Logger.Error('Received UploadMultipartFileAsync url: ' + url + '\nErr: ' + JSON.stringify(result));
-    //                 DeleteFile(tmpFile);
-    //                 resolve(result);
-    //             }
-    //         }, (this.HttpReqID++).toString(), method, url, header, 'FILE:' + tempPath + filename, false, -1);
-    //         if(ret)
-    //         {
-    //             Logger.Error('Received UploadMultipartFileAsync url: ' + url + '\nErr: ' + JSON.stringify(ret));
-    //             DeleteFile(tmpFile);
-    //             resolve(ret);
-    //         }
-    //     });
-    // }
+    async UploadMultipartFileWithTokenAsync(url: string, method: HttpMethod, contentFile: string,
+                    progress_reporter: NetProgressReportNativeFunc, dataInToken: DataInToken): Promise<IHttpResponse> {
+        await gAuth.UpdateAccessTokenIfGettingExpiredAsync(dataInToken);
+        let reply = await this.UploadMultipartFileAsync(url, method, contentFile,  progress_reporter, dataInToken.AcessToken );
+        if(reply && reply.type === 'RESULT_RSP' && reply.rsp_data && reply.rsp_code === 403){
+            //dataInToken.AcessToken = await gAuth.RegenerateAccessTokenAsync()??dataInToken.AcessToken;
+            await gAuth.UpdateAccessTokenIfGettingExpiredAsync(dataInToken, true);
+            return await this.UploadMultipartFileAsync(url, method, contentFile,  progress_reporter, dataInToken.AcessToken );
+        }
+        return reply;
 
-    GetFileContent(response: IHttpResponse) {
+
+    }
+    private async UploadMultipartFileAsync(url: string, method: HttpMethod, contentFile: string,
+        progress_reporter: NetProgressReportNativeFunc, bearer: string): Promise<IHttpResponse> {
+        let boundary = this.GenerateBoundary();
+        let tempPath = GetHttpTmpFolder();
+        let filename = '/upload_file_' + boundary;
+        let header = this.makeMultipartHttpHeader(boundary, bearer);
+        let tmpFile = tempPath + filename;
+        // let npFile = new NPFile(tmpFile, 'wb');
+        // npFile.write('----------------------------' + boundary + '\r\n');
+        // npFile.write('Content-Disposition: form-data; name="file"; filename="' + contentFile + '"\r\n');
+        // npFile.write('Content-Type: application/octet-stream\r\n\r\n');
+        // npFile.writeFrom(contentFile);
+        // npFile.write('\r\n');
+        // npFile.write('----------------------------' + boundary + '--');
+        // npFile.close();
+
+        let txt = ('----------------------------' + boundary + '\r\n');
+        txt += ('Content-Disposition: form-data; name="file"; filename="' + contentFile + '"\r\n');
+        txt += ('Content-Type: application/octet-stream\r\n\r\n');
+        NativeNPSync.WriteFile(tmpFile, txt, 'wb');
+        NativeNPSync.AppendFile(tmpFile, contentFile);
+        txt =  ('\r\n');
+        txt += ('----------------------------' + boundary + '--');
+        NativeNPSync.WriteFile(tmpFile, txt, 'ab');
+
+        return new Promise<IHttpResponse>((resolve) => {
+            const new_header = header.replace(/Authorization:Bearer .*/, 'Authorization:Bearer ****');
+            Logger.Data('UploadMultipartFileAsync url: ' + url + '\nHEADER: ' + new_header + '\nBODY: ' + contentFile);
+            // let ret = NativeNPSync.SendHttpRequest(result => {
+            SendHttpRequest(result => {
+                if (/*result.type == "RECEIVING" || */result.type === 'SENDING') {
+                    if (progress_reporter)
+                        progress_reporter({ total: result.total ?? 1, done: result.done ?? 1 });
+                    return;
+                } else if (result.type === 'RESULT_RSP') {
+                    Logger.Data('Received UploadMultipartFileAsync url: ' + url + '\nRsp: ' + JSON.stringify(result));
+                    NativeNPSync.DeleteFile(tmpFile);
+                    resolve(result);
+                } else if (result.type === 'RESULT_ERR') {
+                    Logger.Error('Received UploadMultipartFileAsync url: ' + url + '\nErr: ' + JSON.stringify(result));
+                    NativeNPSync.DeleteFile(tmpFile);
+                    resolve(result);
+                }
+            }, (this.HttpReqID++).toString(), method, url, header, 'FILE:' + tempPath + filename, '', -1);
+            // if(ret)
+            // {
+            //     Logger.Error('Received UploadMultipartFileAsync url: ' + url + '\nErr: ' + JSON.stringify(ret));
+            //     DeleteFile(tmpFile);
+            //     resolve(ret);
+            // }
+        });
+    }
+
+    GetFileContent(response: IHttpResponseRsp) {
         try {
             //return JSON.parse(LoadFile(response.rsp_data));
             return NPSyncSpec.LoadFile(response.rsp_data || '', 600);
@@ -169,12 +181,12 @@ export var gHttpAsync = new class{
         }
     }
     async DownloadFileWithTokenAsync(url: string, method: HttpMethod, dataInToken:DataInToken, content: string,
-                            progress_reporter?: NetProgressReportNativeFunc, remark = {}): Promise<IHttpResponse> {
+                            progress_reporter?: NetProgressReportNativeFunc, remark = {}): Promise<IHttpResponseRsp|IHttpResponseErr> {
 
         await gAuth.UpdateAccessTokenIfGettingExpiredAsync(dataInToken);
         let reply = await this.DownloadFileAsync(url, method, this.HttpHeader(dataInToken.AcessToken),
             content, progress_reporter, remark);
-        if (reply && reply.rsp_data && reply.rsp_code === 403) {
+        if (reply && reply.type === 'RESULT_RSP' &&  reply.rsp_data && reply.rsp_code === 403) {
             //dataInToken.AcessToken = await gAuth.RegenerateAccessTokenAsync() ?? dataInToken.AcessToken;
             await gAuth.UpdateAccessTokenIfGettingExpiredAsync(dataInToken, true);
             reply = await this.DownloadFileAsync(url, method, this.HttpHeader(dataInToken.AcessToken),
@@ -184,14 +196,14 @@ export var gHttpAsync = new class{
     }
     tmpFileIndex = 0;
     async DownloadFileAsync(url: string, method: HttpMethod, header: string, content: string,
-        progress_reporter?: NetProgressReportNativeFunc, remark = {}): Promise<IHttpResponse> {
+        progress_reporter?: NetProgressReportNativeFunc, remark = {}): Promise<IHttpResponseRsp|IHttpResponseErr> {
 
-        let fileName =GetHttpTmpFolder() + '/__http_request' + (this.tmpFileIndex++);
-        return new Promise<IHttpResponse>((resolve) => {
+        let fileName = GetHttpTmpFolder() + '/__http_request' + (this.tmpFileIndex++);
+        return new Promise<IHttpResponseRsp|IHttpResponseErr>((resolve) => {
             //Logger.Data("DownloadFileAsync url: " + url + "\nHEADER: " + header + "\nBODY: " + content);
             const new_header = header.replace(/Authorization:Bearer .*/, 'Authorization:Bearer ****');
             Logger.Data('DownloadFileAsync url: ' + url + '\nHEADER: ' + new_header + '\nBODY: ' + content);
-            NPSyncSpec.SendHttpRequest(
+            SendHttpRequest(
                 result => {
                     if (result.type === 'RECEIVING') {
                         if (progress_reporter) {
@@ -211,7 +223,6 @@ Additional Info: ${JSON.stringify(remark)}`);
                     } else if (result.type === 'RESULT_ERR') {
                         Logger.Warn(`Received DownloadFileAsync url: ${url}
 Err: ${JSON.stringify(result)}
-rsp_data_dump:${this.GetFileContent(result)}
 Additional Info: ${JSON.stringify(remark)}`);
                         resolve(result);
                     }
@@ -234,7 +245,7 @@ Additional Info: ${JSON.stringify(remark)}`);
         return new Promise<IHttpResponse>((resolve) => {
             const new_header = header.replace(/Authorization:Bearer .*/, 'Authorization:Bearer ****');
             Logger.Data('UploadFileAsync url: ' + url + '\nHEADER: ' + new_header + '\nBODY: ' + fileName);
-            NPSyncSpec.SendHttpRequest(result => {
+            SendHttpRequest(result => {
                 if (/*result.type == "RECEIVING" || */result.type === 'SENDING') {
                     if (progress_reporter)
                         {progress_reporter({ total: result.total ?? 1, done: result.done ?? 1 });}

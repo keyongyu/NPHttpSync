@@ -3,24 +3,31 @@
 #include <vector>
 #include <stdarg.h>
 namespace HttpComm {
-    class Buffer {
+class Buffer{
     public:
         size_t          m_nLen;
         void* m_pBuf;
         size_t          m_nCapcity;
 
         ~Buffer() {
-            free(m_pBuf);
+          Free();
         }
         Buffer(int nCap = 1024) :m_pBuf(NULL) {
             Init(nCap);
+        }
+        void Free(){
+            if(m_pBuf)
+                free(m_pBuf);
+            m_pBuf= nullptr;
+            m_nCapcity = 0;
+            m_nLen = 0;
         }
         void Init(size_t nCap) {
             if (m_pBuf)
                 free(m_pBuf);
             if(nCap<=0)
                 nCap=4;
-            m_pBuf = calloc(nCap, 1);
+            m_pBuf = malloc(nCap);
             m_nCapcity = nCap;
             m_nLen = 0;
         }
@@ -100,39 +107,39 @@ namespace HttpComm {
         void JsonAppendString(const char* p, unsigned int N = 0);
     };
 
-//    struct  UploadFile {
-//        const std::string fileName;
-//        const std::string columnName;
-//        const std::string commsStatus;
-//        const std::string table;
-//        const uint64_t rowid;
-//
-//        UploadFile(const char* pfileName, const char* pColumnName, const char* pCommsStatus, const char* pTable, const uint64_t pRowId)
-//            :fileName(pfileName), columnName(pColumnName), commsStatus(pCommsStatus), table(pTable), rowid(pRowId)
-//        {
-//        }
-//    };
-//
-//    struct Comm2Txn {
-//        bool			        m_HasNext;
-//        std::vector<uint64_t>* m_pRowIDs;
-//        Buffer* m_pBuf;
-//        int               m_MsgID;
-//        Comm2Txn() :m_HasNext(false), m_pRowIDs(nullptr), m_pBuf(nullptr), m_MsgID(0) {}
-//    };
-//
+   struct  UploadFile {
+       const std::string fileName;
+       const std::string columnName;
+       const std::string commsStatus;
+       const std::string table;
+       const uint64_t rowid;
+
+       UploadFile(const char* pfileName, const char* pColumnName, const char* pCommsStatus, const char* pTable, const uint64_t pRowId)
+           :fileName(pfileName), columnName(pColumnName), commsStatus(pCommsStatus), table(pTable), rowid(pRowId)
+       {
+       }
+   };
+
+   struct Comm2Txn {
+       bool			        m_HasNext;
+       std::vector<uint64_t>* m_pRowIDs;
+       Buffer* m_pBuf;
+       int         m_MsgID;
+       Comm2Txn() :m_HasNext(false), m_pRowIDs(nullptr), m_pBuf(nullptr), m_MsgID(0) {}
+   };
+
 //    struct Comm2TblSync {
 //
 //    };
-//
-//    bool Comm2_GetTxnHangingFiles(const std::string& name, const std::string& json_str,
-//        std::vector<UploadFile>& files, std::string& err_desc);
-//
-//    bool Comm2_MakeTxn(const std::string& strCompany, const std::string& strAppID, const std::string& strRefreshToken, unsigned long max_msgsize,
-//        const std::string& name, const std::string& json_str, Comm2Txn& txn, std::string& err_desc);
-//
-//    bool Comm2_CommitTxn(const std::string& txnName, const std::string& hdrName,
-//        uint64_t* pRowIDs, size_t num_ids, std::string statusFlag);
+
+   bool Comm2_GetTxnHangingFiles(const std::string& name, const std::string& json_str,
+       std::vector<UploadFile>& files, std::string& err_desc);
+
+   bool Comm2_MakeTxn(const std::string& strCompany, const std::string& strAppID, const std::string& strRefreshToken, unsigned long max_msgsize,
+       const std::string& name, const std::string& json_str, Comm2Txn& txn, std::string& err_desc);
+
+   bool Comm2_CommitTxn(const std::string& txnName, const std::string& hdrName,
+       uint64_t* pRowIDs, size_t num_ids, std::string statusFlag);
 //
     std::string Comm2_ProcessTblSync(const std::string& fileName, bool dryRun);
 //    std::string Comm2_GetAndResetSmartTxnTables(bool bClearTables);

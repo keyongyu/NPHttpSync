@@ -4,7 +4,7 @@ import {
   FCStorage, FirstCheckDir, GetEngineVersion, GetHardwareId,
   IsDevEngine,
   Logger,
-  make_progress_reporter,
+  //make_progress_reporter,
   NetProgressReportFunc,
   ProgressReportFunc,
   ReportArg, toJson, WaitForPromiseT,
@@ -164,13 +164,13 @@ export let gHttpMobileManager = new (class {
   //     return 'Accept:application/json;\nContent-Type:application/json; charset=utf-8\nAuthorization:Bearer ' + token;
   // }
 
-  HttpEscapeHeader(token: string) {
-    return (
-      'Accept:application/json;\\nContent-Type:application/json; charset=utf-8\\nAuthorization:Bearer ' +
-      token
-    );
-    //return this.HttpHeader(token).replace(/\\/gi, '\\\\');
-  }
+  // HttpEscapeHeader(token: string) {
+  //   return (
+  //     'Accept:application/json;\\nContent-Type:application/json; charset=utf-8\\nAuthorization:Bearer ' +
+  //     token
+  //   );
+  //   //return this.HttpHeader(token).replace(/\\/gi, '\\\\');
+  // }
   CompleteUrl(apiUrl: string) {
     apiUrl = apiUrl.trim();
 
@@ -285,7 +285,7 @@ export let gHttpMobileManager = new (class {
   }
   userCredentialProvider_: UserCredentialProvider|undefined ;
   SetCredentialProvider(userCredentialProvider: UserCredentialProvider) {
-    this.userCredentialProvider_=userCredentialProvider;
+    this.userCredentialProvider_= userCredentialProvider;
   }
   async GetUserCredential(userCredential: UserCredential):Promise<UserCredential|null> {
      if(!this.userCredentialProvider_)
@@ -294,7 +294,7 @@ export let gHttpMobileManager = new (class {
   }
   async FirstCheckUI (runAt:RunAt, dataInToken?:DataInToken,progress?: ProgressReportFunc, fcData?:FirstCheckResult) {
     let onFirstCheckPostInit  = async (finalResult: FinalResult) => {
-          let retries=0;
+          let retries= 0;
           while(!dataInToken && (retries++) <3 ) {
               dataInToken = (await gAuth.GetTokenInfoAsync(progress)) || undefined;
           }
@@ -398,7 +398,7 @@ export let gHttpMobileManager = new (class {
   async FirstCheckValidationAsync(run_at: RunAt, dataInToken: DataInToken):Promise<MaybeFirstCheckResult>{
       Logger.Event("Request first check user validation from server.");
       let reply= await this.HttpFirstCheckAsync(run_at, dataInToken);
-      if (reply && reply.rsp_data && reply.rsp_code === 200) {
+      if (reply && reply.type=="RESULT_RSP" && reply.rsp_data && reply.rsp_code === 200) {
           try {
               let firstCheckResult = toJson(reply.rsp_data);
               // if (GetEngineType() === 'AND' && run_at === 'ENG_START' && firstCheckResult.PI_ACTION) {
@@ -420,7 +420,7 @@ export let gHttpMobileManager = new (class {
               Logger.Error("FirstCheck validation failed: " + e) ;
               return { success: false, detail: ""+e };
           }
-      } else if (reply.error_code === NoNetwork || reply.error_code == ConnectionError ) {
+      } else if (reply.type=="RESULT_ERR" && (reply.error_code === NoNetwork || reply.error_code == ConnectionError )) {
           // 2710: No network available. Please ensure that network connection is available and then try again.
           // 4025: MMSvcs
           await CommAlertAsync('IDS_HTTPCOMM_NO_NETWORK', 'IDS_MM_DIALOG_TITLE');
@@ -432,7 +432,10 @@ export let gHttpMobileManager = new (class {
           return { success: false, detail: "Unable to perform FirstCheck validation, server has no response." };
       }
       else {
-          Logger.Error(`FirstCheck validation fail to get proper response from server: ${reply.rsp_data}`) ;
+          if(reply.type==="RESULT_RSP")
+            Logger.Error(`FirstCheck validation fail to get proper response from server: ${reply.rsp_data}`) ;
+          else
+            Logger.Error(`FirstCheck validation fail: ${JSON.stringify(reply)}`) ;
           return { success: false, detail: 'FirstCheck validation fail to get proper response from server' };
       }
   };
@@ -487,7 +490,8 @@ export let gHttpMobileManager = new (class {
   //     // } else return false; // This should not happen
   // }
 
-  async DownloadPackageFileAsync(serverFilePath:string, progress:NetProgressReportFunc, dataInToken:DataInToken ,remark:object):Promise<IHttpResponse|null> {
+  async DownloadPackageFileAsync(serverFilePath:string, progress:NetProgressReportFunc,
+                                 dataInToken:DataInToken ,remark:object) {
       let downloadRequest ;
       let storageType = gStorageConfig.GetStorageInfo('TYPE');
       if (storageType === 'S3_DIRECT') {
@@ -522,7 +526,7 @@ export let gHttpMobileManager = new (class {
       let downloadRequest = await this.DownloadPackageFileAsync(url, (network_progress) => {
           progress_report(Object.assign({ cat: 'MMSvcs', subCat: subCat, name: '', status: 'progress' }, network_progress));
       }, dataInToken, { fileType: key, fileUrl: url });
-      if (downloadRequest && downloadRequest.rsp_code === 200) { // Download success
+      if (downloadRequest && downloadRequest.type==="RESULT_RSP" && downloadRequest.rsp_code === 200) { // Download success
           this.ProcessDownloadedFile(key, downloadRequest);
 
           if (subCat === 'DownloadApp' || subCat === 'DownloadEngineLocale' || subCat === 'DownloadAppLocale') {
@@ -531,10 +535,12 @@ export let gHttpMobileManager = new (class {
               return { success: true, restart: false };
           }
       } else if(downloadRequest) { // Download fail
-          let fileData = gHttpAsync.GetFileContent(downloadRequest);
-          //Logger.Warn(subCat + ': download fail, ' + url + ', bad content received:' + fileData);
-          NativeNPSync.DeleteFile(downloadRequest.rsp_data || '');
-
+        let fileData ;
+         if(downloadRequest.type==="RESULT_RSP") {
+            fileData = gHttpAsync.GetFileContent(downloadRequest);
+            //Logger.Warn(subCat + ': download fail, ' + url + ', bad content received:' + fileData);
+            NativeNPSync.DeleteFile(downloadRequest.rsp_data || '');
+          }
           if (maxRetry > numAttempts) {
               Logger.Event('Retrying download: ' + url);
               return await this.DownloadFirstCheckFile(key, subCat, url, progress_report, dataInToken, ++numAttempts);
@@ -567,8 +573,10 @@ export let gHttpMobileManager = new (class {
           //     ExecuteApp('Unzip ' + destFile);
           // DeleteFile(destFile);
       } else if (name === 'MANIFEST') {
-          let originFile = file.rsp_data||"";
-          NativeNPSync.MoveFile(originFile, ManifestFilePath,true);
+          let originFile = file.type==="RESULT_RSP"? file.rsp_data:"";
+          if(originFile) {
+            NativeNPSync.MoveFile(originFile, ManifestFilePath, true);
+          }
       } else if (name === 'INSTRJ_ENG' || name === 'INSTRJ_APP' || name === 'INSTRJ_COMM') {
           // let originFile = file.rsp_data;
           // let destFile = name + '.js';
@@ -872,44 +880,126 @@ export let gHttpMobileManager = new (class {
   };
   //
 
-      private async ValidateFirstCheckReply(dataInToken: DataInToken, result?: FirstCheckReply) {
-          if (result?.FLAG === 'S') {
-              return true;
-          }
-          let serverErrorMessage = 'Server message: ';
-          if (result?.FLAG === 'F') {
-              let error = result?.ERR;
-              if (Array.isArray(error)) {
-                  for (let i = 0; i < error.length; i++) {
-                      serverErrorMessage += error[i];
-                      serverErrorMessage += '\n';
-                  }
-              } else {
-                  serverErrorMessage += result?.ERR;
-              }
-              let compId = dataInToken.CompanyId;
-              let appId = this.GetAppId();
-              let devUserId = dataInToken.UserId;
-              let hardwareId = GetHardwareId();
-              let engType = 'AND'
-              let errorMessage = `Comp ID: ${compId}
-  App ID: ${appId}
-  Dev User ID: ${devUserId}
-  Hardware ID: ${hardwareId}
-  Eng Type: ${engType}
-  `;
-              if (IsDevEngine()) errorMessage = errorMessage + serverErrorMessage;
-              Logger.Error(`FirstCheck Validation Fail: ${errorMessage}`);
-
-              // Show localised error alert in Production engine
-              if (!IsDevEngine())
-                await CommAlertAsync('(IDS_MM_USER_VALIDATION_FAIL)', '(IDS_MM_DIALOG_TITLE)'); // 4036: User validation failed. Please contact Administrator.
-              return false;
-          } else {
-              Logger.Error('FirstCheck: unknown reply, ' + JSON.stringify(result));
-              return false;
-          }
+  private async ValidateFirstCheckReply(dataInToken: DataInToken, result?: FirstCheckReply) {
+      if (result?.FLAG === 'S') {
+          return true;
       }
+      let serverErrorMessage = 'Server message: ';
+      if (result?.FLAG === 'F') {
+          let error = result?.ERR;
+          if (Array.isArray(error)) {
+              for (let i = 0; i < error.length; i++) {
+                  serverErrorMessage += error[i];
+                  serverErrorMessage += '\n';
+              }
+          } else {
+              serverErrorMessage += result?.ERR;
+          }
+          let compId = dataInToken.CompanyId;
+          let appId = this.GetAppId();
+          let devUserId = dataInToken.UserId;
+          let hardwareId = GetHardwareId();
+          let engType = 'AND'
+          let errorMessage = `Comp ID: ${compId}
+App ID: ${appId}
+Dev User ID: ${devUserId}
+Hardware ID: ${hardwareId}
+Eng Type: ${engType}
+`;
+          if (IsDevEngine()) errorMessage = errorMessage + serverErrorMessage;
+          Logger.Error(`FirstCheck Validation Fail: ${errorMessage}`);
+
+          // Show localised error alert in Production engine
+          if (!IsDevEngine())
+            await CommAlertAsync('(IDS_MM_USER_VALIDATION_FAIL)', '(IDS_MM_DIALOG_TITLE)'); // 4036: User validation failed. Please contact Administrator.
+          return false;
+      } else {
+          Logger.Error('FirstCheck: unknown reply, ' + JSON.stringify(result));
+          return false;
+      }
+  }
+  public async UploadPackageFileAsync(
+    { filePath, serverFilePath, progress,  dataInToken, resolve=undefined,numAttempts = 0,
+      silentCallback = false, skipRetry = false }
+    :
+    {filePath:string, serverFilePath:string,progress:NetProgressReportFunc, dataInToken:DataInToken,
+      resolve?:resolve_t, numAttempts?:number,silentCallback?:boolean, skipRetry?:boolean }
+  ) {
+    let reply:IHttpResponse|null=null;
+    const MaxNumRetries = 3;
+    try {
+      if (serverFilePath.startsWith('/')) {
+        serverFilePath=serverFilePath.substr(1);
+      }
+      let storageType = gStorageConfig.GetStorageInfo('TYPE');
+      let serverURL = gStorageConfig.GetStorageInfo('URL');
+
+      if (storageType === 'S3_DIRECT') {
+        reply= await gS3.UploadFile(filePath, serverFilePath, progress, silentCallback);
+      } else if (storageType === 'OBJECT_STORE_SVC') {
+        let fullServerURL = `${serverURL}/upload/storage/${serverFilePath}`;
+        //if(Math.floor(Math.random() * Math.floor(5))==2)// 1/5 chance to hit failure
+        //	fullServerURL = `${serverURL}/uploadx/storage/${serverFilePath}`;
+        reply = await gHttpAsync.UploadMultipartFileWithTokenAsync(fullServerURL, 'POST', filePath,
+          (upload_progress) => {
+            if (upload_progress.done !== undefined && upload_progress.total !== undefined) {
+              let status = upload_progress.total === upload_progress.done ? 'completed' : 'progress';
+
+              if (!silentCallback) {
+                progress({ status, detail: filePath, current: upload_progress.done, total: upload_progress.total });
+              } else {
+                Logger.Data(`Uploading File ${filePath}: ${upload_progress.done}/${upload_progress.total}`);
+              }
+
+            }
+          }, dataInToken);
+      } else {
+        Logger.Error(`UploadPackageFileAsync - Unknown storage type "${storageType}"`);
+        // uploadRequest = { success: false, error: `Failed to upload file (${filePath}). Unknown storage type ${storageType}` };
+        if (resolve) resolve(reply);
+        return reply;
+      }
+
+      if (reply && (reply.type==="RESULT_ERR" ||
+                     (reply.type==="RESULT_RSP" && reply.rsp_code !== 200 && reply.rsp_code !== 201))) {
+        if (reply.type==="RESULT_RSP" && reply.rsp_data)
+          Logger.Error(`tried to upload file (${filePath}), but got error: ${reply.rsp_code}:${reply.rsp_data}`);
+        else
+          Logger.Error(`tried to upload file (${filePath}), but got error: ${JSON.stringify(reply)}`);
+        if (!skipRetry) {
+          numAttempts++;
+          throw numAttempts;
+        }
+      }
+
+      if (resolve) resolve(reply);
+      return reply;
+    } catch (error) {
+      if ((typeof error) === 'number' && numAttempts < MaxNumRetries) {
+        //progress({ status: 'progress', detail: 'Error: retrying in ' + error + ' seconds' });
+        // @ts-ignore
+        let timeOut:number =error;
+        reply= await new Promise((resolve2) => {
+          setTimeout(() => {
+            this.UploadPackageFileAsync({ filePath, serverFilePath, progress, numAttempts, resolve: resolve2, silentCallback, skipRetry, dataInToken });
+          }, timeOut* 1000);
+        });
+      } else {
+        if ((typeof error) === 'number' && numAttempts >= MaxNumRetries) {
+          let errmsg = `Failed to upload file (${filePath}) after ${numAttempts} attempts`;
+          Logger.Error(errmsg);
+          //reply = { success: false, error: errmsg };
+        } else {
+          Logger.Error('Encounter upload file error:' + JSON.stringify(error));
+          //reply = { success: false, error: error };
+        }
+      }
+
+      if (resolve) resolve(reply);
+      return reply;
+    }
+  };
+
 
   // private async SubmitStringInstructionResultAsync(version:string, result:"S"|"F", uploadedURL:string, dataInToken:DataInToken) {
   //     let body = {
