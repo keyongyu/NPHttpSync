@@ -24,12 +24,14 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         expo_sqlite2/SQLite3Wrapper.cpp
         ../../../../../shared_cxx/HttpComm/Comm2.cpp
         ../../../../../shared_cxx/FileSystem.cpp
-        ../../../../../shared_cxx/vendor/sqlite3/sqlite3.c
+        #../../../../../shared_cxx/vendor/sqlite3/sqlite3.c
+        ../../../../../shared_cxx/vendor/sqlcipher/sqlite3.c
         ../../../../../shared_cxx/R3_Log.cpp
         ../../../../../shared_cxx/NativeNPSyncModule.cpp)
 
 # Define where CMake can find the additional header files. We need to crawl back the jni, main, src, app, android folders
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
         ../../../../../shared_cxx
-        ../../../../../shared_cxx/vendor/sqlite3
+        #../../../../../shared_cxx/vendor/sqlite3
+        ../../../../../shared_cxx/vendor/sqlcipher
 )

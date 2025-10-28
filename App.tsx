@@ -37,6 +37,7 @@ function App(): React.JSX.Element {
   }, []);
   function syncImages(){
     const db = SQLite.openDatabaseSync('databaseName');
+    db.execSync(`PRAGMA key = 'password'`);
     db.useForHttpDataSync();
     //NPSyncSpec.DeleteFolder(WorkDir+"/M_PRD");
 
@@ -53,6 +54,7 @@ function App(): React.JSX.Element {
   }
   function syncDB(){
     const db = SQLite.openDatabaseSync('databaseName');
+    db.execSync(`PRAGMA key = 'password'`);
     db.useForHttpDataSync();
     //NPSyncSpec.DeleteFolder(WorkDir+"/M_PRD");
 
@@ -70,6 +72,7 @@ function App(): React.JSX.Element {
       console.log('sqliteTest');
       //const dbx = SQLite.openDatabaseSync('databaseName');
       const db = await SQLite.openDatabaseAsync('databaseName');
+      await db.execAsync(`PRAGMA key = 'password'`);
 
       // `execAsync()` is useful for bulk queries when you want to execute altogether.
       // Please note that `execAsync()` does not escape parameters and may lead to SQL injection.
@@ -205,6 +208,8 @@ function App(): React.JSX.Element {
 
   async function uploadTxn() {
     const db = SQLite.openDatabaseSync('databaseName');
+    db.execSync(`PRAGMA key = 'password'`);
+
     db.useForHttpDataSync();
     //NPSyncSpec.DeleteFolder(WorkDir+"/M_PRD");
 
