@@ -275,7 +275,7 @@ namespace facebook::react {
             m_Deletor = [sptr2=sptr](void* p){
 
                 void* pData = sptr2->m_pBuf;
-                assert(p==pData);
+                assert(p==pData||p==nullptr);
                 if(p!=pData) {
                     //int n = sptr2.use_count();
                     //n++;

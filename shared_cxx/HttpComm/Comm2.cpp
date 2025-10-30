@@ -498,7 +498,7 @@ GenericValue<UTF8<char>>*  childArray(GenericValue<UTF8<char>>& parent,const cha
     if(!parent.HasMember(childName))
         return nullptr;
     auto& child= parent [childName];
-    if(child.IsArray())
+    if(!child.IsArray())
         return nullptr;
     return &child;
 }
@@ -591,7 +591,7 @@ bool LoadTxnSchema(const string& json_str, TxnSchema& txn_schema, string& err_de
             if (pdtlFields) {
                 auto& dtlFields = *pdtlFields;
                 for (auto j = 0; j < dtlFields.Size(); ++j) {
-                    auto assembleType = childStringOr(dtlFields[i],"AssembleType", "");
+                    auto assembleType = childStringOr(dtlFields[j],"AssembleType", "");
                     if (strcasecmp(assembleType.c_str(), "EMBEDDED") == 0) {
                         auto columnName = childStringOr(dtlFields[j],"Name", "");
                         if (!columnName.empty()) {
