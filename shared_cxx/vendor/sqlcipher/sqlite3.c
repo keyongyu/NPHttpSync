@@ -1,6 +1,6 @@
 /******************************************************************************
 ** This file is an amalgamation of many separate C source files from SQLite
-** version 3.45.3.  By combining all the individual C code files into this
+** version 3.44.2.  By combining all the individual C code files into this
 ** single large file, the entire code can be compiled as a single translation
 ** unit.  This allows many compilers to do optimizations that would not be
 ** possible if the files were compiled separately.  Performance improvements
@@ -18,7 +18,7 @@
 ** separate file. This file contains only code for the core SQLite library.
 **
 ** The content in this amalgamation comes from Fossil check-in
-** 8653b758870e6ef0c98d46b3ace27849054a with changes in files:
+** ebead0e7230cd33bcec9f95d2183069565b9 with changes in files:
 **
 **    .fossil-settings/empty-dirs
 **    .fossil-settings/ignore-glob
@@ -496,9 +496,9 @@ extern "C" {
 ** [sqlite3_libversion_number()], [sqlite3_sourceid()],
 ** [sqlite_version()] and [sqlite_source_id()].
 */
-#define SQLITE_VERSION        "3.45.3"
-#define SQLITE_VERSION_NUMBER 3045003
-#define SQLITE_SOURCE_ID      "2024-04-15 13:34:05 8653b758870e6ef0c98d46b3ace27849054af85da891eb121e9aaa537f1ealt1"
+#define SQLITE_VERSION        "3.44.2"
+#define SQLITE_VERSION_NUMBER 3044002
+#define SQLITE_SOURCE_ID      "2023-11-24 11:41:44 ebead0e7230cd33bcec9f95d2183069565b9e709bf745c9b5db65cc0cbf9alt1"
 
 /*
 ** CAPI3REF: Run-Time Library Version Numbers
@@ -770,8 +770,6 @@ typedef int (*sqlite3_callback)(void*,int,char**, char**);
 **      the 1st parameter to sqlite3_exec() while sqlite3_exec() is running.
 ** <li> The application must not modify the SQL statement text passed into
 **      the 2nd parameter of sqlite3_exec() while sqlite3_exec() is running.
-** <li> The application must not dereference the arrays or string pointers
-**       passed as the 3rd and 4th callback parameters after it returns.
 ** </ul>
 */
 SQLITE_API int sqlite3_exec(
@@ -2493,22 +2491,6 @@ struct sqlite3_mem_methods {
 ** configuration setting is never used, then the default maximum is determined
 ** by the [SQLITE_MEMDB_DEFAULT_MAXSIZE] compile-time option.  If that
 ** compile-time option is not set, then the default maximum is 1073741824.
-**
-** [[SQLITE_CONFIG_ROWID_IN_VIEW]]
-** <dt>SQLITE_CONFIG_ROWID_IN_VIEW
-** <dd>The SQLITE_CONFIG_ROWID_IN_VIEW option enables or disables the ability
-** for VIEWs to have a ROWID.  The capability can only be enabled if SQLite is
-** compiled with -DSQLITE_ALLOW_ROWID_IN_VIEW, in which case the capability
-** defaults to on.  This configuration option queries the current setting or
-** changes the setting to off or on.  The argument is a pointer to an integer.
-** If that integer initially holds a value of 1, then the ability for VIEWs to
-** have ROWIDs is activated.  If the integer initially holds zero, then the
-** ability is deactivated.  Any other initial value for the integer leaves the
-** setting unchanged.  After changes, if any, the integer is written with
-** a 1 or 0, if the ability for VIEWs to have ROWIDs is on or off.  If SQLite
-** is compiled without -DSQLITE_ALLOW_ROWID_IN_VIEW (which is the usual and
-** recommended case) then the integer is always filled with zero, regardless
-** if its initial value.
 ** </dl>
 */
 #define SQLITE_CONFIG_SINGLETHREAD         1  /* nil */
@@ -2540,7 +2522,6 @@ struct sqlite3_mem_methods {
 #define SQLITE_CONFIG_SMALL_MALLOC        27  /* boolean */
 #define SQLITE_CONFIG_SORTERREF_SIZE      28  /* int nByte */
 #define SQLITE_CONFIG_MEMDB_MAXSIZE       29  /* sqlite3_int64 */
-#define SQLITE_CONFIG_ROWID_IN_VIEW       30  /* int* */
 
 /*
 ** CAPI3REF: Database Connection Configuration Options
@@ -4323,17 +4304,15 @@ SQLITE_API void sqlite3_free_filename(sqlite3_filename);
 ** </ul>
 **
 ** ^The sqlite3_errmsg() and sqlite3_errmsg16() return English-language
-** text that describes the error, as either UTF-8 or UTF-16 respectively,
-** or NULL if no error message is available.
+** text that describes the error, as either UTF-8 or UTF-16 respectively.
 ** (See how SQLite handles [invalid UTF] for exceptions to this rule.)
 ** ^(Memory to hold the error message string is managed internally.
 ** The application does not need to worry about freeing the result.
 ** However, the error string might be overwritten or deallocated by
 ** subsequent calls to other SQLite interface functions.)^
 **
-** ^The sqlite3_errstr(E) interface returns the English-language text
-** that describes the [result code] E, as UTF-8, or NULL if E is not an
-** result code for which a text error message is available.
+** ^The sqlite3_errstr() interface returns the English-language text
+** that describes the [result code], as UTF-8.
 ** ^(Memory to hold the error message string is managed internally
 ** and must not be freed by the application)^.
 **
@@ -8468,11 +8447,9 @@ SQLITE_API int sqlite3_vfs_unregister(sqlite3_vfs*);
 **
 ** ^(Some systems (for example, Windows 95) do not support the operation
 ** implemented by sqlite3_mutex_try().  On those systems, sqlite3_mutex_try()
-** will always return SQLITE_BUSY. In most cases the SQLite core only uses
-** sqlite3_mutex_try() as an optimization, so this is acceptable
-** behavior. The exceptions are unix builds that set the
-** SQLITE_ENABLE_SETLK_TIMEOUT build option. In that case a working
-** sqlite3_mutex_try() is required.)^
+** will always return SQLITE_BUSY. The SQLite core only ever uses
+** sqlite3_mutex_try() as an optimization so this is acceptable
+** behavior.)^
 **
 ** ^The sqlite3_mutex_leave() routine exits a mutex that was
 ** previously entered by the same thread.   The behavior
@@ -8731,7 +8708,6 @@ SQLITE_API int sqlite3_test_control(int op, ...);
 #define SQLITE_TESTCTRL_ASSERT                  12
 #define SQLITE_TESTCTRL_ALWAYS                  13
 #define SQLITE_TESTCTRL_RESERVE                 14  /* NOT USED */
-#define SQLITE_TESTCTRL_JSON_SELFCHECK          14
 #define SQLITE_TESTCTRL_OPTIMIZATIONS           15
 #define SQLITE_TESTCTRL_ISKEYWORD               16  /* NOT USED */
 #define SQLITE_TESTCTRL_SCRATCHMALLOC           17  /* NOT USED */
@@ -13245,11 +13221,8 @@ struct Fts5PhraseIter {
 **   created with the "columnsize=0" option.
 **
 ** xColumnText:
-**   If parameter iCol is less than zero, or greater than or equal to the
-**   number of columns in the table, SQLITE_RANGE is returned.
-**
-**   Otherwise, this function attempts to retrieve the text of column iCol of
-**   the current document. If successful, (*pz) is set to point to a buffer
+**   This function attempts to retrieve the text of column iCol of the
+**   current document. If successful, (*pz) is set to point to a buffer
 **   containing the text in utf-8 encoding, (*pn) is set to the size in bytes
 **   (not characters) of the buffer and SQLITE_OK is returned. Otherwise,
 **   if an error occurs, an SQLite error code is returned and the final values
@@ -13259,10 +13232,8 @@ struct Fts5PhraseIter {
 **   Returns the number of phrases in the current query expression.
 **
 ** xPhraseSize:
-**   If parameter iCol is less than zero, or greater than or equal to the
-**   number of phrases in the current query, as returned by xPhraseCount,
-**   0 is returned. Otherwise, this function returns the number of tokens in
-**   phrase iPhrase of the query. Phrases are numbered starting from zero.
+**   Returns the number of tokens in phrase iPhrase of the query. Phrases
+**   are numbered starting from zero.
 **
 ** xInstCount:
 **   Set *pnInst to the total number of occurrences of all phrases within
@@ -13278,13 +13249,12 @@ struct Fts5PhraseIter {
 **   Query for the details of phrase match iIdx within the current row.
 **   Phrase matches are numbered starting from zero, so the iIdx argument
 **   should be greater than or equal to zero and smaller than the value
-**   output by xInstCount(). If iIdx is less than zero or greater than
-**   or equal to the value returned by xInstCount(), SQLITE_RANGE is returned.
+**   output by xInstCount().
 **
-**   Otherwise, output parameter *piPhrase is set to the phrase number, *piCol
+**   Usually, output parameter *piPhrase is set to the phrase number, *piCol
 **   to the column in which it occurs and *piOff the token offset of the
-**   first token of the phrase. SQLITE_OK is returned if successful, or an
-**   error code (i.e. SQLITE_NOMEM) if an error occurs.
+**   first token of the phrase. Returns SQLITE_OK if successful, or an error
+**   code (i.e. SQLITE_NOMEM) if an error occurs.
 **
 **   This API can be quite slow if used with an FTS5 table created with the
 **   "detail=none" or "detail=column" option.
@@ -13309,10 +13279,6 @@ struct Fts5PhraseIter {
 **   function may be used to access the properties of each matched row.
 **   Invoking Api.xUserData() returns a copy of the pointer passed as
 **   the third argument to pUserData.
-**
-**   If parameter iPhrase is less than zero, or greater than or equal to
-**   the number of phrases in the query, as returned by xPhraseCount(),
-**   this function returns SQLITE_RANGE.
 **
 **   If the callback function returns any value other than SQLITE_OK, the
 **   query is abandoned and the xQueryPhrase function returns immediately.
@@ -13428,42 +13394,9 @@ struct Fts5PhraseIter {
 **
 ** xPhraseNextColumn()
 **   See xPhraseFirstColumn above.
-**
-** xQueryToken(pFts5, iPhrase, iToken, ppToken, pnToken)
-**   This is used to access token iToken of phrase iPhrase of the current
-**   query. Before returning, output parameter *ppToken is set to point
-**   to a buffer containing the requested token, and *pnToken to the
-**   size of this buffer in bytes.
-**
-**   If iPhrase or iToken are less than zero, or if iPhrase is greater than
-**   or equal to the number of phrases in the query as reported by
-**   xPhraseCount(), or if iToken is equal to or greater than the number of
-**   tokens in the phrase, SQLITE_RANGE is returned and *ppToken and *pnToken
-     are both zeroed.
-**
-**   The output text is not a copy of the query text that specified the
-**   token. It is the output of the tokenizer module. For tokendata=1
-**   tables, this includes any embedded 0x00 and trailing data.
-**
-** xInstToken(pFts5, iIdx, iToken, ppToken, pnToken)
-**   This is used to access token iToken of phrase hit iIdx within the
-**   current row. If iIdx is less than zero or greater than or equal to the
-**   value returned by xInstCount(), SQLITE_RANGE is returned.  Otherwise,
-**   output variable (*ppToken) is set to point to a buffer containing the
-**   matching document token, and (*pnToken) to the size of that buffer in
-**   bytes. This API is not available if the specified token matches a
-**   prefix query term. In that case both output variables are always set
-**   to 0.
-**
-**   The output text is not a copy of the document text that was tokenized.
-**   It is the output of the tokenizer module. For tokendata=1 tables, this
-**   includes any embedded 0x00 and trailing data.
-**
-**   This API can be quite slow if used with an FTS5 table created with the
-**   "detail=none" or "detail=column" option.
 */
 struct Fts5ExtensionApi {
-  int iVersion;                   /* Currently always set to 3 */
+  int iVersion;                   /* Currently always set to 2 */
 
   void *(*xUserData)(Fts5Context*);
 
@@ -13498,13 +13431,6 @@ struct Fts5ExtensionApi {
 
   int (*xPhraseFirstColumn)(Fts5Context*, int iPhrase, Fts5PhraseIter*, int*);
   void (*xPhraseNextColumn)(Fts5Context*, Fts5PhraseIter*, int *piCol);
-
-  /* Below this point are iVersion>=3 only */
-  int (*xQueryToken)(Fts5Context*,
-      int iPhrase, int iToken,
-      const char **ppToken, int *pnToken
-  );
-  int (*xInstToken)(Fts5Context*, int iIdx, int iToken, const char**, int*);
 };
 
 /*
@@ -13991,7 +13917,7 @@ struct fts5_api {
 ** max_page_count macro.
 */
 #ifndef SQLITE_MAX_PAGE_COUNT
-# define SQLITE_MAX_PAGE_COUNT 0xfffffffe /* 4294967294 */
+# define SQLITE_MAX_PAGE_COUNT 1073741823
 #endif
 
 /*
@@ -14129,19 +14055,6 @@ struct fts5_api {
 #else
 # undef SQLITE_USE_SEH
 #endif
-
-/*
-** Enable SQLITE_DIRECT_OVERFLOW_READ, unless the build explicitly
-** disables it using -DSQLITE_DIRECT_OVERFLOW_READ=0
-*/
-#if defined(SQLITE_DIRECT_OVERFLOW_READ) && SQLITE_DIRECT_OVERFLOW_READ+1==1
-  /* Disable if -DSQLITE_DIRECT_OVERFLOW_READ=0 */
-# undef SQLITE_DIRECT_OVERFLOW_READ
-#else
-  /* In all other cases, enable */
-# define SQLITE_DIRECT_OVERFLOW_READ 1
-#endif
-
 
 /*
 ** The SQLITE_THREADSAFE macro must be defined as 0, 1, or 2.
@@ -15213,7 +15126,6 @@ SQLITE_PRIVATE u32 sqlite3TreeTrace;
 **   0x00010000     Beginning of DELETE/INSERT/UPDATE processing
 **   0x00020000     Transform DISTINCT into GROUP BY
 **   0x00040000     SELECT tree dump after all code has been generated
-**   0x00080000     NOT NULL strength reduction
 */
 
 /*
@@ -16031,7 +15943,7 @@ SQLITE_PRIVATE sqlite3_file *sqlite3PagerJrnlFile(Pager*);
 SQLITE_PRIVATE const char *sqlite3PagerJournalname(Pager*);
 SQLITE_PRIVATE void *sqlite3PagerTempSpace(Pager*);
 SQLITE_PRIVATE int sqlite3PagerIsMemdb(Pager*);
-SQLITE_PRIVATE void sqlite3PagerCacheStat(Pager *, int, int, u64*);
+SQLITE_PRIVATE void sqlite3PagerCacheStat(Pager *, int, int, int *);
 SQLITE_PRIVATE void sqlite3PagerClearCache(Pager*);
 SQLITE_PRIVATE int sqlite3SectorSize(sqlite3_file *);
 
@@ -16624,7 +16536,6 @@ typedef struct VdbeOpList VdbeOpList;
 #define P4_INT64      (-13) /* P4 is a 64-bit signed integer */
 #define P4_INTARRAY   (-14) /* P4 is a vector of 32-bit integers */
 #define P4_FUNCCTX    (-15) /* P4 is a pointer to an sqlite3_context object */
-#define P4_TABLEREF   (-16) /* Like P4_TABLE, but reference counted */
 
 /* Error message codes for OP_Halt */
 #define P5_ConstraintNotNull 1
@@ -16847,15 +16758,13 @@ typedef struct VdbeOpList VdbeOpList;
 #define OP_Pagecount     178
 #define OP_MaxPgcnt      179
 #define OP_ClrSubtype    180 /* synopsis: r[P1].subtype = 0                */
-#define OP_GetSubtype    181 /* synopsis: r[P2] = r[P1].subtype            */
-#define OP_SetSubtype    182 /* synopsis: r[P2].subtype = r[P1]            */
-#define OP_FilterAdd     183 /* synopsis: filter(P1) += key(P3@P4)         */
-#define OP_Trace         184
-#define OP_CursorHint    185
-#define OP_ReleaseReg    186 /* synopsis: release r[P1@P2] mask P3         */
-#define OP_Noop          187
-#define OP_Explain       188
-#define OP_Abortable     189
+#define OP_FilterAdd     181 /* synopsis: filter(P1) += key(P3@P4)         */
+#define OP_Trace         182
+#define OP_CursorHint    183
+#define OP_ReleaseReg    184 /* synopsis: release r[P1@P2] mask P3         */
+#define OP_Noop          185
+#define OP_Explain       186
+#define OP_Abortable     187
 
 /* Properties such as "out2" or "jump" that are specified in
 ** comments following the "case" for each opcode in the vdbe.c
@@ -16891,8 +16800,8 @@ typedef struct VdbeOpList VdbeOpList;
 /* 152 */ 0x00, 0x10, 0x00, 0x00, 0x06, 0x10, 0x00, 0x04,\
 /* 160 */ 0x1a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
 /* 168 */ 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x10, 0x50,\
-/* 176 */ 0x40, 0x00, 0x10, 0x10, 0x02, 0x12, 0x12, 0x00,\
-/* 184 */ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,}
+/* 176 */ 0x40, 0x00, 0x10, 0x10, 0x02, 0x00, 0x00, 0x00,\
+/* 184 */ 0x00, 0x00, 0x00, 0x00,}
 
 /* The resolve3P2Values() routine is able to run faster if it knows
 ** the value of the largest JUMP opcode.  The smaller the maximum
@@ -18153,11 +18062,11 @@ struct FuncDestructor {
 #define MFUNCTION(zName, nArg, xPtr, xFunc) \
   {nArg, SQLITE_FUNC_BUILTIN|SQLITE_FUNC_CONSTANT|SQLITE_UTF8, \
    xPtr, 0, xFunc, 0, 0, 0, #zName, {0} }
-#define JFUNCTION(zName, nArg, bUseCache, bWS, bRS, bJsonB, iArg, xFunc) \
+#define JFUNCTION(zName, nArg, bUseCache, bWS, bRS, iArg, xFunc) \
   {nArg, SQLITE_FUNC_BUILTIN|SQLITE_DETERMINISTIC|SQLITE_FUNC_CONSTANT|\
    SQLITE_UTF8|((bUseCache)*SQLITE_FUNC_RUNONLY)|\
    ((bRS)*SQLITE_SUBTYPE)|((bWS)*SQLITE_RESULT_SUBTYPE), \
-   SQLITE_INT_TO_PTR(iArg|((bJsonB)*JSON_BLOB)),0,xFunc,0, 0, 0, #zName, {0} }
+   SQLITE_INT_TO_PTR(iArg), 0, xFunc, 0, 0, 0, #zName, {0} }
 #define INLINE_FUNC(zName, nArg, iArg, mFlags) \
   {nArg, SQLITE_FUNC_BUILTIN|\
    SQLITE_UTF8|SQLITE_FUNC_INLINE|SQLITE_FUNC_CONSTANT|(mFlags), \
@@ -18555,15 +18464,6 @@ struct Table {
 #define HasRowid(X)     (((X)->tabFlags & TF_WithoutRowid)==0)
 #define VisibleRowid(X) (((X)->tabFlags & TF_NoVisibleRowid)==0)
 
-/* Macro is true if the SQLITE_ALLOW_ROWID_IN_VIEW (mis-)feature is
-** available.  By default, this macro is false
-*/
-#ifndef SQLITE_ALLOW_ROWID_IN_VIEW
-# define ViewCanHaveRowid     0
-#else
-# define ViewCanHaveRowid     (sqlite3Config.mNoVisibleRowid==0)
-#endif
-
 /*
 ** Each foreign key constraint is an instance of the following structure.
 **
@@ -18801,7 +18701,6 @@ struct Index {
   unsigned isCovering:1;   /* True if this is a covering index */
   unsigned noSkipScan:1;   /* Do not try to use skip-scan if true */
   unsigned hasStat1:1;     /* aiRowLogEst values come from sqlite_stat1 */
-  unsigned bLowQual:1;     /* sqlite_stat1 says this is a low-quality index */
   unsigned bNoQuery:1;     /* Do not use this index to optimize queries */
   unsigned bAscKeyBug:1;   /* True if the bba7b69f9849b5bf bug applies */
   unsigned bHasVCol:1;     /* Index references one or more VIRTUAL columns */
@@ -18915,7 +18814,6 @@ struct AggInfo {
     int iOBTab;              /* Ephemeral table to implement ORDER BY */
     u8 bOBPayload;           /* iOBTab has payload columns separate from key */
     u8 bOBUnique;            /* Enforce uniqueness on iOBTab keys */
-    u8 bUseSubtype;          /* Transfer subtype info through sorter */
   } *aFunc;
   int nFunc;              /* Number of entries in aFunc[] */
   u32 selId;              /* Select to which this AggInfo belongs */
@@ -19449,7 +19347,6 @@ struct NameContext {
   int nRef;            /* Number of names resolved by this context */
   int nNcErr;          /* Number of errors encountered while resolving names */
   int ncFlags;         /* Zero or more NC_* flags defined below */
-  u32 nNestedSelect;   /* Number of nested selects using this NC */
   Select *pWinSelect;  /* SELECT statement for any window functions */
 };
 
@@ -19483,7 +19380,6 @@ struct NameContext {
 #define NC_InAggFunc 0x020000 /* True if analyzing arguments to an agg func */
 #define NC_FromDDL   0x040000 /* SQL text comes from sqlite_schema */
 #define NC_NoSelect  0x080000 /* Do not descend into sub-selects */
-#define NC_Where     0x100000 /* Processing WHERE clause of a SELECT */
 #define NC_OrderAgg 0x8000000 /* Has an aggregate other than count/min/max */
 
 /*
@@ -19507,7 +19403,6 @@ struct Upsert {
   Expr *pUpsertWhere;       /* WHERE clause for the ON CONFLICT UPDATE */
   Upsert *pNextUpsert;      /* Next ON CONFLICT clause in the list */
   u8 isDoUpdate;            /* True for DO UPDATE.  False for DO NOTHING */
-  u8 isDup;                 /* True if 2nd or later with same pUpsertIdx */
   /* Above this point is the parse tree for the ON CONFLICT clauses.
   ** The next group of fields stores intermediate data. */
   void *pToFree;            /* Free memory when deleting the Upsert object */
@@ -20168,9 +20063,6 @@ struct sqlite3_str {
 **
 **   3.  Make a (read-only) copy of a read-only RCStr string using
 **       sqlite3RCStrRef().
-**
-** "String" is in the name, but an RCStr object can also be used to hold
-** binary data.
 */
 struct RCStr {
   u64 nRCRef;            /* Number of references */
@@ -20229,9 +20121,6 @@ struct Sqlite3Config {
   u8 bSmallMalloc;                  /* Avoid large memory allocations if true */
   u8 bExtraSchemaChecks;            /* Verify type,name,tbl_name in schema */
   u8 bUseLongDouble;                /* Make use of long double */
-#ifdef SQLITE_DEBUG
-  u8 bJsonSelfcheck;                /* Double-check JSON parsing */
-#endif
   int mxStrlen;                     /* Maximum string length */
   int neverCorrupt;                 /* Database is always well-formed */
   int szLookaside;                  /* Default lookaside buffer size */
@@ -20278,11 +20167,6 @@ struct Sqlite3Config {
 #endif
 #ifndef SQLITE_UNTESTABLE
   int (*xTestCallback)(int);        /* Invoked by sqlite3FaultSim() */
-#endif
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-  u32 mNoVisibleRowid;              /* TF_NoVisibleRowid if the ROWID_IN_VIEW
-                                    ** feature is disabled.  0 if rowids can
-                                    ** occur in views. */
 #endif
   int bLocaltimeFault;              /* True to fail localtime() calls */
   int (*xAltLocaltime)(const void*,void*); /* Alternative localtime() routine */
@@ -20739,13 +20623,10 @@ SQLITE_PRIVATE void sqlite3MutexWarnOnContention(sqlite3_mutex*);
 # define EXP754 (((u64)0x7ff)<<52)
 # define MAN754 ((((u64)1)<<52)-1)
 # define IsNaN(X) (((X)&EXP754)==EXP754 && ((X)&MAN754)!=0)
-# define IsOvfl(X) (((X)&EXP754)==EXP754)
 SQLITE_PRIVATE   int sqlite3IsNaN(double);
-SQLITE_PRIVATE   int sqlite3IsOverflow(double);
 #else
-# define IsNaN(X)             0
-# define sqlite3IsNaN(X)      0
-# define sqlite3IsOVerflow(X) 0
+# define IsNaN(X)         0
+# define sqlite3IsNaN(X)  0
 #endif
 
 /*
@@ -20866,7 +20747,6 @@ SQLITE_PRIVATE void sqlite3ExprOrderByAggregateError(Parse*,Expr*);
 SQLITE_PRIVATE void sqlite3ExprFunctionUsable(Parse*,const Expr*,const FuncDef*);
 SQLITE_PRIVATE void sqlite3ExprAssignVarNumber(Parse*, Expr*, u32);
 SQLITE_PRIVATE void sqlite3ExprDelete(sqlite3*, Expr*);
-SQLITE_PRIVATE void sqlite3ExprDeleteGeneric(sqlite3*,void*);
 SQLITE_PRIVATE void sqlite3ExprDeferredDelete(Parse*, Expr*);
 SQLITE_PRIVATE void sqlite3ExprUnmapAndDelete(Parse*, Expr*);
 SQLITE_PRIVATE ExprList *sqlite3ExprListAppend(Parse*,ExprList*,Expr*);
@@ -20876,7 +20756,6 @@ SQLITE_PRIVATE void sqlite3ExprListSetSortOrder(ExprList*,int,int);
 SQLITE_PRIVATE void sqlite3ExprListSetName(Parse*,ExprList*,const Token*,int);
 SQLITE_PRIVATE void sqlite3ExprListSetSpan(Parse*,ExprList*,const char*,const char*);
 SQLITE_PRIVATE void sqlite3ExprListDelete(sqlite3*, ExprList*);
-SQLITE_PRIVATE void sqlite3ExprListDeleteGeneric(sqlite3*,void*);
 SQLITE_PRIVATE u32 sqlite3ExprListFlags(const ExprList*);
 SQLITE_PRIVATE int sqlite3IndexHasDuplicateRootPage(Index*);
 SQLITE_PRIVATE int sqlite3Init(sqlite3*, char**);
@@ -20973,7 +20852,6 @@ SQLITE_PRIVATE   int sqlite3DbMaskAllZero(yDbMask);
 SQLITE_PRIVATE void sqlite3DropTable(Parse*, SrcList*, int, int);
 SQLITE_PRIVATE void sqlite3CodeDropTable(Parse*, Table*, int, int);
 SQLITE_PRIVATE void sqlite3DeleteTable(sqlite3*, Table*);
-SQLITE_PRIVATE void sqlite3DeleteTableGeneric(sqlite3*, void*);
 SQLITE_PRIVATE void sqlite3FreeIndex(sqlite3*, Index*);
 #ifndef SQLITE_OMIT_AUTOINCREMENT
 SQLITE_PRIVATE   void sqlite3AutoincrementBegin(Parse *pParse);
@@ -21010,7 +20888,6 @@ SQLITE_PRIVATE int sqlite3Select(Parse*, Select*, SelectDest*);
 SQLITE_PRIVATE Select *sqlite3SelectNew(Parse*,ExprList*,SrcList*,Expr*,ExprList*,
                          Expr*,ExprList*,u32,Expr*);
 SQLITE_PRIVATE void sqlite3SelectDelete(sqlite3*, Select*);
-SQLITE_PRIVATE void sqlite3SelectDeleteGeneric(sqlite3*,void*);
 SQLITE_PRIVATE Table *sqlite3SrcListLookup(Parse*, SrcList*);
 SQLITE_PRIVATE int sqlite3IsReadOnly(Parse*, Table*, Trigger*);
 SQLITE_PRIVATE void sqlite3OpenTable(Parse*, int iCur, int iDb, Table*, int);
@@ -21237,7 +21114,6 @@ SQLITE_PRIVATE int sqlite3Utf16ByteLen(const void *pData, int nChar);
 #endif
 SQLITE_PRIVATE int sqlite3Utf8CharLen(const char *pData, int nByte);
 SQLITE_PRIVATE u32 sqlite3Utf8Read(const u8**);
-SQLITE_PRIVATE int sqlite3Utf8ReadLimited(const u8*, int, u32*);
 SQLITE_PRIVATE LogEst sqlite3LogEst(u64);
 SQLITE_PRIVATE LogEst sqlite3LogEstAdd(LogEst,LogEst);
 SQLITE_PRIVATE LogEst sqlite3LogEstFromDouble(double);
@@ -21584,7 +21460,6 @@ SQLITE_PRIVATE   Cte *sqlite3CteNew(Parse*,Token*,ExprList*,Select*,u8);
 SQLITE_PRIVATE   void sqlite3CteDelete(sqlite3*,Cte*);
 SQLITE_PRIVATE   With *sqlite3WithAdd(Parse*,With*,Cte*);
 SQLITE_PRIVATE   void sqlite3WithDelete(sqlite3*,With*);
-SQLITE_PRIVATE   void sqlite3WithDeleteGeneric(sqlite3*,void*);
 SQLITE_PRIVATE   With *sqlite3WithPush(Parse*, With*, u8);
 #else
 # define sqlite3CteNew(P,T,E,S)   ((void*)0)
@@ -21597,7 +21472,7 @@ SQLITE_PRIVATE   With *sqlite3WithPush(Parse*, With*, u8);
 SQLITE_PRIVATE   Upsert *sqlite3UpsertNew(sqlite3*,ExprList*,Expr*,ExprList*,Expr*,Upsert*);
 SQLITE_PRIVATE   void sqlite3UpsertDelete(sqlite3*,Upsert*);
 SQLITE_PRIVATE   Upsert *sqlite3UpsertDup(sqlite3*,Upsert*);
-SQLITE_PRIVATE   int sqlite3UpsertAnalyzeTarget(Parse*,SrcList*,Upsert*,Upsert*);
+SQLITE_PRIVATE   int sqlite3UpsertAnalyzeTarget(Parse*,SrcList*,Upsert*);
 SQLITE_PRIVATE   void sqlite3UpsertDoUpdate(Parse*,Upsert*,Table*,Index*,int);
 SQLITE_PRIVATE   Upsert *sqlite3UpsertOfIndex(Upsert*,Index*);
 SQLITE_PRIVATE   int sqlite3UpsertNextIsIPK(Upsert*);
@@ -21986,9 +21861,6 @@ static const char * const sqlite3azCompileOpt[] = {
 # if SQLITE_ALLOW_COVERING_INDEX_SCAN != 1
   "ALLOW_COVERING_INDEX_SCAN=" CTIMEOPT_VAL(SQLITE_ALLOW_COVERING_INDEX_SCAN),
 # endif
-#endif
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-  "ALLOW_ROWID_IN_VIEW",
 #endif
 #ifdef SQLITE_ALLOW_URI_AUTHORITY
   "ALLOW_URI_AUTHORITY",
@@ -22979,9 +22851,6 @@ SQLITE_PRIVATE SQLITE_WSD struct Sqlite3Config sqlite3Config = {
    0,                         /* bSmallMalloc */
    1,                         /* bExtraSchemaChecks */
    sizeof(LONGDOUBLE_TYPE)>8, /* bUseLongDouble */
-#ifdef SQLITE_DEBUG
-   0,                         /* bJsonSelfcheck */
-#endif
    0x7ffffffe,                /* mxStrlen */
    0,                         /* neverCorrupt */
    SQLITE_DEFAULT_LOOKASIDE,  /* szLookaside, nLookaside */
@@ -23023,9 +22892,6 @@ SQLITE_PRIVATE SQLITE_WSD struct Sqlite3Config sqlite3Config = {
 #endif
 #ifndef SQLITE_UNTESTABLE
    0,                         /* xTestCallback */
-#endif
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-   0,                         /* mNoVisibleRowid.  0 == allow rowid-in-view */
 #endif
    0,                         /* bLocaltimeFault */
    0,                         /* xAltLocaltime */
@@ -24237,7 +24103,7 @@ SQLITE_API int sqlite3_db_status(
     case SQLITE_DBSTATUS_CACHE_MISS:
     case SQLITE_DBSTATUS_CACHE_WRITE:{
       int i;
-      u64 nRet = 0;
+      int nRet = 0;
       assert( SQLITE_DBSTATUS_CACHE_MISS==SQLITE_DBSTATUS_CACHE_HIT+1 );
       assert( SQLITE_DBSTATUS_CACHE_WRITE==SQLITE_DBSTATUS_CACHE_HIT+2 );
 
@@ -24250,7 +24116,7 @@ SQLITE_API int sqlite3_db_status(
       *pHighwater = 0; /* IMP: R-42420-56072 */
                        /* IMP: R-54100-20147 */
                        /* IMP: R-29431-39229 */
-      *pCurrent = (int)nRet & 0x7fffffff;
+      *pCurrent = nRet;
       break;
     }
 
@@ -25319,12 +25185,6 @@ static int isDate(
   }
   computeJD(p);
   if( p->isError || !validJulianDay(p->iJD) ) return 1;
-  if( argc==1 && p->validYMD && p->D>28 ){
-    /* Make sure a YYYY-MM-DD is normalized.
-    ** Example: 2023-02-31 -> 2023-03-03 */
-    assert( p->validJD );
-    p->validYMD = 0;
-  }
   return 0;
 }
 
@@ -31493,7 +31353,6 @@ SQLITE_API void sqlite3_str_vappendf(
         if( xtype==etFLOAT ){
           iRound = -precision;
         }else if( xtype==etGENERIC ){
-          if( precision==0 ) precision = 1;
           iRound = precision;
         }else{
           iRound = precision+1;
@@ -32365,7 +32224,7 @@ SQLITE_API void sqlite3_str_appendf(StrAccum *p, const char *zFormat, ...){
 
 
 /*****************************************************************************
-** Reference counted string/blob storage
+** Reference counted string storage
 *****************************************************************************/
 
 /*
@@ -33217,7 +33076,7 @@ SQLITE_PRIVATE void sqlite3TreeViewExpr(TreeView *pView, const Expr *pExpr, u8 m
       assert( pExpr->x.pList->nExpr==2 );
       pY = pExpr->x.pList->a[0].pExpr;
       pZ = pExpr->x.pList->a[1].pExpr;
-      sqlite3TreeViewLine(pView, "BETWEEN%s", zFlgs);
+      sqlite3TreeViewLine(pView, "BETWEEN");
       sqlite3TreeViewExpr(pView, pX, 1);
       sqlite3TreeViewExpr(pView, pY, 1);
       sqlite3TreeViewExpr(pView, pZ, 0);
@@ -34352,38 +34211,7 @@ SQLITE_PRIVATE u32 sqlite3Utf8Read(
   return c;
 }
 
-/*
-** Read a single UTF8 character out of buffer z[], but reading no
-** more than n characters from the buffer.  z[] is not zero-terminated.
-**
-** Return the number of bytes used to construct the character.
-**
-** Invalid UTF8 might generate a strange result.  No effort is made
-** to detect invalid UTF8.
-**
-** At most 4 bytes will be read out of z[].  The return value will always
-** be between 1 and 4.
-*/
-SQLITE_PRIVATE int sqlite3Utf8ReadLimited(
-  const u8 *z,
-  int n,
-  u32 *piOut
-){
-  u32 c;
-  int i = 1;
-  assert( n>0 );
-  c = z[0];
-  if( c>=0xc0 ){
-    c = sqlite3Utf8Trans1[c-0xc0];
-    if( n>4 ) n = 4;
-    while( i<n && (z[i] & 0xc0)==0x80 ){
-      c = (c<<6) + (0x3f & z[i]);
-      i++;
-    }
-  }
-  *piOut = c;
-  return i;
-}
+
 
 
 /*
@@ -34825,19 +34653,6 @@ SQLITE_PRIVATE int sqlite3IsNaN(double x){
 }
 #endif /* SQLITE_OMIT_FLOATING_POINT */
 
-#ifndef SQLITE_OMIT_FLOATING_POINT
-/*
-** Return true if the floating point value is NaN or +Inf or -Inf.
-*/
-SQLITE_PRIVATE int sqlite3IsOverflow(double x){
-  int rc;   /* The value return */
-  u64 y;
-  memcpy(&y,&x,sizeof(y));
-  rc = IsOvfl(y);
-  return rc;
-}
-#endif /* SQLITE_OMIT_FLOATING_POINT */
-
 /*
 ** Compute a string length that is limited to what can be stored in
 ** lower 30 bits of a 32-bit signed integer.
@@ -34911,7 +34726,7 @@ SQLITE_PRIVATE void sqlite3ErrorClear(sqlite3 *db){
 */
 SQLITE_PRIVATE void sqlite3SystemError(sqlite3 *db, int rc){
   if( rc==SQLITE_IOERR_NOMEM ) return;
-#if defined(SQLITE_USE_SEH) && !defined(SQLITE_OMIT_WAL)
+#ifdef SQLITE_USE_SEH
   if( rc==SQLITE_IOERR_IN_PAGE ){
     int ii;
     int iErr;
@@ -35397,9 +35212,6 @@ do_atof_calc:
     u64 s2;
     rr[0] = (double)s;
     s2 = (u64)rr[0];
-#if defined(_MSC_VER) && _MSC_VER<1700
-    if( s2==0x8000000000000000LL ){ s2 = 2*(u64)(0.5*rr[0]); }
-#endif
     rr[1] = s>=s2 ? (double)(s - s2) : -(double)(s2 - s);
     if( e>0 ){
       while( e>=100  ){
@@ -35842,7 +35654,7 @@ SQLITE_PRIVATE void sqlite3FpDecode(FpDecode *p, double r, int iRound, int mxRou
   assert( p->n>0 );
   assert( p->n<sizeof(p->zBuf) );
   p->iDP = p->n + exp;
-  if( iRound<=0 ){
+  if( iRound<0 ){
     iRound = p->iDP - iRound;
     if( iRound==0 && p->zBuf[i+1]>='5' ){
       iRound = 1;
@@ -37170,15 +36982,13 @@ SQLITE_PRIVATE const char *sqlite3OpcodeName(int i){
     /* 178 */ "Pagecount"        OpHelp(""),
     /* 179 */ "MaxPgcnt"         OpHelp(""),
     /* 180 */ "ClrSubtype"       OpHelp("r[P1].subtype = 0"),
-    /* 181 */ "GetSubtype"       OpHelp("r[P2] = r[P1].subtype"),
-    /* 182 */ "SetSubtype"       OpHelp("r[P2].subtype = r[P1]"),
-    /* 183 */ "FilterAdd"        OpHelp("filter(P1) += key(P3@P4)"),
-    /* 184 */ "Trace"            OpHelp(""),
-    /* 185 */ "CursorHint"       OpHelp(""),
-    /* 186 */ "ReleaseReg"       OpHelp("release r[P1@P2] mask P3"),
-    /* 187 */ "Noop"             OpHelp(""),
-    /* 188 */ "Explain"          OpHelp(""),
-    /* 189 */ "Abortable"        OpHelp(""),
+    /* 181 */ "FilterAdd"        OpHelp("filter(P1) += key(P3@P4)"),
+    /* 182 */ "Trace"            OpHelp(""),
+    /* 183 */ "CursorHint"       OpHelp(""),
+    /* 184 */ "ReleaseReg"       OpHelp("release r[P1@P2] mask P3"),
+    /* 185 */ "Noop"             OpHelp(""),
+    /* 186 */ "Explain"          OpHelp(""),
+    /* 187 */ "Abortable"        OpHelp(""),
   };
   return azName[i];
 }
@@ -42224,13 +42034,7 @@ static int unixFileControl(sqlite3_file *id, int op, void *pArg){
 #ifdef SQLITE_ENABLE_SETLK_TIMEOUT
     case SQLITE_FCNTL_LOCK_TIMEOUT: {
       int iOld = pFile->iBusyTimeout;
-#if SQLITE_ENABLE_SETLK_TIMEOUT==1
       pFile->iBusyTimeout = *(int*)pArg;
-#elif SQLITE_ENABLE_SETLK_TIMEOUT==2
-      pFile->iBusyTimeout = !!(*(int*)pArg);
-#else
-# error "SQLITE_ENABLE_SETLK_TIMEOUT must be set to 1 or 2"
-#endif
       *(int*)pArg = iOld;
       return SQLITE_OK;
     }
@@ -42483,25 +42287,6 @@ static int unixGetpagesize(void){
 ** Either unixShmNode.pShmMutex must be held or unixShmNode.nRef==0 and
 ** unixMutexHeld() is true when reading or writing any other field
 ** in this structure.
-**
-** aLock[SQLITE_SHM_NLOCK]:
-**   This array records the various locks held by clients on each of the
-**   SQLITE_SHM_NLOCK slots. If the aLock[] entry is set to 0, then no
-**   locks are held by the process on this slot. If it is set to -1, then
-**   some client holds an EXCLUSIVE lock on the locking slot. If the aLock[]
-**   value is set to a positive value, then it is the number of shared
-**   locks currently held on the slot.
-**
-** aMutex[SQLITE_SHM_NLOCK]:
-**   Normally, when SQLITE_ENABLE_SETLK_TIMEOUT is not defined, mutex
-**   pShmMutex is used to protect the aLock[] array and the right to
-**   call fcntl() on unixShmNode.hShm to obtain or release locks.
-**
-**   If SQLITE_ENABLE_SETLK_TIMEOUT is defined though, we use an array
-**   of mutexes - one for each locking slot. To read or write locking
-**   slot aLock[iSlot], the caller must hold the corresponding mutex
-**   aMutex[iSlot]. Similarly, to call fcntl() to obtain or release a
-**   lock corresponding to slot iSlot, mutex aMutex[iSlot] must be held.
 */
 struct unixShmNode {
   unixInodeInfo *pInode;     /* unixInodeInfo that owns this SHM node */
@@ -42515,11 +42300,10 @@ struct unixShmNode {
   char **apRegion;           /* Array of mapped shared-memory regions */
   int nRef;                  /* Number of unixShm objects pointing to this */
   unixShm *pFirst;           /* All unixShm objects pointing to this */
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-  sqlite3_mutex *aMutex[SQLITE_SHM_NLOCK];
-#endif
   int aLock[SQLITE_SHM_NLOCK];  /* # shared locks on slot, -1==excl lock */
 #ifdef SQLITE_DEBUG
+  u8 exclMask;               /* Mask of exclusive locks held */
+  u8 sharedMask;             /* Mask of shared locks held */
   u8 nextShmId;              /* Next available unixShm.id value */
 #endif
 };
@@ -42602,35 +42386,16 @@ static int unixShmSystemLock(
   struct flock f;        /* The posix advisory locking structure */
   int rc = SQLITE_OK;    /* Result code form fcntl() */
 
+  /* Access to the unixShmNode object is serialized by the caller */
   pShmNode = pFile->pInode->pShmNode;
-
-  /* Assert that the parameters are within expected range and that the
-  ** correct mutex or mutexes are held. */
-  assert( pShmNode->nRef>=0 );
-  assert( (ofst==UNIX_SHM_DMS && n==1)
-       || (ofst>=UNIX_SHM_BASE && ofst+n<=(UNIX_SHM_BASE+SQLITE_SHM_NLOCK))
-  );
-  if( ofst==UNIX_SHM_DMS ){
-    assert( pShmNode->nRef>0 || unixMutexHeld() );
-    assert( pShmNode->nRef==0 || sqlite3_mutex_held(pShmNode->pShmMutex) );
-  }else{
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-    int ii;
-    for(ii=ofst-UNIX_SHM_BASE; ii<ofst-UNIX_SHM_BASE+n; ii++){
-      assert( sqlite3_mutex_held(pShmNode->aMutex[ii]) );
-    }
-#else
-    assert( sqlite3_mutex_held(pShmNode->pShmMutex) );
-    assert( pShmNode->nRef>0 );
-#endif
-  }
+  assert( pShmNode->nRef==0 || sqlite3_mutex_held(pShmNode->pShmMutex) );
+  assert( pShmNode->nRef>0 || unixMutexHeld() );
 
   /* Shared locks never span more than one byte */
   assert( n==1 || lockType!=F_RDLCK );
 
   /* Locks are within range */
   assert( n>=1 && n<=SQLITE_SHM_NLOCK );
-  assert( ofst>=UNIX_SHM_BASE && ofst<=(UNIX_SHM_DMS+SQLITE_SHM_NLOCK) );
 
   if( pShmNode->hShm>=0 ){
     int res;
@@ -42641,7 +42406,7 @@ static int unixShmSystemLock(
     f.l_len = n;
     res = osSetPosixAdvisoryLock(pShmNode->hShm, &f, pFile);
     if( res==-1 ){
-#if defined(SQLITE_ENABLE_SETLK_TIMEOUT) && SQLITE_ENABLE_SETLK_TIMEOUT==1
+#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
       rc = (pFile->iBusyTimeout ? SQLITE_BUSY_TIMEOUT : SQLITE_BUSY);
 #else
       rc = SQLITE_BUSY;
@@ -42649,27 +42414,38 @@ static int unixShmSystemLock(
     }
   }
 
-  /* Do debug tracing */
+  /* Update the global lock state and do debug tracing */
 #ifdef SQLITE_DEBUG
+  { u16 mask;
   OSTRACE(("SHM-LOCK "));
+  mask = ofst>31 ? 0xffff : (1<<(ofst+n)) - (1<<ofst);
   if( rc==SQLITE_OK ){
     if( lockType==F_UNLCK ){
-      OSTRACE(("unlock %d..%d ok\n", ofst, ofst+n-1));
+      OSTRACE(("unlock %d ok", ofst));
+      pShmNode->exclMask &= ~mask;
+      pShmNode->sharedMask &= ~mask;
     }else if( lockType==F_RDLCK ){
-      OSTRACE(("read-lock %d..%d ok\n", ofst, ofst+n-1));
+      OSTRACE(("read-lock %d ok", ofst));
+      pShmNode->exclMask &= ~mask;
+      pShmNode->sharedMask |= mask;
     }else{
       assert( lockType==F_WRLCK );
-      OSTRACE(("write-lock %d..%d ok\n", ofst, ofst+n-1));
+      OSTRACE(("write-lock %d ok", ofst));
+      pShmNode->exclMask |= mask;
+      pShmNode->sharedMask &= ~mask;
     }
   }else{
     if( lockType==F_UNLCK ){
-      OSTRACE(("unlock %d..%d failed\n", ofst, ofst+n-1));
+      OSTRACE(("unlock %d failed", ofst));
     }else if( lockType==F_RDLCK ){
-      OSTRACE(("read-lock %d..%d failed\n", ofst, ofst+n-1));
+      OSTRACE(("read-lock failed"));
     }else{
       assert( lockType==F_WRLCK );
-      OSTRACE(("write-lock %d..%d failed\n", ofst, ofst+n-1));
+      OSTRACE(("write-lock %d failed", ofst));
     }
+  }
+  OSTRACE((" - afterwards %03x,%03x\n",
+           pShmNode->sharedMask, pShmNode->exclMask));
   }
 #endif
 
@@ -42707,11 +42483,6 @@ static void unixShmPurge(unixFile *pFd){
     int i;
     assert( p->pInode==pFd->pInode );
     sqlite3_mutex_free(p->pShmMutex);
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-    for(i=0; i<SQLITE_SHM_NLOCK; i++){
-      sqlite3_mutex_free(p->aMutex[i]);
-    }
-#endif
     for(i=0; i<p->nRegion; i+=nShmPerMap){
       if( p->hShm>=0 ){
         osMunmap(p->apRegion[i], p->szRegion);
@@ -42771,20 +42542,7 @@ static int unixLockSharedMemory(unixFile *pDbFd, unixShmNode *pShmNode){
       pShmNode->isUnlocked = 1;
       rc = SQLITE_READONLY_CANTINIT;
     }else{
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-      /* Do not use a blocking lock here. If the lock cannot be obtained
-      ** immediately, it means some other connection is truncating the
-      ** *-shm file. And after it has done so, it will not release its
-      ** lock, but only downgrade it to a shared lock. So no point in
-      ** blocking here. The call below to obtain the shared DMS lock may
-      ** use a blocking lock. */
-      int iSaveTimeout = pDbFd->iBusyTimeout;
-      pDbFd->iBusyTimeout = 0;
-#endif
       rc = unixShmSystemLock(pDbFd, F_WRLCK, UNIX_SHM_DMS, 1);
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-      pDbFd->iBusyTimeout = iSaveTimeout;
-#endif
       /* The first connection to attach must truncate the -shm file.  We
       ** truncate to 3 bytes (an arbitrary small number, less than the
       ** -shm header size) rather than 0 as a system debugging aid, to
@@ -42905,18 +42663,6 @@ static int unixOpenSharedMemory(unixFile *pDbFd){
         rc = SQLITE_NOMEM_BKPT;
         goto shm_open_err;
       }
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-      {
-        int ii;
-        for(ii=0; ii<SQLITE_SHM_NLOCK; ii++){
-          pShmNode->aMutex[ii] = sqlite3_mutex_alloc(SQLITE_MUTEX_FAST);
-          if( pShmNode->aMutex[ii]==0 ){
-            rc = SQLITE_NOMEM_BKPT;
-            goto shm_open_err;
-          }
-        }
-      }
-#endif
     }
 
     if( pInode->bProcessLock==0 ){
@@ -43138,11 +42884,9 @@ shmpage_out:
 */
 #ifdef SQLITE_DEBUG
 static int assertLockingArrayOk(unixShmNode *pShmNode){
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-  return 1;
-#else
   unixShm *pX;
   int aLock[SQLITE_SHM_NLOCK];
+  assert( sqlite3_mutex_held(pShmNode->pShmMutex) );
 
   memset(aLock, 0, sizeof(aLock));
   for(pX=pShmNode->pFirst; pX; pX=pX->pNext){
@@ -43160,14 +42904,13 @@ static int assertLockingArrayOk(unixShmNode *pShmNode){
 
   assert( 0==memcmp(pShmNode->aLock, aLock, sizeof(aLock)) );
   return (memcmp(pShmNode->aLock, aLock, sizeof(aLock))==0);
-#endif
 }
 #endif
 
 /*
 ** Change the lock state for a shared-memory segment.
 **
-** Note that the relationship between SHARED and EXCLUSIVE locks is a little
+** Note that the relationship between SHAREd and EXCLUSIVE locks is a little
 ** different here than in posix.  In xShmLock(), one can go from unlocked
 ** to shared and back or from unlocked to exclusive and back.  But one may
 ** not go from shared to exclusive or from exclusive to shared.
@@ -43182,7 +42925,7 @@ static int unixShmLock(
   unixShm *p;                           /* The shared memory being locked */
   unixShmNode *pShmNode;                /* The underlying file iNode */
   int rc = SQLITE_OK;                   /* Result code */
-  u16 mask = (1<<(ofst+n)) - (1<<ofst); /* Mask of locks to take or release */
+  u16 mask;                             /* Mask of locks to take or release */
   int *aLock;
 
   p = pDbFd->pShm;
@@ -43217,151 +42960,88 @@ static int unixShmLock(
   ** It is not permitted to block on the RECOVER lock.
   */
 #ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-  {
-    u16 lockMask = (p->exclMask|p->sharedMask);
-    assert( (flags & SQLITE_SHM_UNLOCK) || pDbFd->iBusyTimeout==0 || (
-          (ofst!=2)                                   /* not RECOVER */
-       && (ofst!=1 || lockMask==0 || lockMask==2)
-       && (ofst!=0 || lockMask<3)
-       && (ofst<3  || lockMask<(1<<ofst))
-    ));
-  }
+  assert( (flags & SQLITE_SHM_UNLOCK) || pDbFd->iBusyTimeout==0 || (
+         (ofst!=2)                                   /* not RECOVER */
+      && (ofst!=1 || (p->exclMask|p->sharedMask)==0)
+      && (ofst!=0 || (p->exclMask|p->sharedMask)<3)
+      && (ofst<3  || (p->exclMask|p->sharedMask)<(1<<ofst))
+  ));
 #endif
 
-  /* Check if there is any work to do. There are three cases:
-  **
-  **    a) An unlock operation where there are locks to unlock,
-  **    b) An shared lock where the requested lock is not already held
-  **    c) An exclusive lock where the requested lock is not already held
-  **
-  ** The SQLite core never requests an exclusive lock that it already holds.
-  ** This is assert()ed below.
-  */
-  assert( flags!=(SQLITE_SHM_EXCLUSIVE|SQLITE_SHM_LOCK)
-       || 0==(p->exclMask & mask)
-  );
-  if( ((flags & SQLITE_SHM_UNLOCK) && ((p->exclMask|p->sharedMask) & mask))
-   || (flags==(SQLITE_SHM_SHARED|SQLITE_SHM_LOCK) && 0==(p->sharedMask & mask))
-   || (flags==(SQLITE_SHM_EXCLUSIVE|SQLITE_SHM_LOCK))
-  ){
+  mask = (1<<(ofst+n)) - (1<<ofst);
+  assert( n>1 || mask==(1<<ofst) );
+  sqlite3_mutex_enter(pShmNode->pShmMutex);
+  assert( assertLockingArrayOk(pShmNode) );
+  if( flags & SQLITE_SHM_UNLOCK ){
+    if( (p->exclMask|p->sharedMask) & mask ){
+      int ii;
+      int bUnlock = 1;
 
-    /* Take the required mutexes. In SETLK_TIMEOUT mode (blocking locks), if
-    ** this is an attempt on an exclusive lock use sqlite3_mutex_try(). If any
-    ** other thread is holding this mutex, then it is either holding or about
-    ** to hold a lock exclusive to the one being requested, and we may
-    ** therefore return SQLITE_BUSY to the caller.
-    **
-    ** Doing this prevents some deadlock scenarios. For example, thread 1 may
-    ** be a checkpointer blocked waiting on the WRITER lock. And thread 2
-    ** may be a normal SQL client upgrading to a write transaction. In this
-    ** case thread 2 does a non-blocking request for the WRITER lock. But -
-    ** if it were to use sqlite3_mutex_enter() then it would effectively
-    ** become a (doomed) blocking request, as thread 2 would block until thread
-    ** 1 obtained WRITER and released the mutex. Since thread 2 already holds
-    ** a lock on a read-locking slot at this point, this breaks the
-    ** anti-deadlock rules (see above).  */
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-    int iMutex;
-    for(iMutex=ofst; iMutex<ofst+n; iMutex++){
-      if( flags==(SQLITE_SHM_LOCK|SQLITE_SHM_EXCLUSIVE) ){
-        rc = sqlite3_mutex_try(pShmNode->aMutex[iMutex]);
-        if( rc!=SQLITE_OK ) goto leave_shmnode_mutexes;
-      }else{
-        sqlite3_mutex_enter(pShmNode->aMutex[iMutex]);
+      for(ii=ofst; ii<ofst+n; ii++){
+        if( aLock[ii]>((p->sharedMask & (1<<ii)) ? 1 : 0) ){
+          bUnlock = 0;
+        }
+      }
+
+      if( bUnlock ){
+        rc = unixShmSystemLock(pDbFd, F_UNLCK, ofst+UNIX_SHM_BASE, n);
+        if( rc==SQLITE_OK ){
+          memset(&aLock[ofst], 0, sizeof(int)*n);
+        }
+      }else if( ALWAYS(p->sharedMask & (1<<ofst)) ){
+        assert( n==1 && aLock[ofst]>1 );
+        aLock[ofst]--;
+      }
+
+      /* Undo the local locks */
+      if( rc==SQLITE_OK ){
+        p->exclMask &= ~mask;
+        p->sharedMask &= ~mask;
       }
     }
-#else
-    sqlite3_mutex_enter(pShmNode->pShmMutex);
-#endif
+  }else if( flags & SQLITE_SHM_SHARED ){
+    assert( n==1 );
+    assert( (p->exclMask & (1<<ofst))==0 );
+    if( (p->sharedMask & mask)==0 ){
+      if( aLock[ofst]<0 ){
+        rc = SQLITE_BUSY;
+      }else if( aLock[ofst]==0 ){
+        rc = unixShmSystemLock(pDbFd, F_RDLCK, ofst+UNIX_SHM_BASE, n);
+      }
 
-    if( ALWAYS(rc==SQLITE_OK) ){
-      if( flags & SQLITE_SHM_UNLOCK ){
-        /* Case (a) - unlock.  */
-        int bUnlock = 1;
-        assert( (p->exclMask & p->sharedMask)==0 );
-        assert( !(flags & SQLITE_SHM_EXCLUSIVE) || (p->exclMask & mask)==mask );
-        assert( !(flags & SQLITE_SHM_SHARED) || (p->sharedMask & mask)==mask );
+      /* Get the local shared locks */
+      if( rc==SQLITE_OK ){
+        p->sharedMask |= mask;
+        aLock[ofst]++;
+      }
+    }
+  }else{
+    /* Make sure no sibling connections hold locks that will block this
+    ** lock.  If any do, return SQLITE_BUSY right away.  */
+    int ii;
+    for(ii=ofst; ii<ofst+n; ii++){
+      assert( (p->sharedMask & mask)==0 );
+      if( ALWAYS((p->exclMask & (1<<ii))==0) && aLock[ii] ){
+        rc = SQLITE_BUSY;
+        break;
+      }
+    }
 
-        /* If this is a SHARED lock being unlocked, it is possible that other
-        ** clients within this process are holding the same SHARED lock. In
-        ** this case, set bUnlock to 0 so that the posix lock is not removed
-        ** from the file-descriptor below.  */
-        if( flags & SQLITE_SHM_SHARED ){
-          assert( n==1 );
-          assert( aLock[ofst]>=1 );
-          if( aLock[ofst]>1 ){
-            bUnlock = 0;
-            aLock[ofst]--;
-            p->sharedMask &= ~mask;
-          }
-        }
-
-        if( bUnlock ){
-          rc = unixShmSystemLock(pDbFd, F_UNLCK, ofst+UNIX_SHM_BASE, n);
-          if( rc==SQLITE_OK ){
-            memset(&aLock[ofst], 0, sizeof(int)*n);
-            p->sharedMask &= ~mask;
-            p->exclMask &= ~mask;
-          }
-        }
-      }else if( flags & SQLITE_SHM_SHARED ){
-        /* Case (b) - a shared lock.  */
-
-        if( aLock[ofst]<0 ){
-          /* An exclusive lock is held by some other connection. BUSY. */
-          rc = SQLITE_BUSY;
-        }else if( aLock[ofst]==0 ){
-          rc = unixShmSystemLock(pDbFd, F_RDLCK, ofst+UNIX_SHM_BASE, n);
-        }
-
-        /* Get the local shared locks */
-        if( rc==SQLITE_OK ){
-          p->sharedMask |= mask;
-          aLock[ofst]++;
-        }
-      }else{
-        /* Case (c) - an exclusive lock.  */
-        int ii;
-
-        assert( flags==(SQLITE_SHM_LOCK|SQLITE_SHM_EXCLUSIVE) );
+    /* Get the exclusive locks at the system level. Then if successful
+    ** also update the in-memory values. */
+    if( rc==SQLITE_OK ){
+      rc = unixShmSystemLock(pDbFd, F_WRLCK, ofst+UNIX_SHM_BASE, n);
+      if( rc==SQLITE_OK ){
         assert( (p->sharedMask & mask)==0 );
-        assert( (p->exclMask & mask)==0 );
-
-        /* Make sure no sibling connections hold locks that will block this
-        ** lock.  If any do, return SQLITE_BUSY right away.  */
+        p->exclMask |= mask;
         for(ii=ofst; ii<ofst+n; ii++){
-          if( aLock[ii] ){
-            rc = SQLITE_BUSY;
-            break;
-          }
-        }
-
-        /* Get the exclusive locks at the system level. Then if successful
-        ** also update the in-memory values. */
-        if( rc==SQLITE_OK ){
-          rc = unixShmSystemLock(pDbFd, F_WRLCK, ofst+UNIX_SHM_BASE, n);
-          if( rc==SQLITE_OK ){
-            p->exclMask |= mask;
-            for(ii=ofst; ii<ofst+n; ii++){
-              aLock[ii] = -1;
-            }
-          }
+          aLock[ii] = -1;
         }
       }
-      assert( assertLockingArrayOk(pShmNode) );
     }
-
-    /* Drop the mutexes acquired above. */
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-  leave_shmnode_mutexes:
-    for(iMutex--; iMutex>=ofst; iMutex--){
-      sqlite3_mutex_leave(pShmNode->aMutex[iMutex]);
-    }
-#else
-    sqlite3_mutex_leave(pShmNode->pShmMutex);
-#endif
   }
-
+  assert( assertLockingArrayOk(pShmNode) );
+  sqlite3_mutex_leave(pShmNode->pShmMutex);
   OSTRACE(("SHM-LOCK shmid-%d, pid-%d got %03x,%03x\n",
            p->id, osGetpid(0), p->sharedMask, p->exclMask));
   return rc;
@@ -43611,16 +43291,11 @@ static int unixFetch(sqlite3_file *fd, i64 iOff, int nAmt, void **pp){
 
 #if SQLITE_MAX_MMAP_SIZE>0
   if( pFd->mmapSizeMax>0 ){
-    /* Ensure that there is always at least a 256 byte buffer of addressable
-    ** memory following the returned page. If the database is corrupt,
-    ** SQLite may overread the page slightly (in practice only a few bytes,
-    ** but 256 is safe, round, number).  */
-    const int nEofBuffer = 256;
     if( pFd->pMapRegion==0 ){
       int rc = unixMapfile(pFd, -1);
       if( rc!=SQLITE_OK ) return rc;
     }
-    if( pFd->mmapSize >= (iOff+nAmt+nEofBuffer) ){
+    if( pFd->mmapSize >= iOff+nAmt ){
       *pp = &((u8 *)pFd->pMapRegion)[iOff];
       pFd->nFetchOut++;
     }
@@ -50973,11 +50648,6 @@ static int winFetch(sqlite3_file *fd, i64 iOff, int nAmt, void **pp){
 
 #if SQLITE_MAX_MMAP_SIZE>0
   if( pFd->mmapSizeMax>0 ){
-    /* Ensure that there is always at least a 256 byte buffer of addressable
-    ** memory following the returned page. If the database is corrupt,
-    ** SQLite may overread the page slightly (in practice only a few bytes,
-    ** but 256 is safe, round, number).  */
-    const int nEofBuffer = 256;
     if( pFd->pMapRegion==0 ){
       int rc = winMapfile(pFd, -1);
       if( rc!=SQLITE_OK ){
@@ -50986,7 +50656,7 @@ static int winFetch(sqlite3_file *fd, i64 iOff, int nAmt, void **pp){
         return rc;
       }
     }
-    if( pFd->mmapSize >= (iOff+nAmt+nEofBuffer) ){
+    if( pFd->mmapSize >= iOff+nAmt ){
       assert( pFd->pMapRegion!=0 );
       *pp = &((u8 *)pFd->pMapRegion)[iOff];
       pFd->nFetchOut++;
@@ -53465,14 +53135,6 @@ SQLITE_API unsigned char *sqlite3_serialize(
     pOut = 0;
   }else{
     sz = sqlite3_column_int64(pStmt, 0)*szPage;
-    if( sz==0 ){
-      sqlite3_reset(pStmt);
-      sqlite3_exec(db, "BEGIN IMMEDIATE; COMMIT;", 0, 0, 0);
-      rc = sqlite3_step(pStmt);
-      if( rc==SQLITE_ROW ){
-        sz = sqlite3_column_int64(pStmt, 0)*szPage;
-      }
-    }
     if( piSize ) *piSize = sz;
     if( mFlags & SQLITE_SERIALIZE_NOCOPY ){
       pOut = 0;
@@ -57613,7 +57275,7 @@ struct Pager {
   char *zJournal;             /* Name of the journal file */
   int (*xBusyHandler)(void*); /* Function to call when busy */
   void *pBusyHandlerArg;      /* Context argument for xBusyHandler */
-  u32 aStat[4];               /* Total cache hits, misses, writes, spills */
+  int aStat[4];               /* Total cache hits, misses, writes, spills */
 #ifdef SQLITE_TEST
   int nRead;                  /* Database pages read */
 #endif
@@ -57756,8 +57418,9 @@ SQLITE_PRIVATE int sqlite3PagerDirectReadOk(Pager *pPager, Pgno pgno){
 #ifndef SQLITE_OMIT_WAL
   if( pPager->pWal ){
     u32 iRead = 0;
-    (void)sqlite3WalFindFrame(pPager->pWal, pgno, &iRead);
-    return iRead==0;
+    int rc;
+    rc = sqlite3WalFindFrame(pPager->pWal, pgno, &iRead);
+    return (rc==SQLITE_OK && iRead==0);
   }
 #endif
   return 1;
@@ -63865,11 +63528,11 @@ SQLITE_PRIVATE int *sqlite3PagerStats(Pager *pPager){
   a[3] = pPager->eState==PAGER_OPEN ? -1 : (int) pPager->dbSize;
   a[4] = pPager->eState;
   a[5] = pPager->errCode;
-  a[6] = (int)pPager->aStat[PAGER_STAT_HIT] & 0x7fffffff;
-  a[7] = (int)pPager->aStat[PAGER_STAT_MISS] & 0x7fffffff;
+  a[6] = pPager->aStat[PAGER_STAT_HIT];
+  a[7] = pPager->aStat[PAGER_STAT_MISS];
   a[8] = 0;  /* Used to be pPager->nOvfl */
   a[9] = pPager->nRead;
-  a[10] = (int)pPager->aStat[PAGER_STAT_WRITE] & 0x7fffffff;
+  a[10] = pPager->aStat[PAGER_STAT_WRITE];
   return a;
 }
 #endif
@@ -63885,7 +63548,7 @@ SQLITE_PRIVATE int *sqlite3PagerStats(Pager *pPager){
 ** reset parameter is non-zero, the cache hit or miss count is zeroed before
 ** returning.
 */
-SQLITE_PRIVATE void sqlite3PagerCacheStat(Pager *pPager, int eStat, int reset, u64 *pnVal){
+SQLITE_PRIVATE void sqlite3PagerCacheStat(Pager *pPager, int eStat, int reset, int *pnVal){
 
   assert( eStat==SQLITE_DBSTATUS_CACHE_HIT
        || eStat==SQLITE_DBSTATUS_CACHE_MISS
@@ -64121,7 +63784,7 @@ SQLITE_PRIVATE sqlite3_file *sqlite3PagerFile(Pager *pPager){
 ** This will be either the rollback journal or the WAL file.
 */
 SQLITE_PRIVATE sqlite3_file *sqlite3PagerJrnlFile(Pager *pPager){
-#ifdef SQLITE_OMIT_WAL
+#if SQLITE_OMIT_WAL
   return pPager->jfd;
 #else
   return pPager->pWal ? sqlite3WalFile(pPager->pWal) : pPager->jfd;
@@ -64868,7 +64531,7 @@ SQLITE_PRIVATE int sqlite3PagerWalFramesize(Pager *pPager){
 }
 #endif
 
-#if defined(SQLITE_USE_SEH) && !defined(SQLITE_OMIT_WAL)
+#ifdef SQLITE_USE_SEH
 SQLITE_PRIVATE int sqlite3PagerWalSystemErrno(Pager *pPager){
   return sqlite3WalSystemErrno(pPager->pWal);
 }
@@ -66905,19 +66568,6 @@ static int walIteratorInit(Wal *pWal, u32 nBackfill, WalIterator **pp){
 }
 
 #ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-
-
-/*
-** Attempt to enable blocking locks that block for nMs ms. Return 1 if
-** blocking locks are successfully enabled, or 0 otherwise.
-*/
-static int walEnableBlockingMs(Wal *pWal, int nMs){
-  int rc = sqlite3OsFileControl(
-      pWal->pDbFd, SQLITE_FCNTL_LOCK_TIMEOUT, (void*)&nMs
-  );
-  return (rc==SQLITE_OK);
-}
-
 /*
 ** Attempt to enable blocking locks. Blocking locks are enabled only if (a)
 ** they are supported by the VFS, and (b) the database handle is configured
@@ -66929,7 +66579,11 @@ static int walEnableBlocking(Wal *pWal){
   if( pWal->db ){
     int tmout = pWal->db->busyTimeout;
     if( tmout ){
-      res = walEnableBlockingMs(pWal, tmout);
+      int rc;
+      rc = sqlite3OsFileControl(
+          pWal->pDbFd, SQLITE_FCNTL_LOCK_TIMEOUT, (void*)&tmout
+      );
+      res = (rc==SQLITE_OK);
     }
   }
   return res;
@@ -66978,10 +66632,20 @@ SQLITE_PRIVATE void sqlite3WalDb(Wal *pWal, sqlite3 *db){
   pWal->db = db;
 }
 
+/*
+** Take an exclusive WRITE lock. Blocking if so configured.
+*/
+static int walLockWriter(Wal *pWal){
+  int rc;
+  walEnableBlocking(pWal);
+  rc = walLockExclusive(pWal, WAL_WRITE_LOCK, 1);
+  walDisableBlocking(pWal);
+  return rc;
+}
 #else
 # define walEnableBlocking(x) 0
 # define walDisableBlocking(x)
-# define walEnableBlockingMs(pWal, ms) 0
+# define walLockWriter(pWal) walLockExclusive((pWal), WAL_WRITE_LOCK, 1)
 # define sqlite3WalDb(pWal, db)
 #endif   /* ifdef SQLITE_ENABLE_SETLK_TIMEOUT */
 
@@ -67582,9 +67246,7 @@ static int walIndexReadHdr(Wal *pWal, int *pChanged){
       }
     }else{
       int bWriteLock = pWal->writeLock;
-      if( bWriteLock
-       || SQLITE_OK==(rc = walLockExclusive(pWal, WAL_WRITE_LOCK, 1))
-      ){
+      if( bWriteLock || SQLITE_OK==(rc = walLockWriter(pWal)) ){
         pWal->writeLock = 1;
         if( SQLITE_OK==(rc = walIndexPage(pWal, 0, &page0)) ){
           badHdr = walIndexTryHdr(pWal, pChanged);
@@ -67592,8 +67254,7 @@ static int walIndexReadHdr(Wal *pWal, int *pChanged){
             /* If the wal-index header is still malformed even while holding
             ** a WRITE lock, it can only mean that the header is corrupted and
             ** needs to be reconstructed.  So run recovery to do exactly that.
-            ** Disable blocking locks first.  */
-            walDisableBlocking(pWal);
+            */
             rc = walIndexRecover(pWal);
             *pChanged = 1;
           }
@@ -67804,37 +67465,6 @@ static int walBeginShmUnreliable(Wal *pWal, int *pChanged){
 }
 
 /*
-** The final argument passed to walTryBeginRead() is of type (int*). The
-** caller should invoke walTryBeginRead as follows:
-**
-**   int cnt = 0;
-**   do {
-**     rc = walTryBeginRead(..., &cnt);
-**   }while( rc==WAL_RETRY );
-**
-** The final value of "cnt" is of no use to the caller. It is used by
-** the implementation of walTryBeginRead() as follows:
-**
-**   + Each time walTryBeginRead() is called, it is incremented. Once
-**     it reaches WAL_RETRY_PROTOCOL_LIMIT - indicating that walTryBeginRead()
-**     has many times been invoked and failed with WAL_RETRY - walTryBeginRead()
-**     returns SQLITE_PROTOCOL.
-**
-**   + If SQLITE_ENABLE_SETLK_TIMEOUT is defined and walTryBeginRead() failed
-**     because a blocking lock timed out (SQLITE_BUSY_TIMEOUT from the OS
-**     layer), the WAL_RETRY_BLOCKED_MASK bit is set in "cnt". In this case
-**     the next invocation of walTryBeginRead() may omit an expected call to
-**     sqlite3OsSleep(). There has already been a delay when the previous call
-**     waited on a lock.
-*/
-#define WAL_RETRY_PROTOCOL_LIMIT 100
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-# define WAL_RETRY_BLOCKED_MASK    0x10000000
-#else
-# define WAL_RETRY_BLOCKED_MASK    0
-#endif
-
-/*
 ** Attempt to start a read transaction.  This might fail due to a race or
 ** other transient condition.  When that happens, it returns WAL_RETRY to
 ** indicate to the caller that it is safe to retry immediately.
@@ -67884,16 +67514,13 @@ static int walBeginShmUnreliable(Wal *pWal, int *pChanged){
 ** so it takes care to hold an exclusive lock on the corresponding
 ** WAL_READ_LOCK() while changing values.
 */
-static int walTryBeginRead(Wal *pWal, int *pChanged, int useWal, int *pCnt){
+static int walTryBeginRead(Wal *pWal, int *pChanged, int useWal, int cnt){
   volatile WalCkptInfo *pInfo;    /* Checkpoint information in wal-index */
   u32 mxReadMark;                 /* Largest aReadMark[] value */
   int mxI;                        /* Index of largest aReadMark[] value */
   int i;                          /* Loop counter */
   int rc = SQLITE_OK;             /* Return code  */
   u32 mxFrame;                    /* Wal frame to lock to */
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-  int nBlockTmout = 0;
-#endif
 
   assert( pWal->readLock<0 );     /* Not currently locked */
 
@@ -67917,34 +67544,14 @@ static int walTryBeginRead(Wal *pWal, int *pChanged, int useWal, int *pCnt){
   ** so that on the 100th (and last) RETRY we delay for 323 milliseconds.
   ** The total delay time before giving up is less than 10 seconds.
   */
-  (*pCnt)++;
-  if( *pCnt>5 ){
+  if( cnt>5 ){
     int nDelay = 1;                      /* Pause time in microseconds */
-    int cnt = (*pCnt & ~WAL_RETRY_BLOCKED_MASK);
-    if( cnt>WAL_RETRY_PROTOCOL_LIMIT ){
+    if( cnt>100 ){
       VVA_ONLY( pWal->lockError = 1; )
       return SQLITE_PROTOCOL;
     }
-    if( *pCnt>=10 ) nDelay = (cnt-9)*(cnt-9)*39;
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-    /* In SQLITE_ENABLE_SETLK_TIMEOUT builds, configure the file-descriptor
-    ** to block for locks for approximately nDelay us. This affects three
-    ** locks: (a) the shared lock taken on the DMS slot in os_unix.c (if
-    ** using os_unix.c), (b) the WRITER lock taken in walIndexReadHdr() if the
-    ** first attempted read fails, and (c) the shared lock taken on the
-    ** read-mark.
-    **
-    ** If the previous call failed due to an SQLITE_BUSY_TIMEOUT error,
-    ** then sleep for the minimum of 1us. The previous call already provided
-    ** an extra delay while it was blocking on the lock.
-    */
-    nBlockTmout = (nDelay+998) / 1000;
-    if( !useWal && walEnableBlockingMs(pWal, nBlockTmout) ){
-      if( *pCnt & WAL_RETRY_BLOCKED_MASK ) nDelay = 1;
-    }
-#endif
+    if( cnt>=10 ) nDelay = (cnt-9)*(cnt-9)*39;
     sqlite3OsSleep(pWal->pVfs, nDelay);
-    *pCnt &= ~WAL_RETRY_BLOCKED_MASK;
   }
 
   if( !useWal ){
@@ -67952,13 +67559,6 @@ static int walTryBeginRead(Wal *pWal, int *pChanged, int useWal, int *pCnt){
     if( pWal->bShmUnreliable==0 ){
       rc = walIndexReadHdr(pWal, pChanged);
     }
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-    walDisableBlocking(pWal);
-    if( rc==SQLITE_BUSY_TIMEOUT ){
-      rc = SQLITE_BUSY;
-      *pCnt |= WAL_RETRY_BLOCKED_MASK;
-    }
-#endif
     if( rc==SQLITE_BUSY ){
       /* If there is not a recovery running in another thread or process
       ** then convert BUSY errors to WAL_RETRY.  If recovery is known to
@@ -68073,19 +67673,9 @@ static int walTryBeginRead(Wal *pWal, int *pChanged, int useWal, int *pCnt){
     return rc==SQLITE_BUSY ? WAL_RETRY : SQLITE_READONLY_CANTINIT;
   }
 
-  (void)walEnableBlockingMs(pWal, nBlockTmout);
   rc = walLockShared(pWal, WAL_READ_LOCK(mxI));
-  walDisableBlocking(pWal);
   if( rc ){
-#ifdef SQLITE_ENABLE_SETLK_TIMEOUT
-    if( rc==SQLITE_BUSY_TIMEOUT ){
-      *pCnt |= WAL_RETRY_BLOCKED_MASK;
-    }
-#else
-    assert( rc!=SQLITE_BUSY_TIMEOUT );
-#endif
-    assert( (rc&0xFF)!=SQLITE_BUSY||rc==SQLITE_BUSY||rc==SQLITE_BUSY_TIMEOUT );
-    return (rc&0xFF)==SQLITE_BUSY ? WAL_RETRY : rc;
+    return rc==SQLITE_BUSY ? WAL_RETRY : rc;
   }
   /* Now that the read-lock has been obtained, check that neither the
   ** value in the aReadMark[] array or the contents of the wal-index
@@ -68273,7 +67863,7 @@ static int walBeginReadTransaction(Wal *pWal, int *pChanged){
 #endif
 
   do{
-    rc = walTryBeginRead(pWal, pChanged, 0, &cnt);
+    rc = walTryBeginRead(pWal, pChanged, 0, ++cnt);
   }while( rc==WAL_RETRY );
   testcase( (rc&0xff)==SQLITE_BUSY );
   testcase( (rc&0xff)==SQLITE_IOERR );
@@ -68454,7 +68044,6 @@ static int walFindFrame(
         iRead = iFrame;
       }
       if( (nCollide--)==0 ){
-        *piRead = 0;
         return SQLITE_CORRUPT_BKPT;
       }
       iKey = walNextHash(iKey);
@@ -68758,7 +68347,7 @@ static int walRestartLog(Wal *pWal){
     cnt = 0;
     do{
       int notUsed;
-      rc = walTryBeginRead(pWal, &notUsed, 1, &cnt);
+      rc = walTryBeginRead(pWal, &notUsed, 1, ++cnt);
     }while( rc==WAL_RETRY );
     assert( (rc&0xff)!=SQLITE_BUSY ); /* BUSY not possible when useWal==1 */
     testcase( (rc&0xff)==SQLITE_IOERR );
@@ -69187,9 +68776,10 @@ SQLITE_PRIVATE int sqlite3WalCheckpoint(
   if( pWal->readOnly ) return SQLITE_READONLY;
   WALTRACE(("WAL%p: checkpoint begins\n", pWal));
 
-  /* Enable blocking locks, if possible. */
+  /* Enable blocking locks, if possible. If blocking locks are successfully
+  ** enabled, set xBusy2=0 so that the busy-handler is never invoked. */
   sqlite3WalDb(pWal, db);
-  if( xBusy2 ) (void)walEnableBlocking(pWal);
+  (void)walEnableBlocking(pWal);
 
   /* IMPLEMENTATION-OF: R-62028-47212 All calls obtain an exclusive
   ** "checkpoint" lock on the database file.
@@ -69230,14 +68820,9 @@ SQLITE_PRIVATE int sqlite3WalCheckpoint(
   /* Read the wal-index header. */
   SEH_TRY {
     if( rc==SQLITE_OK ){
-      /* For a passive checkpoint, do not re-enable blocking locks after
-      ** reading the wal-index header. A passive checkpoint should not block
-      ** or invoke the busy handler. The only lock such a checkpoint may
-      ** attempt to obtain is a lock on a read-slot, and it should give up
-      ** immediately and do a partial checkpoint if it cannot obtain it. */
       walDisableBlocking(pWal);
       rc = walIndexReadHdr(pWal, &isChanged);
-      if( eMode2!=SQLITE_CHECKPOINT_PASSIVE ) (void)walEnableBlocking(pWal);
+      (void)walEnableBlocking(pWal);
       if( isChanged && pWal->pDbFd->pMethods->iVersion>=3 ){
         sqlite3OsUnfetch(pWal->pDbFd, 0, 0);
       }
@@ -69574,7 +69159,7 @@ SQLITE_PRIVATE sqlite3_file *sqlite3WalFile(Wal *pWal){
 **     22       1     Min embedded payload fraction (must be 32)
 **     23       1     Min leaf payload fraction (must be 32)
 **     24       4     File change counter
-**     28       4     The size of the database in pages
+**     28       4     Reserved for future use
 **     32       4     First freelist page
 **     36       4     Number of freelist pages in the file
 **     40      60     15 4-byte meta values passed to higher layers
@@ -75701,6 +75286,7 @@ static int accessPayload(
           assert( aWrite>=pBufStart );                         /* due to (6) */
           memcpy(aSave, aWrite, 4);
           rc = sqlite3OsRead(fd, aWrite, a+4, (i64)pBt->pageSize*(nextPage-1));
+          if( rc && nextPage>pBt->nPage ) rc = SQLITE_CORRUPT_BKPT;
           nextPage = get4byte(aWrite);
           memcpy(aWrite, aSave, 4);
         }else
@@ -76820,10 +76406,7 @@ static SQLITE_NOINLINE int btreePrevious(BtCursor *pCur){
   }
 
   pPage = pCur->pPage;
-  if( sqlite3FaultSim(412) ) pPage->isInit = 0;
-  if( !pPage->isInit ){
-    return SQLITE_CORRUPT_BKPT;
-  }
+  assert( pPage->isInit );
   if( !pPage->leaf ){
     int idx = pCur->ix;
     rc = moveToChild(pCur, get4byte(findCell(pPage, idx)));
@@ -77496,10 +77079,7 @@ static int fillInCell(
     n = nHeader + nPayload;
     testcase( n==3 );
     testcase( n==4 );
-    if( n<4 ){
-      n = 4;
-      pPayload[nPayload] = 0;
-    }
+    if( n<4 ) n = 4;
     *pnSize = n;
     assert( nSrc<=nPayload );
     testcase( nSrc<nPayload );
@@ -79945,10 +79525,7 @@ SQLITE_PRIVATE int sqlite3BtreeInsert(
   if( flags & BTREE_PREFORMAT ){
     rc = SQLITE_OK;
     szNew = p->pBt->nPreformatSize;
-    if( szNew<4 ){
-      szNew = 4;
-      newCell[3] = 0;
-    }
+    if( szNew<4 ) szNew = 4;
     if( ISAUTOVACUUM(p->pBt) && szNew>pPage->maxLocal ){
       CellInfo info;
       pPage->xParseCell(pPage, newCell, &info);
@@ -80010,7 +79587,7 @@ SQLITE_PRIVATE int sqlite3BtreeInsert(
   }else if( loc<0 && pPage->nCell>0 ){
     assert( pPage->leaf );
     idx = ++pCur->ix;
-    pCur->curFlags &= ~(BTCF_ValidNKey|BTCF_ValidOvfl);
+    pCur->curFlags &= ~BTCF_ValidNKey;
   }else{
     assert( pPage->leaf );
   }
@@ -80040,7 +79617,7 @@ SQLITE_PRIVATE int sqlite3BtreeInsert(
   */
   if( pPage->nOverflow ){
     assert( rc==SQLITE_OK );
-    pCur->curFlags &= ~(BTCF_ValidNKey|BTCF_ValidOvfl);
+    pCur->curFlags &= ~(BTCF_ValidNKey);
     rc = balance(pCur);
 
     /* Must make sure nOverflow is reset to zero even if the balance()
@@ -86192,10 +85769,6 @@ static void freeP4(sqlite3 *db, int p4type, void *p4){
       if( db->pnBytesFreed==0 ) sqlite3VtabUnlock((VTable *)p4);
       break;
     }
-    case P4_TABLEREF: {
-      if( db->pnBytesFreed==0 ) sqlite3DeleteTable(db, (Table*)p4);
-      break;
-    }
   }
 }
 
@@ -86323,7 +85896,7 @@ static void SQLITE_NOINLINE vdbeChangeP4Full(
   int n
 ){
   if( pOp->p4type ){
-    assert( pOp->p4type > P4_FREE_IF_LE );
+    freeP4(p->db, pOp->p4type, pOp->p4.p);
     pOp->p4type = 0;
     pOp->p4.p = 0;
   }
@@ -88852,23 +88425,6 @@ static void serialGet(
     pMem->flags = IsNaN(x) ? MEM_Null : MEM_Real;
   }
 }
-static int serialGet7(
-  const unsigned char *buf,     /* Buffer to deserialize from */
-  Mem *pMem                     /* Memory cell to write value into */
-){
-  u64 x = FOUR_BYTE_UINT(buf);
-  u32 y = FOUR_BYTE_UINT(buf+4);
-  x = (x<<32) + y;
-  assert( sizeof(x)==8 && sizeof(pMem->u.r)==8 );
-  swapMixedEndianFloat(x);
-  memcpy(&pMem->u.r, &x, sizeof(x));
-  if( IsNaN(x) ){
-    pMem->flags = MEM_Null;
-    return 1;
-  }
-  pMem->flags = MEM_Real;
-  return 0;
-}
 SQLITE_PRIVATE void sqlite3VdbeSerialGet(
   const unsigned char *buf,     /* Buffer to deserialize from */
   u32 serial_type,              /* Serial type to deserialize */
@@ -89548,7 +89104,7 @@ SQLITE_PRIVATE int sqlite3VdbeRecordCompareWithSkip(
       }else if( serial_type==0 ){
         rc = -1;
       }else if( serial_type==7 ){
-        serialGet7(&aKey1[d1], &mem1);
+        sqlite3VdbeSerialGet(&aKey1[d1], serial_type, &mem1);
         rc = -sqlite3IntFloatCompare(pRhs->u.i, mem1.u.r);
       }else{
         i64 lhs = vdbeRecordDecodeInt(serial_type, &aKey1[d1]);
@@ -89573,18 +89129,14 @@ SQLITE_PRIVATE int sqlite3VdbeRecordCompareWithSkip(
       }else if( serial_type==0 ){
         rc = -1;
       }else{
+        sqlite3VdbeSerialGet(&aKey1[d1], serial_type, &mem1);
         if( serial_type==7 ){
-          if( serialGet7(&aKey1[d1], &mem1) ){
-            rc = -1;  /* mem1 is a NaN */
-          }else if( mem1.u.r<pRhs->u.r ){
+          if( mem1.u.r<pRhs->u.r ){
             rc = -1;
           }else if( mem1.u.r>pRhs->u.r ){
             rc = +1;
-          }else{
-            assert( rc==0 );
           }
         }else{
-          sqlite3VdbeSerialGet(&aKey1[d1], serial_type, &mem1);
           rc = sqlite3IntFloatCompare(mem1.u.i, pRhs->u.r);
         }
       }
@@ -89654,14 +89206,7 @@ SQLITE_PRIVATE int sqlite3VdbeRecordCompareWithSkip(
     /* RHS is null */
     else{
       serial_type = aKey1[idx1];
-      if( serial_type==0
-       || serial_type==10
-       || (serial_type==7 && serialGet7(&aKey1[d1], &mem1)!=0)
-      ){
-        assert( rc==0 );
-      }else{
-        rc = 1;
-      }
+      rc = (serial_type!=0 && serial_type!=10);
     }
 
     if( rc!=0 ){
@@ -90474,15 +90019,7 @@ SQLITE_API int sqlite3_clear_bindings(sqlite3_stmt *pStmt){
   int rc = SQLITE_OK;
   Vdbe *p = (Vdbe*)pStmt;
 #if SQLITE_THREADSAFE
-  sqlite3_mutex *mutex;
-#endif
-#ifdef SQLITE_ENABLE_API_ARMOR
-  if( pStmt==0 ){
-    return SQLITE_MISUSE_BKPT;
-  }
-#endif
-#if SQLITE_THREADSAFE
-  mutex = p->db->mutex;
+  sqlite3_mutex *mutex = ((Vdbe*)pStmt)->db->mutex;
 #endif
   sqlite3_mutex_enter(mutex);
   for(i=0; i<p->nVar; i++){
@@ -91272,8 +90809,9 @@ SQLITE_API int sqlite3_step(sqlite3_stmt *pStmt){
 SQLITE_API void *sqlite3_user_data(sqlite3_context *p){
 #ifdef SQLITE_ENABLE_API_ARMOR
   if( p==0 ) return 0;
-#endif
+#else
   assert( p && p->pFunc );
+#endif
   return p->pFunc->pUserData;
 }
 
@@ -95092,7 +94630,7 @@ case OP_AddImm: {            /* in1 */
   pIn1 = &aMem[pOp->p1];
   memAboutToChange(p, pIn1);
   sqlite3VdbeMemIntegerify(pIn1);
-  *(u64*)&pIn1->u.i += (u64)pOp->p2;
+  pIn1->u.i += pOp->p2;
   break;
 }
 
@@ -95359,9 +94897,7 @@ case OP_Ge: {             /* same as TK_GE, jump, in1, in3 */
         }
       }
     }else if( affinity==SQLITE_AFF_TEXT && ((flags1 | flags3) & MEM_Str)!=0 ){
-      if( (flags1 & MEM_Str)!=0 ){
-        pIn1->flags &= ~(MEM_Int|MEM_Real|MEM_IntReal);
-      }else if( (flags1&(MEM_Int|MEM_Real|MEM_IntReal))!=0 ){
+      if( (flags1 & MEM_Str)==0 && (flags1&(MEM_Int|MEM_Real|MEM_IntReal))!=0 ){
         testcase( pIn1->flags & MEM_Int );
         testcase( pIn1->flags & MEM_Real );
         testcase( pIn1->flags & MEM_IntReal );
@@ -95370,9 +94906,7 @@ case OP_Ge: {             /* same as TK_GE, jump, in1, in3 */
         flags1 = (pIn1->flags & ~MEM_TypeMask) | (flags1 & MEM_TypeMask);
         if( NEVER(pIn1==pIn3) ) flags3 = flags1 | MEM_Str;
       }
-      if( (flags3 & MEM_Str)!=0 ){
-        pIn3->flags &= ~(MEM_Int|MEM_Real|MEM_IntReal);
-      }else if( (flags3&(MEM_Int|MEM_Real|MEM_IntReal))!=0 ){
+      if( (flags3 & MEM_Str)==0 && (flags3&(MEM_Int|MEM_Real|MEM_IntReal))!=0 ){
         testcase( pIn3->flags & MEM_Int );
         testcase( pIn3->flags & MEM_Real );
         testcase( pIn3->flags & MEM_IntReal );
@@ -101242,10 +100776,9 @@ case OP_VCheck: {             /* out2 */
 
   pOut = &aMem[pOp->p2];
   sqlite3VdbeMemSetNull(pOut);  /* Innocent until proven guilty */
-  assert( pOp->p4type==P4_TABLEREF );
+  assert( pOp->p4type==P4_TABLE );
   pTab = pOp->p4.pTab;
   assert( pTab!=0 );
-  assert( pTab->nTabRef>0 );
   assert( IsVirtual(pTab) );
   if( pTab->u.vtab.p==0 ) break;
   pVtab = pTab->u.vtab.p->pVtab;
@@ -101254,11 +100787,13 @@ case OP_VCheck: {             /* out2 */
   assert( pModule!=0 );
   assert( pModule->iVersion>=4 );
   assert( pModule->xIntegrity!=0 );
+  pTab->nTabRef++;
   sqlite3VtabLock(pTab->u.vtab.p);
   assert( pOp->p1>=0 && pOp->p1<db->nDb );
   rc = pModule->xIntegrity(pVtab, db->aDb[pOp->p1].zDbSName, pTab->zName,
                            pOp->p3, &zErr);
   sqlite3VtabUnlock(pTab->u.vtab.p);
+  sqlite3DeleteTable(db, pTab);
   if( rc ){
     sqlite3_free(zErr);
     goto abort_due_to_error;
@@ -101383,7 +100918,6 @@ case OP_VColumn: {           /* ncycle */
   const sqlite3_module *pModule;
   Mem *pDest;
   sqlite3_context sContext;
-  FuncDef nullFunc;
 
   VdbeCursor *pCur = p->apCsr[pOp->p1];
   assert( pCur!=0 );
@@ -101401,9 +100935,6 @@ case OP_VColumn: {           /* ncycle */
   memset(&sContext, 0, sizeof(sContext));
   sContext.pOut = pDest;
   sContext.enc = encoding;
-  nullFunc.pUserData = 0;
-  nullFunc.funcFlags = SQLITE_RESULT_SUBTYPE;
-  sContext.pFunc = &nullFunc;
   assert( pOp->p5==OPFLAG_NOCHNG || pOp->p5==0 );
   if( pOp->p5 & OPFLAG_NOCHNG ){
     sqlite3VdbeMemSetNull(pDest);
@@ -101733,42 +101264,6 @@ case OP_Function: {            /* group */
 case OP_ClrSubtype: {   /* in1 */
   pIn1 = &aMem[pOp->p1];
   pIn1->flags &= ~MEM_Subtype;
-  break;
-}
-
-/* Opcode: GetSubtype P1 P2 * * *
-** Synopsis:  r[P2] = r[P1].subtype
-**
-** Extract the subtype value from register P1 and write that subtype
-** into register P2.  If P1 has no subtype, then P1 gets a NULL.
-*/
-case OP_GetSubtype: {   /* in1 out2 */
-  pIn1 = &aMem[pOp->p1];
-  pOut = &aMem[pOp->p2];
-  if( pIn1->flags & MEM_Subtype ){
-    sqlite3VdbeMemSetInt64(pOut, pIn1->eSubtype);
-  }else{
-    sqlite3VdbeMemSetNull(pOut);
-  }
-  break;
-}
-
-/* Opcode: SetSubtype P1 P2 * * *
-** Synopsis:  r[P2].subtype = r[P1]
-**
-** Set the subtype value of register P2 to the integer from register P1.
-** If P1 is NULL, clear the subtype from p2.
-*/
-case OP_SetSubtype: {   /* in1 out2 */
-  pIn1 = &aMem[pOp->p1];
-  pOut = &aMem[pOp->p2];
-  if( pIn1->flags & MEM_Null ){
-    pOut->flags &= ~MEM_Subtype;
-  }else{
-    assert( pIn1->flags & MEM_Int );
-    pOut->flags |= MEM_Subtype;
-    pOut->eSubtype = (u8)(pIn1->u.i & 0xff);
-  }
   break;
 }
 
@@ -106560,13 +106055,8 @@ sqlite3_mutex* sqlcipher_mutex(int);
 /* #include "pager.h" */
 /* #include "vdbeInt.h" */
 
-#if !defined(SQLCIPHER_OMIT_LOG_DEVICE)
-#if defined(__ANDROID__)
+#ifdef __ANDROID__
 #include <android/log.h>
-#elif defined(__APPLE__)
-/* #include <TargetConditionals.h> */
-#include <os/log.h>
-#endif
 #endif
 
 /* #include <time.h> */
@@ -106609,7 +106099,7 @@ SQLITE_API void sqlite3pager_reset(Pager *pPager);
 #define CIPHER_STR(s) #s
 
 #ifndef CIPHER_VERSION_NUMBER
-#define CIPHER_VERSION_NUMBER 4.6.0
+#define CIPHER_VERSION_NUMBER 4.5.6
 #endif
 
 #ifndef CIPHER_VERSION_BUILD
@@ -106851,6 +106341,7 @@ int sqlcipher_codec_ctx_integrity_check(codec_ctx *, Parse *, char *);
 
 int sqlcipher_set_log(const char *destination);
 void sqlcipher_set_log_level(unsigned int level);
+void sqlcipher_log(unsigned int tag, const char *message, ...);
 
 #define SQLCIPHER_LOG_NONE          0x00
 #define SQLCIPHER_LOG_ERROR         0x01
@@ -106859,12 +106350,6 @@ void sqlcipher_set_log_level(unsigned int level);
 #define SQLCIPHER_LOG_DEBUG         0x08
 #define SQLCIPHER_LOG_TRACE         0x10
 #define SQLCIPHER_LOG_ALL           0xffffffff
-
-#ifdef SQLCIPHER_OMIT_LOG
-#define sqlcipher_log(tag, message, ...)
-#else
-void sqlcipher_log(unsigned int tag, const char *message, ...);
-#endif
 
 void sqlcipher_vdbe_return_string(Parse*, const char*, const char*, int);
 
@@ -107625,7 +107110,7 @@ static void* sqlite3Codec(void *iCtx, void *data, Pgno pgno, int mode) {
 #ifdef SQLCIPHER_TEST
       if((sqlcipher_get_test_flags() & TEST_FAIL_DECRYPT) > 0 && sqlcipher_get_test_fail()) {
         rc = SQLITE_ERROR;
-        sqlcipher_log(SQLCIPHER_LOG_WARN, "sqlite3Codec: simulating decryption failure for pgno=%d, mode=%d, page_sz=%d\n", pgno, mode, page_sz);
+        sqlcipher_log(SQLCIPHER_LOG_ERROR, "simulating decryption failure for pgno=%d, mode=%d, page_sz=%d\n", pgno, mode, page_sz);
       }
 #endif
       if(rc != SQLITE_OK) {
@@ -107659,7 +107144,7 @@ static void* sqlite3Codec(void *iCtx, void *data, Pgno pgno, int mode) {
 #ifdef SQLCIPHER_TEST
       if((sqlcipher_get_test_flags() & TEST_FAIL_ENCRYPT) > 0 && sqlcipher_get_test_fail()) {
         rc = SQLITE_ERROR;
-        sqlcipher_log(SQLCIPHER_LOG_WARN, "sqlite3Codec: simulating encryption failure for pgno=%d, mode=%d, page_sz=%d\n", pgno, mode, page_sz);
+        sqlcipher_log(SQLCIPHER_LOG_ERROR, "simulating encryption failure for pgno=%d, mode=%d, page_sz=%d\n", pgno, mode, page_sz);
       }
 #endif
       if(rc != SQLITE_OK) {
@@ -107704,7 +107189,7 @@ int sqlcipherCodecAttach(sqlite3* db, int nDb, const void *zKey, int nKey) {
 
     if(ctx != NULL && SQLCIPHER_FLAG_GET(ctx->flags, CIPHER_FLAG_KEY_USED)) {
       /* there is already a codec attached to this database, so we should not proceed */
-      sqlcipher_log(SQLCIPHER_LOG_WARN, "sqlcipherCodecAttach: no codec attached to db");
+      sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipherCodecAttach: no codec attached to db, exiting");
       return SQLITE_OK;
     }
 
@@ -107731,7 +107216,7 @@ int sqlcipherCodecAttach(sqlite3* db, int nDb, const void *zKey, int nKey) {
 
     if(rc != SQLITE_OK) {
       /* initialization failed, do not attach potentially corrupted context */
-      sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipherCodecAttach: context initialization failed, forcing error state with rc=%d", rc);
+      sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipherCodecAttach: context initialization failed forcing error state with rc=%d", rc);
       /* force an error at the pager level, such that even the upstream caller ignores the return code
          the pager will be in an error state and will process no further operations */
       sqlite3pager_error(pPager, rc);
@@ -107798,7 +107283,7 @@ SQLITE_API int sqlite3_key_v2(sqlite3 *db, const char *zDb, const void *pKey, in
     int db_index = sqlcipher_find_db_index(db, zDb);
     return sqlcipherCodecAttach(db, db_index, pKey, nKey);
   }
-  sqlcipher_log(SQLCIPHER_LOG_WARN, "sqlite3_key_v2: no key provided");
+  sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlite3_key_v2: no key provided");
   return SQLITE_ERROR;
 }
 
@@ -107834,7 +107319,7 @@ SQLITE_API int sqlite3_rekey_v2(sqlite3 *db, const char *zDb, const void *pKey, 
 
       if(ctx == NULL) {
         /* there was no codec attached to this database, so this should do nothing! */
-        sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlite3_rekey_v2: no codec attached to db %s: rekey can't be used on an unencrypted database", zDb);
+        sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlite3_rekey_v2: no codec attached to db, exiting");
         return SQLITE_MISUSE;
       }
 
@@ -107863,7 +107348,7 @@ SQLITE_API int sqlite3_rekey_v2(sqlite3 *db, const char *zDb, const void *pKey, 
              sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlite3_rekey_v2: error %d occurred writing page %d", rc, pgno);
             }
           } else {
-             sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlite3_rekey_v2: error %d occurred reading page %d", rc, pgno);
+             sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlite3_rekey_v2: error %d occurred getting page %d", rc, pgno);
           }
         }
       }
@@ -107884,7 +107369,7 @@ SQLITE_API int sqlite3_rekey_v2(sqlite3 *db, const char *zDb, const void *pKey, 
     }
     return SQLITE_OK;
   }
-  sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlite3_rekey_v2: no key provided for db %s: rekey can't be used to decrypt an encrypted database", zDb);
+  sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlite3_rekey_v2: no key provided");
   return SQLITE_ERROR;
 }
 
@@ -108216,9 +107701,8 @@ static sqlcipher_provider *default_provider = NULL;
 
 static sqlite3_mutex* sqlcipher_static_mutex[SQLCIPHER_MUTEX_COUNT];
 static FILE* sqlcipher_log_file = NULL;
-static volatile int sqlcipher_log_device = 0;
+static volatile int sqlcipher_log_logcat = 0;
 static volatile unsigned int sqlcipher_log_level = SQLCIPHER_LOG_NONE;
-static volatile int sqlcipher_log_set = 0;
 
 sqlite3_mutex* sqlcipher_mutex(int mutex) {
   if(mutex < 0 || mutex >= SQLCIPHER_MUTEX_COUNT) return NULL;
@@ -108341,19 +107825,6 @@ void sqlcipher_activate() {
     for(i = 0; i < SQLCIPHER_MUTEX_COUNT; i++) {
       sqlcipher_static_mutex[i] = sqlite3_mutex_alloc(SQLITE_MUTEX_FAST);
     }
-#ifndef SQLCIPHER_OMIT_DEFAULT_LOGGING
-    /* when sqlcipher is first activated, set a default log target and level of WARN. Use the "device log"
-       for android (logcat) or apple (console). Use stderr on all other platforms. */
-    if(!sqlcipher_log_set) {
-      sqlcipher_log_level = SQLCIPHER_LOG_WARN;
-#if defined(__ANDROID__) || defined(__APPLE_)
-      sqlcipher_log_device = 1;
-#else
-      sqlcipher_log_file = stderr;
-#endif
-      sqlcipher_log_set = 1;
-    }
-#endif
   }
 
   /* check to see if there is a provider registered at this point
@@ -108485,20 +107956,18 @@ void sqlcipher_mlock(void *ptr, sqlite_uint64 sz) {
 
   if(ptr == NULL || sz == 0) return;
 
-  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mlock: calling mlock(%p,%lu); _SC_PAGESIZE=%lu", ptr - offset, sz + offset, pagesize);
+  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mem_lock: calling mlock(%p,%lu); _SC_PAGESIZE=%lu", ptr - offset, sz + offset, pagesize);
   rc = mlock(ptr - offset, sz + offset);
   if(rc!=0) {
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mlock: mlock() returned %d errno=%d", rc, errno);
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_mlock: mlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mem_lock: mlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
   }
 #elif defined(_WIN32)
 #if !(defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_APP))
   int rc;
-  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mlock: calling VirtualLock(%p,%d)", ptr, sz);
+  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mem_lock: calling VirtualLock(%p,%d)", ptr, sz);
   rc = VirtualLock(ptr, sz);
   if(rc==0) {
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mlock: VirtualLock() returned %d LastError=%d", rc, GetLastError());
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_mlock: VirtualLock(%p,%d) returned %d LastError=%d", ptr, sz, rc, GetLastError());
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mem_lock: VirtualLock(%p,%d) returned %d LastError=%d", ptr, sz, rc, GetLastError());
   }
 #endif
 #endif
@@ -108514,25 +107983,18 @@ void sqlcipher_munlock(void *ptr, sqlite_uint64 sz) {
 
   if(ptr == NULL || sz == 0) return;
 
-  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_munlock: calling munlock(%p,%lu)", ptr - offset, sz + offset);
+  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mem_unlock: calling munlock(%p,%lu)", ptr - offset, sz + offset);
   rc = munlock(ptr - offset, sz + offset);
   if(rc!=0) {
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_munlock: munlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mem_unlock: munlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
   }
 #elif defined(_WIN32)
 #if !(defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_APP))
   int rc;
-
-  if(ptr == NULL || sz == 0) return;
-
-  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_munlock: calling VirtualUnlock(%p,%d)", ptr, sz);
+  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mem_lock: calling VirtualUnlock(%p,%d)", ptr, sz);
   rc = VirtualUnlock(ptr, sz);
-
-  /* because memory allocations may be made from the same individual page, it is possible for VirtualUnlock to be called
-   * multiple times for the same page. Subsequent calls will return an error, but this can be safely ignored (i.e. because
-   * the previous call for that page unlocked the memory already). Log an info level event only in that case. */
   if(!rc) {
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_munlock: VirtualUnlock(%p,%d) returned %d LastError=%d", ptr, sz, rc, GetLastError());
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mem_unlock: VirtualUnlock(%p,%d) returned %d LastError=%d", ptr, sz, rc, GetLastError());
   }
 #endif
 #endif
@@ -108610,10 +108072,10 @@ static int sqlcipher_cipher_ctx_init(codec_ctx *ctx, cipher_ctx **iCtx) {
 static void sqlcipher_cipher_ctx_free(codec_ctx* ctx, cipher_ctx **iCtx) {
   cipher_ctx *c_ctx = *iCtx;
   sqlcipher_log(SQLCIPHER_LOG_DEBUG, "cipher_ctx_free: iCtx=%p", iCtx);
-  if(c_ctx->key) sqlcipher_free(c_ctx->key, ctx->key_sz);
-  if(c_ctx->hmac_key) sqlcipher_free(c_ctx->hmac_key, ctx->key_sz);
-  if(c_ctx->pass) sqlcipher_free(c_ctx->pass, c_ctx->pass_sz);
-  if(c_ctx->keyspec) sqlcipher_free(c_ctx->keyspec, ctx->keyspec_sz);
+  sqlcipher_free(c_ctx->key, ctx->key_sz);
+  sqlcipher_free(c_ctx->hmac_key, ctx->key_sz);
+  sqlcipher_free(c_ctx->pass, c_ctx->pass_sz);
+  sqlcipher_free(c_ctx->keyspec, ctx->keyspec_sz);
   sqlcipher_free(c_ctx, sizeof(cipher_ctx));
 }
 
@@ -108684,8 +108146,8 @@ static int sqlcipher_cipher_ctx_copy(codec_ctx *ctx, cipher_ctx *target, cipher_
   void *hmac_key = target->hmac_key;
 
   sqlcipher_log(SQLCIPHER_LOG_DEBUG, "sqlcipher_cipher_ctx_copy: target=%p, source=%p", target, source);
-  if(target->pass) sqlcipher_free(target->pass, target->pass_sz);
-  if(target->keyspec) sqlcipher_free(target->keyspec, ctx->keyspec_sz);
+  sqlcipher_free(target->pass, target->pass_sz);
+  sqlcipher_free(target->keyspec, ctx->keyspec_sz);
   memcpy(target, source, sizeof(cipher_ctx));
 
   target->key = key; /* restore pointer to previously allocated key data */
@@ -108715,7 +108177,7 @@ static int sqlcipher_cipher_ctx_copy(codec_ctx *ctx, cipher_ctx *target, cipher_
   */
 static int sqlcipher_cipher_ctx_set_keyspec(codec_ctx *ctx, cipher_ctx *c_ctx, const unsigned char *key) {
   /* free, zero existing pointers and size */
-  if(c_ctx->keyspec) sqlcipher_free(c_ctx->keyspec, ctx->keyspec_sz);
+  sqlcipher_free(c_ctx->keyspec, ctx->keyspec_sz);
   c_ctx->keyspec = NULL;
 
   c_ctx->keyspec = sqlcipher_malloc(ctx->keyspec_sz);
@@ -108755,7 +108217,7 @@ static void sqlcipher_set_derive_key(codec_ctx *ctx, int derive) {
   */
 static int sqlcipher_cipher_ctx_set_pass(cipher_ctx *ctx, const void *zKey, int nKey) {
   /* free, zero existing pointers and size */
-  if(ctx->pass) sqlcipher_free(ctx->pass, ctx->pass_sz);
+  sqlcipher_free(ctx->pass, ctx->pass_sz);
   ctx->pass = NULL;
   ctx->pass_sz = 0;
 
@@ -108922,7 +108384,7 @@ int sqlcipher_codec_ctx_get_kdf_algorithm(codec_ctx *ctx) {
 }
 
 void sqlcipher_codec_ctx_set_error(codec_ctx *ctx, int error) {
-  sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_set_error %d", error);
+  sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_set_error: ctx=%p, error=%d", ctx, error);
   sqlite3pager_error(ctx->pBt->pBt->pPager, error);
   ctx->pBt->pBt->db->errCode = error;
 }
@@ -108988,7 +108450,7 @@ int sqlcipher_codec_ctx_set_pagesize(codec_ctx *ctx, int size) {
     return SQLITE_ERROR;
   }
   /* attempt to free the existing page buffer */
-  if(ctx->buffer) sqlcipher_free(ctx->buffer,ctx->page_sz);
+  sqlcipher_free(ctx->buffer,ctx->page_sz);
   ctx->page_sz = size;
 
   /* pre-allocate a page buffer of PageSize bytes. This will
@@ -109167,14 +108629,12 @@ int sqlcipher_codec_ctx_init(codec_ctx **iCtx, Db *pDb, Pager *pPager, const voi
 void sqlcipher_codec_ctx_free(codec_ctx **iCtx) {
   codec_ctx *ctx = *iCtx;
   sqlcipher_log(SQLCIPHER_LOG_DEBUG, "codec_ctx_free: iCtx=%p", iCtx);
-  if(ctx->kdf_salt) sqlcipher_free(ctx->kdf_salt, ctx->kdf_salt_sz);
-  if(ctx->hmac_kdf_salt) sqlcipher_free(ctx->hmac_kdf_salt, ctx->kdf_salt_sz);
-  if(ctx->buffer) sqlcipher_free(ctx->buffer, ctx->page_sz);
+  sqlcipher_free(ctx->kdf_salt, ctx->kdf_salt_sz);
+  sqlcipher_free(ctx->hmac_kdf_salt, ctx->kdf_salt_sz);
+  sqlcipher_free(ctx->buffer, ctx->page_sz);
 
-  if(ctx->provider) {
-    ctx->provider->ctx_free(&ctx->provider_ctx);
-    sqlcipher_free(ctx->provider, sizeof(sqlcipher_provider));
-  }
+  ctx->provider->ctx_free(&ctx->provider_ctx);
+  sqlcipher_free(ctx->provider, sizeof(sqlcipher_provider));
 
   sqlcipher_cipher_ctx_free(ctx, &ctx->read_ctx);
   sqlcipher_cipher_ctx_free(ctx, &ctx->write_ctx);
@@ -109265,26 +108725,26 @@ int sqlcipher_page_cipher(codec_ctx *ctx, int for_ctx, Pgno pgno, int mode, int 
 
     sqlcipher_log(SQLCIPHER_LOG_DEBUG, "sqlcipher_page_cipher: comparing hmac on in=%p out=%p hmac_sz=%d", hmac_in, hmac_out, ctx->hmac_sz);
     if(sqlcipher_memcmp(hmac_in, hmac_out, ctx->hmac_sz) != 0) { /* the hmac check failed */
-      if(sqlite3BtreeGetAutoVacuum(ctx->pBt) != BTREE_AUTOVACUUM_NONE && sqlcipher_ismemset(in, 0, page_sz) == 0) {
+      if(sqlite3BtreeGetAutoVacuum(ctx->pBt) != BTREE_AUTOVACUUM_NONE || sqlcipher_ismemset(in, 0, page_sz) == 0) {
         /* first check if the entire contents of the page is zeros. If so, this page
            resulted from a short read (i.e. sqlite attempted to pull a page after the end of the file. these
            short read failures must be ignored for autovaccum mode to work so wipe the output buffer
            and return SQLITE_OK to skip the decryption step. */
-        sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_page_cipher: zeroed page (short read) for pgno %d with autovacuum enabled", pgno);
+        sqlcipher_log(SQLCIPHER_LOG_WARN, "sqlcipher_page_cipher: zeroed page (short read) for pgno %d, encryption but returning SQLITE_OK", pgno);
         sqlcipher_memset(out, 0, page_sz);
         return SQLITE_OK;
       } else {
         /* if the page memory is not all zeros, it means the there was data and a hmac on the page.
            since the check failed, the page was either tampered with or corrupted. wipe the output buffer,
            and return SQLITE_ERROR to the caller */
-        sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_page_cipher: hmac check failed for pgno=%d", pgno);
+        sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_page_cipher: hmac check failed for pgno=%d returning SQLITE_ERROR", pgno);
         goto error;
       }
     }
   }
 
   if(ctx->provider->cipher(ctx->provider_ctx, mode, c_ctx->key, ctx->key_sz, iv_out, in, size, out) != SQLITE_OK) {
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_page_cipher: cipher operation mode=%d failed for pgno=%d", mode, pgno);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_page_cipher: cipher operation mode=%d failed for pgno=%d returning SQLITE_ERROR", mode, pgno);
     goto error;
   };
 
@@ -109336,19 +108796,19 @@ static int sqlcipher_cipher_ctx_key_derive(codec_ctx *ctx, cipher_ctx *c_ctx) {
     if (c_ctx->pass_sz == ((ctx->key_sz * 2) + 3) && sqlite3StrNICmp((const char *)c_ctx->pass ,"x'", 2) == 0 && cipher_isHex(c_ctx->pass + 2, ctx->key_sz * 2)) {
       int n = c_ctx->pass_sz - 3; /* adjust for leading x' and tailing ' */
       const unsigned char *z = c_ctx->pass + 2; /* adjust lead offset of x' */
-      sqlcipher_log(SQLCIPHER_LOG_DEBUG, "sqlcipher_cipher_ctx_key_derive: using raw key from hex");
+      sqlcipher_log(SQLCIPHER_LOG_DEBUG, "cipher_ctx_key_derive: using raw key from hex");
       cipher_hex2bin(z, n, c_ctx->key);
     } else if (c_ctx->pass_sz == (((ctx->key_sz + ctx->kdf_salt_sz) * 2) + 3) && sqlite3StrNICmp((const char *)c_ctx->pass ,"x'", 2) == 0 && cipher_isHex(c_ctx->pass + 2, (ctx->key_sz + ctx->kdf_salt_sz) * 2)) {
       const unsigned char *z = c_ctx->pass + 2; /* adjust lead offset of x' */
-      sqlcipher_log(SQLCIPHER_LOG_DEBUG, "sqlcipher_cipher_ctx_key_derive: using raw key from hex");
+      sqlcipher_log(SQLCIPHER_LOG_DEBUG, "cipher_ctx_key_derive: using raw key from hex");
       cipher_hex2bin(z, (ctx->key_sz * 2), c_ctx->key);
       cipher_hex2bin(z + (ctx->key_sz * 2), (ctx->kdf_salt_sz * 2), ctx->kdf_salt);
     } else {
-      sqlcipher_log(SQLCIPHER_LOG_DEBUG, "sqlcipher_cipher_ctx_key_derive: deriving key using full PBKDF2 with %d iterations", ctx->kdf_iter);
+      sqlcipher_log(SQLCIPHER_LOG_DEBUG, "cipher_ctx_key_derive: deriving key using full PBKDF2 with %d iterations", ctx->kdf_iter);
       if(ctx->provider->kdf(ctx->provider_ctx, ctx->kdf_algorithm, c_ctx->pass, c_ctx->pass_sz,
                     ctx->kdf_salt, ctx->kdf_salt_sz, ctx->kdf_iter,
                     ctx->key_sz, c_ctx->key) != SQLITE_OK) {
-        sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_cipher_ctx_key_derive: error occurred from provider kdf generating encryption key");
+        sqlcipher_log(SQLCIPHER_LOG_ERROR, "cipher_ctx_key_derive: error occurred from provider kdf generating encryption key");
         return SQLITE_ERROR;
       }
     }
@@ -109382,7 +108842,7 @@ static int sqlcipher_cipher_ctx_key_derive(codec_ctx *ctx, cipher_ctx *c_ctx) {
       if(ctx->provider->kdf(ctx->provider_ctx, ctx->kdf_algorithm, c_ctx->key, ctx->key_sz,
                     ctx->hmac_kdf_salt, ctx->kdf_salt_sz, ctx->fast_kdf_iter,
                     ctx->key_sz, c_ctx->hmac_key) != SQLITE_OK) {
-        sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_cipher_ctx_key_derive: error occurred from provider kdf generating HMAC key");
+        sqlcipher_log(SQLCIPHER_LOG_ERROR, "cipher_ctx_key_derive: error occurred from provider kdf generating HMAC key");
         return SQLITE_ERROR;
       }
     }
@@ -109390,7 +108850,7 @@ static int sqlcipher_cipher_ctx_key_derive(codec_ctx *ctx, cipher_ctx *c_ctx) {
     c_ctx->derive_key = 0;
     return SQLITE_OK;
   }
-  sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_cipher_ctx_key_derive: key material is not present on the context for key derivation");
+  sqlcipher_log(SQLCIPHER_LOG_ERROR, "cipher_ctx_key_derive: key material is not present on the context for key derivation");
   return SQLITE_ERROR;
 }
 
@@ -109589,7 +109049,7 @@ int sqlcipher_codec_ctx_migrate(codec_ctx *ctx) {
   /* Version 4 - current, no upgrade required, so exit immediately */
   rc = sqlcipher_check_connection(db_filename, pass, pass_sz, "", &user_version, &journal_mode);
   if(rc == SQLITE_OK){
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_codec_ctx_migrate: no upgrade required - exiting");
+    sqlcipher_log(SQLCIPHER_LOG_DEBUG, "No upgrade required - exiting");
     goto cleanup;
   }
 
@@ -109597,7 +109057,7 @@ int sqlcipher_codec_ctx_migrate(codec_ctx *ctx) {
     pragma_compat = sqlite3_mprintf("PRAGMA cipher_compatibility = %d;", i);
     rc = sqlcipher_check_connection(db_filename, pass, pass_sz, pragma_compat, &user_version, &journal_mode);
     if(rc == SQLITE_OK) {
-      sqlcipher_log(SQLCIPHER_LOG_DEBUG, "sqlcipher_codec_ctx_migrate: version %d format found", i);
+      sqlcipher_log(SQLCIPHER_LOG_DEBUG, "Version %d format found", i);
       goto migrate;
     }
     if(pragma_compat) sqlcipher_free(pragma_compat, sqlite3Strlen30(pragma_compat));
@@ -109605,7 +109065,7 @@ int sqlcipher_codec_ctx_migrate(codec_ctx *ctx) {
   }
 
   /* if we exit the loop normally we failed to determine the version, this is an error */
-  sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: unable to determine format version for upgrade: this may indicate custom settings were used ");
+  sqlcipher_log(SQLCIPHER_LOG_ERROR, "Upgrade format not determined");
   goto handle_error;
 
 migrate:
@@ -109622,55 +109082,55 @@ migrate:
 
   rc = sqlite3_exec(db, pragma_compat, NULL, NULL, NULL);
   if(rc != SQLITE_OK){
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: set compatibility mode failed, error code %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "set compatibility mode failed, error code %d", rc);
     goto handle_error;
   }
 
   /* force journal mode to DELETE, we will set it back later if different */
   rc = sqlite3_exec(db, "PRAGMA journal_mode = delete;", NULL, NULL, NULL);
   if(rc != SQLITE_OK){
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: force journal mode DELETE failed, error code %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "force journal mode DELETE failed, error code %d", rc);
     goto handle_error;
   }
 
   rc = sqlite3_exec(db, attach_command, NULL, NULL, NULL);
   if(rc != SQLITE_OK){
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: attach failed, error code %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "attach failed, error code %d", rc);
     goto handle_error;
   }
 
   rc = sqlite3_key_v2(db, "migrate", pass, pass_sz);
   if(rc != SQLITE_OK){
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: keying attached database failed, error code %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "keying attached database failed, error code %d", rc);
     goto handle_error;
   }
 
   rc = sqlite3_exec(db, "SELECT sqlcipher_export('migrate');", NULL, NULL, NULL);
   if(rc != SQLITE_OK){
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: sqlcipher_export failed, error code %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_export failed, error code %d", rc);
     goto handle_error;
   }
 
 #ifdef SQLCIPHER_TEST
   if((sqlcipher_get_test_flags() & TEST_FAIL_MIGRATE) > 0) {
     rc = SQLITE_ERROR;
-    sqlcipher_log(SQLCIPHER_LOG_WARN, "sqlcipher_codec_ctx_migrate: simulated migrate failure, error code %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "simulated migrate failure, error code %d", rc);
     goto handle_error;
   }
 #endif
 
   rc = sqlite3_exec(db, set_user_version, NULL, NULL, NULL);
   if(rc != SQLITE_OK){
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: set user version failed, error code %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "set user version failed, error code %d", rc);
     goto handle_error;
   }
 
   if( !db->autoCommit ){
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: cannot migrate from within a transaction");
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "cannot migrate from within a transaction");
     goto handle_error;
   }
   if( db->nVdbeActive>1 ){
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: cannot migrate - SQL statements in progress");
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "cannot migrate - SQL statements in progress");
     goto handle_error;
   }
 
@@ -109708,13 +109168,13 @@ migrate:
 
   if(!MoveFileExW(w_migrated_db_filename, w_db_filename, MOVEFILE_REPLACE_EXISTING)) {
     rc = SQLITE_ERROR;
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: error occurred while renaming migration files %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "error occurred while renaming %d", rc);
     goto handle_error;
   }
 #else
   sqlcipher_log(SQLCIPHER_LOG_DEBUG, "performing POSIX rename");
   if ((rc = rename(migrated_db_filename, db_filename)) != 0) {
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: error occurred while renaming migration files %d", rc);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "error occurred while renaming %d", rc);
     goto handle_error;
   }
 #endif
@@ -109746,12 +109206,12 @@ migrate:
   goto cleanup;
 
 handle_error:
-  sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_codec_ctx_migrate: an error occurred attempting to migrate the database - last error %d", rc);
+  sqlcipher_log(SQLCIPHER_LOG_ERROR, "An error occurred attempting to migrate the database - last error %d", rc);
 
 cleanup:
   if(migrated_db_filename) {
     int del_rc = sqlite3OsDelete(db->pVfs, migrated_db_filename, 0);
-    sqlcipher_log(SQLCIPHER_LOG_DEBUG, "sqlcipher_codec_ctx_migrate: deleted migration database: %d", del_rc);
+    sqlcipher_log(SQLCIPHER_LOG_DEBUG, "deleted migration database: %d", del_rc);
   }
 
   if(pass) sqlcipher_free(pass, pass_sz);
@@ -109792,24 +109252,16 @@ int sqlcipher_codec_add_random(codec_ctx *ctx, const char *zRight, int random_sz
 }
 
 #if !defined(SQLITE_OMIT_TRACE)
-
-#define SQLCIPHER_PROFILE_FMT        "Elapsed time:%.3f ms - %s\n"
-#define SQLCIPHER_PROFILE_FMT_OSLOG  "Elapsed time:%{public}.3f ms - %{public}s\n"
-
 static int sqlcipher_profile_callback(unsigned int trace, void *file, void *stmt, void *run_time){
   FILE *f = (FILE*) file;
+  char *fmt = "Elapsed time:%.3f ms - %s\n";
   double elapsed = (*((sqlite3_uint64*)run_time))/1000000.0;
+#ifdef __ANDROID__
   if(f == NULL) {
-#if !defined(SQLCIPHER_OMIT_LOG_DEVICE)
-#if defined(__ANDROID__)
-    __android_log_print(ANDROID_LOG_DEBUG, "sqlcipher", SQLCIPHER_PROFILE_FMT, elapsed, sqlite3_sql((sqlite3_stmt*)stmt));
-#elif defined(__APPLE__)
-    os_log(OS_LOG_DEFAULT, SQLCIPHER_PROFILE_FMT_OSLOG, elapsed, sqlite3_sql((sqlite3_stmt*)stmt));
-#endif
-#endif
-  } else {
-    fprintf(f, SQLCIPHER_PROFILE_FMT, elapsed, sqlite3_sql((sqlite3_stmt*)stmt));
+    __android_log_print(ANDROID_LOG_DEBUG, "sqlcipher", fmt, elapsed, sqlite3_sql((sqlite3_stmt*)stmt));
   }
+#endif
+  if(f) fprintf(f, fmt, elapsed, sqlite3_sql((sqlite3_stmt*)stmt));
   return SQLITE_OK;
 }
 #endif
@@ -109826,8 +109278,8 @@ int sqlcipher_cipher_profile(sqlite3 *db, const char *destination){
       f = stdout;
     }else if(sqlite3_stricmp(destination, "stderr") == 0){
       f = stderr;
-    }else if(sqlite3_stricmp(destination, "logcat") == 0 || sqlite3_stricmp(destination, "device") == 0){
-      f = NULL; /* file pointer will be NULL indicating the device target (i.e. logcat or oslog). We will accept logcat for backwards compatibility */
+    }else if(sqlite3_stricmp(destination, "logcat") == 0){
+      f = NULL; /* file pointer will be NULL indicating logcat on android */
     }else{
 #if !defined(SQLCIPHER_PROFILE_USE_FOPEN) && (defined(_WIN32) && (__STDC_VERSION__ > 199901L) || defined(SQLITE_OS_WINRT))
       if(fopen_s(&f, destination, "a") != 0) return SQLITE_ERROR;
@@ -109856,49 +109308,20 @@ const char* sqlcipher_codec_get_provider_version(codec_ctx *ctx) {
 void sqlcipher_log(unsigned int level, const char *message, ...) {
   va_list params;
   va_start(params, message);
-  char *formatted = NULL;
 
 #ifdef CODEC_DEBUG
-#if defined(SQLCIPHER_OMIT_LOG_DEVICE)
-    vfprintf(stderr, message, params);
-    fprintf(stderr, "\n");
-    goto end;
-#else
-#if defined(__ANDROID__)
+#ifdef __ANDROID__
     __android_log_vprint(ANDROID_LOG_DEBUG, "sqlcipher", message, params);
-    goto end;
-#elif defined(__APPLE__)
-    formatted = sqlite3_vmprintf(message, params);
-    os_log(OS_LOG_DEFAULT, "%s", formatted);
-    sqlite3_free(formatted);
-    goto end;
 #else
     vfprintf(stderr, message, params);
     fprintf(stderr, "\n");
-    goto end;
-#endif
 #endif
 #endif
 
-  if(level > sqlcipher_log_level || (sqlcipher_log_device == 0 && sqlcipher_log_file == NULL)) {
+  if(level > sqlcipher_log_level || (sqlcipher_log_logcat == 0 && sqlcipher_log_file == NULL)) {
     /* no log target or tag not in included filters */
     goto end;
   }
-
-#if !defined(SQLCIPHER_OMIT_LOG_DEVICE)
-  if(sqlcipher_log_device) {
-#if defined(__ANDROID__)
-    __android_log_vprint(ANDROID_LOG_DEBUG, "sqlcipher", message, params);
-    goto end;
-#elif defined(__APPLE__)
-    formatted = sqlite3_vmprintf(message, params);
-    os_log(OS_LOG_DEFAULT, "%{public}s", formatted);
-    sqlite3_free(formatted);
-    goto end;
-#endif
-  }
-#endif
-
   if(sqlcipher_log_file != NULL){
     char buffer[24];
     struct tm tt;
@@ -109923,10 +109346,13 @@ void sqlcipher_log(unsigned int level, const char *message, ...) {
       fprintf((FILE*)sqlcipher_log_file, "%s.%03d: ", buffer, ms);
       vfprintf((FILE*)sqlcipher_log_file, message, params);
       fprintf((FILE*)sqlcipher_log_file, "\n");
-      goto end;
     }
   }
-
+#ifdef __ANDROID__
+  if(sqlcipher_log_logcat) {
+    __android_log_vprint(ANDROID_LOG_DEBUG, "sqlcipher", message, params);
+  }
+#endif
 end:
   va_end(params);
 }
@@ -109946,11 +109372,10 @@ int sqlcipher_set_log(const char *destination){
     fclose((FILE*)sqlcipher_log_file);
   }
   sqlcipher_log_file = NULL;
-  sqlcipher_log_device = 0;
+  sqlcipher_log_logcat = 0;
 
-  if(sqlite3_stricmp(destination, "logcat") == 0 || sqlite3_stricmp(destination, "device") == 0){
-    /* use the appropriate device log. accept logcat for backwards compatibility */
-    sqlcipher_log_device = 1;
+  if(sqlite3_stricmp(destination, "logcat") == 0){
+    sqlcipher_log_logcat = 1;
   } else if(sqlite3_stricmp(destination, "stdout") == 0){
     sqlcipher_log_file = stdout;
   }else if(sqlite3_stricmp(destination, "stderr") == 0){
@@ -110616,12 +110041,12 @@ int sqlcipher_nss_setup(sqlcipher_provider *p) {
 /* #include "sqliteInt.h" */
 /* #include "crypto.h" */
 /* #include "sqlcipher.h" */
-#include <openssl/crypto.h> /* amalgamator: dontcache */
-#include <openssl/rand.h> /* amalgamator: dontcache */
-#include <openssl/evp.h> /* amalgamator: dontcache */
-#include <openssl/objects.h> /* amalgamator: dontcache */
-#include <openssl/hmac.h> /* amalgamator: dontcache */
-#include <openssl/err.h> /* amalgamator: dontcache */
+#include <openssl/crypto.h>
+#include <openssl/rand.h>
+#include <openssl/evp.h>
+#include <openssl/objects.h>
+#include <openssl/hmac.h>
+#include <openssl/err.h>
 
 static unsigned int openssl_init_count = 0;
 
@@ -110682,8 +110107,9 @@ static int sqlcipher_openssl_activate(void *ctx) {
   /* initialize openssl and increment the internal init counter
      but only if it hasn't been initalized outside of SQLCipher by this program
      e.g. on startup */
+#ifdef SQLCIPHER_FIPS
   int rc = 0;
-
+#endif
   sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_openssl_activate: entering SQLCIPHER_MUTEX_PROVIDER_ACTIVATE");
   sqlite3_mutex_enter(sqlcipher_mutex(SQLCIPHER_MUTEX_PROVIDER_ACTIVATE));
   sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_openssl_activate: entered SQLCIPHER_MUTEX_PROVIDER_ACTIVATE");
@@ -111008,6 +110434,8 @@ static int sqlcipher_openssl_cipher(void *ctx, int mode, unsigned char *key, int
 
   csz += tmp_csz;
   assert(in_sz == csz);
+  if(in_sz!=csz)
+	goto cleanup;
 
   rc = SQLITE_OK;
   goto cleanup;
@@ -111629,8 +111057,6 @@ static void resolveAlias(
   assert( iCol>=0 && iCol<pEList->nExpr );
   pOrig = pEList->a[iCol].pExpr;
   assert( pOrig!=0 );
-  assert( !ExprHasProperty(pExpr, EP_Reduced|EP_TokenOnly) );
-  if( pExpr->pAggInfo ) return;
   db = pParse->db;
   pDup = sqlite3ExprDup(db, pOrig, 0);
   if( db->mallocFailed ){
@@ -111734,7 +111160,6 @@ SQLITE_PRIVATE Bitmask sqlite3ExprColUsed(Expr *pExpr){
   assert( ExprUseYTab(pExpr) );
   pExTab = pExpr->y.pTab;
   assert( pExTab!=0 );
-  assert( n < pExTab->nCol );
   if( (pExTab->tabFlags & TF_HasGenerated)!=0
    && (pExTab->aCol[n].colFlags & COLFLAG_GENERATED)!=0
   ){
@@ -112018,37 +111443,8 @@ static int lookupName(
           }
         }
         if( 0==cnt && VisibleRowid(pTab) ){
-          /* pTab is a potential ROWID match.  Keep track of it and match
-          ** the ROWID later if that seems appropriate.  (Search for "cntTab"
-          ** to find related code.)  Only allow a ROWID match if there is
-          ** a single ROWID match candidate.
-          */
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-          /* In SQLITE_ALLOW_ROWID_IN_VIEW mode, allow a ROWID match
-          ** if there is a single VIEW candidate or if there is a single
-          ** non-VIEW candidate plus multiple VIEW candidates.  In other
-          ** words non-VIEW candidate terms take precedence over VIEWs.
-          */
-          if( cntTab==0
-           || (cntTab==1
-               && ALWAYS(pMatch!=0)
-               && ALWAYS(pMatch->pTab!=0)
-               && (pMatch->pTab->tabFlags & TF_Ephemeral)!=0
-               && (pTab->tabFlags & TF_Ephemeral)==0)
-          ){
-            cntTab = 1;
-            pMatch = pItem;
-          }else{
-            cntTab++;
-          }
-#else
-          /* The (much more common) non-SQLITE_ALLOW_ROWID_IN_VIEW case is
-          ** simpler since we require exactly one candidate, which will
-          ** always be a non-VIEW
-          */
           cntTab++;
           pMatch = pItem;
-#endif
         }
       }
       if( pMatch ){
@@ -112174,13 +111570,13 @@ static int lookupName(
     ** Perhaps the name is a reference to the ROWID
     */
     if( cnt==0
-     && cntTab>=1
+     && cntTab==1
      && pMatch
      && (pNC->ncFlags & (NC_IdxExpr|NC_GenCol))==0
      && sqlite3IsRowid(zCol)
      && ALWAYS(VisibleRowid(pMatch->pTab) || pMatch->fg.isNestedFrom)
     ){
-      cnt = cntTab;
+      cnt = 1;
       if( pMatch->fg.isNestedFrom==0 ) pExpr->iColumn = -1;
       pExpr->affExpr = SQLITE_AFF_INTEGER;
     }
@@ -112340,7 +111736,6 @@ static int lookupName(
     sqlite3RecordErrorOffsetOfExpr(pParse->db, pExpr);
     pParse->checkSchema = 1;
     pTopNC->nNcErr++;
-    eNewExprOp = TK_NULL;
   }
   assert( pFJMatch==0 );
 
@@ -112367,7 +111762,7 @@ static int lookupName(
   ** If a generated column is referenced, set bits for every column
   ** of the table.
   */
-  if( pExpr->iColumn>=0 && cnt==1 && pMatch!=0 ){
+  if( pExpr->iColumn>=0 && pMatch!=0 ){
     pMatch->colUsed |= sqlite3ExprColUsed(pExpr);
   }
 
@@ -112545,19 +111940,6 @@ static int resolveExprStep(Walker *pWalker, Expr *pExpr){
     ** resolved.  This prevents "column" from being counted as having been
     ** referenced, which might prevent a SELECT from being erroneously
     ** marked as correlated.
-    **
-    ** 2024-03-28: Beware of aggregates.  A bare column of aggregated table
-    ** can still evaluate to NULL even though it is marked as NOT NULL.
-    ** Example:
-    **
-    **       CREATE TABLE t1(a INT NOT NULL);
-    **       SELECT a, a IS NULL, a IS NOT NULL, count(*) FROM t1;
-    **
-    ** The "a IS NULL" and "a IS NOT NULL" expressions cannot be optimized
-    ** here because at the time this case is hit, we do not yet know whether
-    ** or not t1 is being aggregated.  We have to assume the worst and omit
-    ** the optimization.  The only time it is safe to apply this optimization
-    ** is within the WHERE clause.
     */
     case TK_NOTNULL:
     case TK_ISNULL: {
@@ -112568,36 +111950,19 @@ static int resolveExprStep(Walker *pWalker, Expr *pExpr){
         anRef[i] = p->nRef;
       }
       sqlite3WalkExpr(pWalker, pExpr->pLeft);
-      if( IN_RENAME_OBJECT ) return WRC_Prune;
-      if( sqlite3ExprCanBeNull(pExpr->pLeft) ){
-        /* The expression can be NULL.  So the optimization does not apply */
-        return WRC_Prune;
-      }
+      if( 0==sqlite3ExprCanBeNull(pExpr->pLeft) && !IN_RENAME_OBJECT ){
+        testcase( ExprHasProperty(pExpr, EP_OuterON) );
+        assert( !ExprHasProperty(pExpr, EP_IntValue) );
+        pExpr->u.iValue = (pExpr->op==TK_NOTNULL);
+        pExpr->flags |= EP_IntValue;
+        pExpr->op = TK_INTEGER;
 
-      for(i=0, p=pNC; p; p=p->pNext, i++){
-        if( (p->ncFlags & NC_Where)==0 ){
-          return WRC_Prune;  /* Not in a WHERE clause.  Unsafe to optimize. */
+        for(i=0, p=pNC; p && i<ArraySize(anRef); p=p->pNext, i++){
+          p->nRef = anRef[i];
         }
+        sqlite3ExprDelete(pParse->db, pExpr->pLeft);
+        pExpr->pLeft = 0;
       }
-      testcase( ExprHasProperty(pExpr, EP_OuterON) );
-      assert( !ExprHasProperty(pExpr, EP_IntValue) );
-#if TREETRACE_ENABLED
-      if( sqlite3TreeTrace & 0x80000 ){
-        sqlite3DebugPrintf(
-           "NOT NULL strength reduction converts the following to %d:\n",
-           pExpr->op==TK_NOTNULL
-        );
-        sqlite3ShowExpr(pExpr);
-      }
-#endif /* TREETRACE_ENABLED */
-      pExpr->u.iValue = (pExpr->op==TK_NOTNULL);
-      pExpr->flags |= EP_IntValue;
-      pExpr->op = TK_INTEGER;
-      for(i=0, p=pNC; p && i<ArraySize(anRef); p=p->pNext, i++){
-        p->nRef = anRef[i];
-      }
-      sqlite3ExprDelete(pParse->db, pExpr->pLeft);
-      pExpr->pLeft = 0;
       return WRC_Prune;
     }
 
@@ -112862,12 +112227,11 @@ static int resolveExprStep(Walker *pWalker, Expr *pExpr){
           while( pNC2
               && sqlite3ReferencesSrcList(pParse, pExpr, pNC2->pSrcList)==0
           ){
-            pExpr->op2 += (1 + pNC2->nNestedSelect);
+            pExpr->op2++;
             pNC2 = pNC2->pNext;
           }
           assert( pDef!=0 || IN_RENAME_OBJECT );
           if( pNC2 && pDef ){
-            pExpr->op2 += pNC2->nNestedSelect;
             assert( SQLITE_FUNC_MINMAX==NC_MinMaxAgg );
             assert( SQLITE_FUNC_ANYORDER==NC_OrderAgg );
             testcase( (pDef->funcFlags & SQLITE_FUNC_MINMAX)!=0 );
@@ -113426,7 +112790,6 @@ static int resolveSelectStep(Walker *pWalker, Select *p){
 
     /* Recursively resolve names in all subqueries in the FROM clause
     */
-    if( pOuterNC ) pOuterNC->nNestedSelect++;
     for(i=0; i<p->pSrc->nSrc; i++){
       SrcItem *pItem = &p->pSrc->a[i];
       if( pItem->pSelect && (pItem->pSelect->selFlags & SF_Resolved)==0 ){
@@ -113450,9 +112813,6 @@ static int resolveSelectStep(Walker *pWalker, Select *p){
           pItem->fg.isCorrelated = (pOuterNC->nRef>nRef);
         }
       }
-    }
-    if( pOuterNC && ALWAYS(pOuterNC->nNestedSelect>0) ){
-      pOuterNC->nNestedSelect--;
     }
 
     /* Set up the local name-context to pass to sqlite3ResolveExprNames() to
@@ -113497,9 +112857,7 @@ static int resolveSelectStep(Walker *pWalker, Select *p){
       }
       if( sqlite3ResolveExprNames(&sNC, p->pHaving) ) return WRC_Abort;
     }
-    sNC.ncFlags |= NC_Where;
     if( sqlite3ResolveExprNames(&sNC, p->pWhere) ) return WRC_Abort;
-    sNC.ncFlags &= ~NC_Where;
 
     /* Resolve names in table-valued-function arguments */
     for(i=0; i<p->pSrc->nSrc; i++){
@@ -114038,10 +113396,9 @@ SQLITE_PRIVATE Expr *sqlite3ExprSkipCollateAndLikely(Expr *pExpr){
       assert( pExpr->x.pList->nExpr>0 );
       assert( pExpr->op==TK_FUNCTION );
       pExpr = pExpr->x.pList->a[0].pExpr;
-    }else if( pExpr->op==TK_COLLATE ){
-      pExpr = pExpr->pLeft;
     }else{
-      break;
+      assert( pExpr->op==TK_COLLATE );
+      pExpr = pExpr->pLeft;
     }
   }
   return pExpr;
@@ -115044,7 +114401,9 @@ SQLITE_PRIVATE void sqlite3ExprAddFunctionOrderBy(
   assert( ExprUseXList(pExpr) );
   if( pExpr->x.pList==0 || NEVER(pExpr->x.pList->nExpr==0) ){
     /* Ignore ORDER BY on zero-argument aggregates */
-    sqlite3ParserAddCleanup(pParse, sqlite3ExprListDeleteGeneric, pOrderBy);
+    sqlite3ParserAddCleanup(pParse,
+        (void(*)(sqlite3*,void*))sqlite3ExprListDelete,
+        pOrderBy);
     return;
   }
   if( IsWindowFunc(pExpr) ){
@@ -115225,9 +114584,6 @@ static SQLITE_NOINLINE void sqlite3ExprDeleteNN(sqlite3 *db, Expr *p){
 SQLITE_PRIVATE void sqlite3ExprDelete(sqlite3 *db, Expr *p){
   if( p ) sqlite3ExprDeleteNN(db, p);
 }
-SQLITE_PRIVATE void sqlite3ExprDeleteGeneric(sqlite3 *db, void *p){
-  if( ALWAYS(p) ) sqlite3ExprDeleteNN(db, (Expr*)p);
-}
 
 /*
 ** Clear both elements of an OnOrUsing object
@@ -115253,7 +114609,9 @@ SQLITE_PRIVATE void sqlite3ClearOnOrUsing(sqlite3 *db, OnOrUsing *p){
 ** pExpr to the pParse->pConstExpr list with a register number of 0.
 */
 SQLITE_PRIVATE void sqlite3ExprDeferredDelete(Parse *pParse, Expr *pExpr){
-  sqlite3ParserAddCleanup(pParse, sqlite3ExprDeleteGeneric, pExpr);
+  sqlite3ParserAddCleanup(pParse,
+    (void(*)(sqlite3*,void*))sqlite3ExprDelete,
+    pExpr);
 }
 
 /* Invoke sqlite3RenameExprUnmap() and sqlite3ExprDelete() on the
@@ -116059,9 +115417,6 @@ static SQLITE_NOINLINE void exprListDeleteNN(sqlite3 *db, ExprList *pList){
 SQLITE_PRIVATE void sqlite3ExprListDelete(sqlite3 *db, ExprList *pList){
   if( pList ) exprListDeleteNN(db, pList);
 }
-SQLITE_PRIVATE void sqlite3ExprListDeleteGeneric(sqlite3 *db, void *pList){
-  if( ALWAYS(pList) ) exprListDeleteNN(db, (ExprList*)pList);
-}
 
 /*
 ** Return the bitwise-OR of all Expr.flags fields in the given
@@ -116560,14 +115915,10 @@ SQLITE_PRIVATE int sqlite3ExprCanBeNull(const Expr *p){
       return 0;
     case TK_COLUMN:
       assert( ExprUseYTab(p) );
-      return ExprHasProperty(p, EP_CanBeNull)
-          || NEVER(p->y.pTab==0) /* Reference to column of index on expr */
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-          || (p->iColumn==XN_ROWID && IsView(p->y.pTab))
-#endif
-          || (p->iColumn>=0
+      return ExprHasProperty(p, EP_CanBeNull) ||
+             p->y.pTab==0 ||  /* Reference to column of index on expression */
+             (p->iColumn>=0
               && p->y.pTab->aCol!=0 /* Possible due to prior error */
-              && ALWAYS(p->iColumn<p->y.pTab->nCol)
               && p->y.pTab->aCol[p->iColumn].notNull==0);
     default:
       return 1;
@@ -119149,10 +118500,8 @@ SQLITE_PRIVATE void sqlite3ExprCode(Parse *pParse, Expr *pExpr, int target){
   inReg = sqlite3ExprCodeTarget(pParse, pExpr, target);
   if( inReg!=target ){
     u8 op;
-    Expr *pX = sqlite3ExprSkipCollateAndLikely(pExpr);
-    testcase( pX!=pExpr );
-    if( ALWAYS(pX)
-     && (ExprHasProperty(pX,EP_Subquery) || pX->op==TK_REGISTER)
+    if( ALWAYS(pExpr)
+     && (ExprHasProperty(pExpr,EP_Subquery) || pExpr->op==TK_REGISTER)
     ){
       op = OP_Copy;
     }else{
@@ -120598,14 +119947,13 @@ static int analyzeAggregate(Walker *pWalker, Expr *pExpr){
     case TK_AGG_FUNCTION: {
       if( (pNC->ncFlags & NC_InAggFunc)==0
        && pWalker->walkerDepth==pExpr->op2
-       && pExpr->pAggInfo==0
       ){
         /* Check to see if pExpr is a duplicate of another aggregate
         ** function that is already in the pAggInfo structure
         */
         struct AggInfo_func *pItem = pAggInfo->aFunc;
         for(i=0; i<pAggInfo->nFunc; i++, pItem++){
-          if( NEVER(pItem->pFExpr==pExpr) ) break;
+          if( pItem->pFExpr==pExpr ) break;
           if( sqlite3ExprCompare(0, pItem->pFExpr, pExpr, -1)==0 ){
             break;
           }
@@ -120648,8 +119996,6 @@ static int analyzeAggregate(Walker *pWalker, Expr *pExpr){
               }else{
                 pItem->bOBPayload = 1;
               }
-              pItem->bUseSubtype =
-                    (pItem->pFunc->funcFlags & SQLITE_SUBTYPE)!=0;
             }else{
               pItem->iOBTab = -1;
             }
@@ -123416,9 +122762,9 @@ static void openStatTable(
 typedef struct StatAccum StatAccum;
 typedef struct StatSample StatSample;
 struct StatSample {
+  tRowcnt *anEq;                  /* sqlite_stat4.nEq */
   tRowcnt *anDLt;                 /* sqlite_stat4.nDLt */
 #ifdef SQLITE_ENABLE_STAT4
-  tRowcnt *anEq;                  /* sqlite_stat4.nEq */
   tRowcnt *anLt;                  /* sqlite_stat4.nLt */
   union {
     i64 iRowid;                     /* Rowid in main table of the key */
@@ -123576,9 +122922,9 @@ static void statInit(
 
   /* Allocate the space required for the StatAccum object */
   n = sizeof(*p)
-    + sizeof(tRowcnt)*nColUp;                    /* StatAccum.anDLt */
+    + sizeof(tRowcnt)*nColUp                  /* StatAccum.anEq */
+    + sizeof(tRowcnt)*nColUp;                 /* StatAccum.anDLt */
 #ifdef SQLITE_ENABLE_STAT4
-  n += sizeof(tRowcnt)*nColUp;                   /* StatAccum.anEq */
   if( mxSample ){
     n += sizeof(tRowcnt)*nColUp                  /* StatAccum.anLt */
       + sizeof(StatSample)*(nCol+mxSample)       /* StatAccum.aBest[], a[] */
@@ -123599,9 +122945,9 @@ static void statInit(
   p->nKeyCol = nKeyCol;
   p->nSkipAhead = 0;
   p->current.anDLt = (tRowcnt*)&p[1];
+  p->current.anEq = &p->current.anDLt[nColUp];
 
 #ifdef SQLITE_ENABLE_STAT4
-  p->current.anEq = &p->current.anDLt[nColUp];
   p->mxSample = p->nLimit==0 ? mxSample : 0;
   if( mxSample ){
     u8 *pSpace;                     /* Allocated space not yet assigned */
@@ -123868,9 +123214,7 @@ static void statPush(
 
   if( p->nRow==0 ){
     /* This is the first call to this function. Do initialization. */
-#ifdef SQLITE_ENABLE_STAT4
     for(i=0; i<p->nCol; i++) p->current.anEq[i] = 1;
-#endif
   }else{
     /* Second and subsequent calls get processed here */
 #ifdef SQLITE_ENABLE_STAT4
@@ -123879,17 +123223,15 @@ static void statPush(
 
     /* Update anDLt[], anLt[] and anEq[] to reflect the values that apply
     ** to the current row of the index. */
-#ifdef SQLITE_ENABLE_STAT4
     for(i=0; i<iChng; i++){
       p->current.anEq[i]++;
     }
-#endif
     for(i=iChng; i<p->nCol; i++){
       p->current.anDLt[i]++;
 #ifdef SQLITE_ENABLE_STAT4
       if( p->mxSample ) p->current.anLt[i] += p->current.anEq[i];
-      p->current.anEq[i] = 1;
 #endif
+      p->current.anEq[i] = 1;
     }
   }
 
@@ -124023,9 +123365,7 @@ static void statGet(
       u64 iVal = (p->nRow + nDistinct - 1) / nDistinct;
       if( iVal==2 && p->nRow*10 <= nDistinct*11 ) iVal = 1;
       sqlite3_str_appendf(&sStat, " %llu", iVal);
-#ifdef SQLITE_ENABLE_STAT4
       assert( p->current.anEq[i] );
-#endif
     }
     sqlite3ResultStrAccum(context, &sStat);
   }
@@ -124713,16 +124053,6 @@ static void decodeIntArray(
 #endif
       while( z[0]!=0 && z[0]!=' ' ) z++;
       while( z[0]==' ' ) z++;
-    }
-
-    /* Set the bLowQual flag if the peak number of rows obtained
-    ** from a full equality match is so large that a full table scan
-    ** seems likely to be faster than using the index.
-    */
-    if( aLog[0] > 66              /* Index has more than 100 rows */
-     && aLog[0] <= aLog[nOut-1]   /* And only a single value seen */
-    ){
-      pIndex->bLowQual = 1;
     }
   }
 }
@@ -126807,7 +126137,7 @@ SQLITE_PRIVATE void sqlite3ColumnSetExpr(
 */
 SQLITE_PRIVATE Expr *sqlite3ColumnExpr(Table *pTab, Column *pCol){
   if( pCol->iDflt==0 ) return 0;
-  if( !IsOrdinaryTable(pTab) ) return 0;
+  if( NEVER(!IsOrdinaryTable(pTab)) ) return 0;
   if( NEVER(pTab->u.tab.pDfltList==0) ) return 0;
   if( NEVER(pTab->u.tab.pDfltList->nExpr<pCol->iDflt) ) return 0;
   return pTab->u.tab.pDfltList->a[pCol->iDflt-1].pExpr;
@@ -126959,9 +126289,6 @@ SQLITE_PRIVATE void sqlite3DeleteTable(sqlite3 *db, Table *pTable){
   if( !pTable ) return;
   if( db->pnBytesFreed==0 && (--pTable->nTabRef)>0 ) return;
   deleteTable(db, pTable);
-}
-SQLITE_PRIVATE void sqlite3DeleteTableGeneric(sqlite3 *db, void *pTable){
-  sqlite3DeleteTable(db, (Table*)pTable);
 }
 
 
@@ -127500,8 +126827,7 @@ SQLITE_PRIVATE void sqlite3ColumnPropertiesFromName(Table *pTab, Column *pCol){
 /*
 ** Clean up the data structures associated with the RETURNING clause.
 */
-static void sqlite3DeleteReturning(sqlite3 *db, void *pArg){
-  Returning *pRet = (Returning*)pArg;
+static void sqlite3DeleteReturning(sqlite3 *db, Returning *pRet){
   Hash *pHash;
   pHash = &(db->aDb[1].pSchema->trigHash);
   sqlite3HashInsert(pHash, pRet->zName, 0);
@@ -127543,7 +126869,8 @@ SQLITE_PRIVATE void sqlite3AddReturning(Parse *pParse, ExprList *pList){
   pParse->u1.pReturning = pRet;
   pRet->pParse = pParse;
   pRet->pReturnEL = pList;
-  sqlite3ParserAddCleanup(pParse, sqlite3DeleteReturning, pRet);
+  sqlite3ParserAddCleanup(pParse,
+     (void(*)(sqlite3*,void*))sqlite3DeleteReturning, pRet);
   testcase( pParse->earlyCleanup );
   if( db->mallocFailed ) return;
   sqlite3_snprintf(sizeof(pRet->zName), pRet->zName,
@@ -127742,8 +127069,7 @@ SQLITE_PRIVATE char sqlite3AffinityType(const char *zIn, Column *pCol){
 
   assert( zIn!=0 );
   while( zIn[0] ){
-    u8 x = *(u8*)zIn;
-    h = (h<<8) + sqlite3UpperToLower[x];
+    h = (h<<8) + sqlite3UpperToLower[(*zIn)&0xff];
     zIn++;
     if( h==(('c'<<24)+('h'<<16)+('a'<<8)+'r') ){             /* CHAR */
       aff = SQLITE_AFF_TEXT;
@@ -129093,12 +128419,9 @@ SQLITE_PRIVATE void sqlite3CreateView(
   ** on a view, even though views do not have rowids.  The following flag
   ** setting fixes this problem.  But the fix can be disabled by compiling
   ** with -DSQLITE_ALLOW_ROWID_IN_VIEW in case there are legacy apps that
-  ** depend upon the old buggy behavior.  The ability can also be toggled
-  ** using sqlite3_config(SQLITE_CONFIG_ROWID_IN_VIEW,...) */
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-  p->tabFlags |= sqlite3Config.mNoVisibleRowid; /* Optional. Allow by default */
-#else
-  p->tabFlags |= TF_NoVisibleRowid;             /* Never allow rowid in view */
+  ** depend upon the old buggy behavior. */
+#ifndef SQLITE_ALLOW_ROWID_IN_VIEW
+  p->tabFlags |= TF_NoVisibleRowid;
 #endif
 
   sqlite3TwoPartName(pParse, pName1, pName2, &pName);
@@ -131611,7 +130934,7 @@ SQLITE_PRIVATE void sqlite3Reindex(Parse *pParse, Token *pName1, Token *pName2){
   if( iDb<0 ) return;
   z = sqlite3NameFromToken(db, pObjName);
   if( z==0 ) return;
-  zDb = pName2->n ? db->aDb[iDb].zDbSName : 0;
+  zDb = db->aDb[iDb].zDbSName;
   pTab = sqlite3FindTable(db, z, zDb);
   if( pTab ){
     reindexTable(pParse, pTab, 0);
@@ -131621,7 +130944,6 @@ SQLITE_PRIVATE void sqlite3Reindex(Parse *pParse, Token *pName1, Token *pName2){
   pIndex = sqlite3FindIndex(db, z, zDb);
   sqlite3DbFree(db, z);
   if( pIndex ){
-    iDb = sqlite3SchemaToIndex(db, pIndex->pTable->pSchema);
     sqlite3BeginWriteOperation(pParse, 0, iDb);
     sqlite3RefillIndex(pParse, pIndex, -1);
     return;
@@ -131786,9 +131108,6 @@ SQLITE_PRIVATE void sqlite3WithDelete(sqlite3 *db, With *pWith){
     }
     sqlite3DbFree(db, pWith);
   }
-}
-SQLITE_PRIVATE void sqlite3WithDeleteGeneric(sqlite3 *db, void *pWith){
-  sqlite3WithDelete(db, (With*)pWith);
 }
 #endif /* !defined(SQLITE_OMIT_CTE) */
 
@@ -134471,13 +133790,13 @@ SQLITE_PRIVATE void sqlite3QuoteValue(StrAccum *pStr, sqlite3_value *pValue){
       double r1, r2;
       const char *zVal;
       r1 = sqlite3_value_double(pValue);
-      sqlite3_str_appendf(pStr, "%!0.15g", r1);
+      sqlite3_str_appendf(pStr, "%!.15g", r1);
       zVal = sqlite3_str_value(pStr);
       if( zVal ){
         sqlite3AtoF(zVal, &r2, pStr->nChar, SQLITE_UTF8);
         if( r1!=r2 ){
           sqlite3_str_reset(pStr);
-          sqlite3_str_appendf(pStr, "%!0.20e", r1);
+          sqlite3_str_appendf(pStr, "%!.20e", r1);
         }
       }
       break;
@@ -134779,7 +134098,7 @@ static void replaceFunc(
   }
   if( zPattern[0]==0 ){
     assert( sqlite3_value_type(argv[1])!=SQLITE_NULL );
-    sqlite3_result_text(context, (const char*)zStr, nStr, SQLITE_TRANSIENT);
+    sqlite3_result_value(context, argv[0]);
     return;
   }
   nPattern = sqlite3_value_bytes(argv[1]);
@@ -135262,7 +134581,7 @@ static void sumFinalize(sqlite3_context *context){
     if( p->approx ){
       if( p->ovrfl ){
         sqlite3_result_error(context,"integer overflow",-1);
-      }else if( !sqlite3IsOverflow(p->rErr) ){
+      }else if( !sqlite3IsNaN(p->rErr) ){
         sqlite3_result_double(context, p->rSum+p->rErr);
       }else{
         sqlite3_result_double(context, p->rSum);
@@ -135279,7 +134598,7 @@ static void avgFinalize(sqlite3_context *context){
     double r;
     if( p->approx ){
       r = p->rSum;
-      if( !sqlite3IsOverflow(p->rErr) ) r += p->rErr;
+      if( !sqlite3IsNaN(p->rErr) ) r += p->rErr;
     }else{
       r = (double)(p->iSum);
     }
@@ -135293,7 +134612,7 @@ static void totalFinalize(sqlite3_context *context){
   if( p ){
     if( p->approx ){
       r = p->rSum;
-      if( !sqlite3IsOverflow(p->rErr) ) r += p->rErr;
+      if( !sqlite3IsNaN(p->rErr) ) r += p->rErr;
     }else{
       r = (double)(p->iSum);
     }
@@ -138710,7 +138029,7 @@ SQLITE_PRIVATE void sqlite3Insert(
       pNx->iDataCur = iDataCur;
       pNx->iIdxCur = iIdxCur;
       if( pNx->pUpsertTarget ){
-        if( sqlite3UpsertAnalyzeTarget(pParse, pTabList, pNx, pUpsert) ){
+        if( sqlite3UpsertAnalyzeTarget(pParse, pTabList, pNx) ){
           goto insert_cleanup;
         }
       }
@@ -140602,10 +139921,7 @@ static int xferOptimization(
     }
   }
 #ifndef SQLITE_OMIT_CHECK
-  if( pDest->pCheck
-   && (db->mDbFlags & DBFLAG_Vacuum)==0
-   && sqlite3ExprListCompare(pSrc->pCheck,pDest->pCheck,-1)
-  ){
+  if( pDest->pCheck && sqlite3ExprListCompare(pSrc->pCheck,pDest->pCheck,-1) ){
     return 0;   /* Tables have different CHECK constraints.  Ticket #2252 */
   }
 #endif
@@ -145076,7 +144392,30 @@ SQLITE_PRIVATE void sqlite3Pragma(
         int mxCol;              /* Maximum non-virtual column number */
 
         if( pObjTab && pObjTab!=pTab ) continue;
-        if( !IsOrdinaryTable(pTab) ) continue;
+        if( !IsOrdinaryTable(pTab) ){
+#ifndef SQLITE_OMIT_VIRTUALTABLE
+          sqlite3_vtab *pVTab;
+          int a1;
+          if( !IsVirtual(pTab) ) continue;
+          if( pTab->nCol<=0 ){
+            const char *zMod = pTab->u.vtab.azArg[0];
+            if( sqlite3HashFind(&db->aModule, zMod)==0 ) continue;
+          }
+          sqlite3ViewGetColumnNames(pParse, pTab);
+          if( pTab->u.vtab.p==0 ) continue;
+          pVTab = pTab->u.vtab.p->pVtab;
+          if( NEVER(pVTab==0) ) continue;
+          if( NEVER(pVTab->pModule==0) ) continue;
+          if( pVTab->pModule->iVersion<4 ) continue;
+          if( pVTab->pModule->xIntegrity==0 ) continue;
+          sqlite3VdbeAddOp3(v, OP_VCheck, i, 3, isQuick);
+          sqlite3VdbeAppendP4(v, pTab, P4_TABLE);
+          a1 = sqlite3VdbeAddOp1(v, OP_IsNull, 3); VdbeCoverage(v);
+          integrityCheckResultRow(v);
+          sqlite3VdbeJumpHere(v, a1);
+#endif
+          continue;
+        }
         if( isQuick || HasRowid(pTab) ){
           pPk = 0;
           r2 = 0;
@@ -145211,7 +144550,6 @@ SQLITE_PRIVATE void sqlite3Pragma(
               ** is REAL, we have to load the actual data using OP_Column
               ** to reliably determine if the value is a NULL. */
               sqlite3VdbeAddOp3(v, OP_Column, p1, p3, 3);
-              sqlite3ColumnDefault(v, pTab, j, 3);
               jmp3 = sqlite3VdbeAddOp2(v, OP_NotNull, 3, labelOk);
               VdbeCoverage(v);
             }
@@ -145402,38 +144740,6 @@ SQLITE_PRIVATE void sqlite3Pragma(
           }
         }
       }
-
-#ifndef SQLITE_OMIT_VIRTUALTABLE
-      /* Second pass to invoke the xIntegrity method on all virtual
-      ** tables.
-      */
-      for(x=sqliteHashFirst(pTbls); x; x=sqliteHashNext(x)){
-        Table *pTab = sqliteHashData(x);
-        sqlite3_vtab *pVTab;
-        int a1;
-        if( pObjTab && pObjTab!=pTab ) continue;
-        if( IsOrdinaryTable(pTab) ) continue;
-        if( !IsVirtual(pTab) ) continue;
-        if( pTab->nCol<=0 ){
-          const char *zMod = pTab->u.vtab.azArg[0];
-          if( sqlite3HashFind(&db->aModule, zMod)==0 ) continue;
-        }
-        sqlite3ViewGetColumnNames(pParse, pTab);
-        if( pTab->u.vtab.p==0 ) continue;
-        pVTab = pTab->u.vtab.p->pVtab;
-        if( NEVER(pVTab==0) ) continue;
-        if( NEVER(pVTab->pModule==0) ) continue;
-        if( pVTab->pModule->iVersion<4 ) continue;
-        if( pVTab->pModule->xIntegrity==0 ) continue;
-        sqlite3VdbeAddOp3(v, OP_VCheck, i, 3, isQuick);
-        pTab->nTabRef++;
-        sqlite3VdbeAppendP4(v, pTab, P4_TABLEREF);
-        a1 = sqlite3VdbeAddOp1(v, OP_IsNull, 3); VdbeCoverage(v);
-        integrityCheckResultRow(v);
-        sqlite3VdbeJumpHere(v, a1);
-        continue;
-      }
-#endif
     }
     {
       static const int iLn = VDBE_OFFSET_LINENO(2);
@@ -146119,11 +145425,7 @@ static int pragmaVtabBestIndex(sqlite3_vtab *tab, sqlite3_index_info *pIdxInfo){
   j = seen[0]-1;
   pIdxInfo->aConstraintUsage[j].argvIndex = 1;
   pIdxInfo->aConstraintUsage[j].omit = 1;
-  if( seen[1]==0 ){
-    pIdxInfo->estimatedCost = (double)1000;
-    pIdxInfo->estimatedRows = 1000;
-    return SQLITE_OK;
-  }
+  if( seen[1]==0 ) return SQLITE_OK;
   pIdxInfo->estimatedCost = (double)20;
   pIdxInfo->estimatedRows = 20;
   j = seen[1]-1;
@@ -147183,7 +146485,6 @@ static int sqlite3LockAndPrepare(
   assert( (rc&db->errMask)==rc );
   db->busyHandler.nBusy = 0;
   sqlite3_mutex_leave(db->mutex);
-  assert( rc==SQLITE_OK || (*ppStmt)==0 );
   return rc;
 }
 
@@ -147580,9 +146881,6 @@ SQLITE_PRIVATE Select *sqlite3SelectNew(
 */
 SQLITE_PRIVATE void sqlite3SelectDelete(sqlite3 *db, Select *p){
   if( OK_IF_ALWAYS_TRUE(p) ) clearSelect(db, p, 1);
-}
-SQLITE_PRIVATE void sqlite3SelectDeleteGeneric(sqlite3 *db, void *p){
-  if( ALWAYS(p) ) clearSelect(db, (Select*)p, 1);
 }
 
 /*
@@ -149350,7 +148648,11 @@ static const char *columnTypeImpl(
         ** data for the result-set column of the sub-select.
         */
         if( iCol<pS->pEList->nExpr
-         && (!ViewCanHaveRowid || iCol>=0)
+#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
+         && iCol>=0
+#else
+         && ALWAYS(iCol>=0)
+#endif
         ){
           /* If iCol is less than zero, then the expression requests the
           ** rowid of the sub-select or view. This expression is legal (see
@@ -150600,7 +149902,9 @@ multi_select_end:
   pDest->iSdst = dest.iSdst;
   pDest->nSdst = dest.nSdst;
   if( pDelete ){
-    sqlite3ParserAddCleanup(pParse, sqlite3SelectDeleteGeneric, pDelete);
+    sqlite3ParserAddCleanup(pParse,
+        (void(*)(sqlite3*,void*))sqlite3SelectDelete,
+        pDelete);
   }
   return rc;
 }
@@ -151151,7 +150455,8 @@ static int multiSelectOrderBy(
   /* Make arrangements to free the 2nd and subsequent arms of the compound
   ** after the parse has finished */
   if( pSplit->pPrior ){
-    sqlite3ParserAddCleanup(pParse, sqlite3SelectDeleteGeneric, pSplit->pPrior);
+    sqlite3ParserAddCleanup(pParse,
+       (void(*)(sqlite3*,void*))sqlite3SelectDelete, pSplit->pPrior);
   }
   pSplit->pPrior = pPrior;
   pPrior->pNext = pSplit;
@@ -151972,7 +151277,9 @@ static int flattenSubquery(
     Table *pTabToDel = pSubitem->pTab;
     if( pTabToDel->nTabRef==1 ){
       Parse *pToplevel = sqlite3ParseToplevel(pParse);
-      sqlite3ParserAddCleanup(pToplevel, sqlite3DeleteTableGeneric, pTabToDel);
+      sqlite3ParserAddCleanup(pToplevel,
+         (void(*)(sqlite3*,void*))sqlite3DeleteTable,
+         pTabToDel);
       testcase( pToplevel->earlyCleanup );
     }else{
       pTabToDel->nTabRef--;
@@ -152525,10 +151832,6 @@ static int pushDownWindowCheck(Parse *pParse, Select *pSubq, Expr *pExpr){
 **
 **  (11) The subquery is not a VALUES clause
 **
-**  (12) The WHERE clause is not "rowid ISNULL" or the equivalent.  This
-**       case only comes up if SQLite is compiled using
-**       SQLITE_ALLOW_ROWID_IN_VIEW.
-**
 ** Return 0 if no changes are made and non-zero if one or more WHERE clause
 ** terms are duplicated into the subquery.
 */
@@ -152636,18 +151939,6 @@ static int pushDownWhereTerms(
    && pWhere->w.iJoin!=iCursor
   ){
     return 0; /* restriction (5) */
-  }
-#endif
-
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-  if( ViewCanHaveRowid && (pWhere->op==TK_ISNULL || pWhere->op==TK_NOTNULL) ){
-    Expr *pLeft = pWhere->pLeft;
-    if( ALWAYS(pLeft)
-     && pLeft->op==TK_COLUMN
-     && pLeft->iColumn < 0
-    ){
-      return 0;  /* Restriction (12) */
-    }
   }
 #endif
 
@@ -153035,7 +152326,8 @@ static struct Cte *searchWith(
 SQLITE_PRIVATE With *sqlite3WithPush(Parse *pParse, With *pWith, u8 bFree){
   if( pWith ){
     if( bFree ){
-      pWith = (With*)sqlite3ParserAddCleanup(pParse, sqlite3WithDeleteGeneric,
+      pWith = (With*)sqlite3ParserAddCleanup(pParse,
+                      (void(*)(sqlite3*,void*))sqlite3WithDelete,
                       pWith);
       if( pWith==0 ) return 0;
     }
@@ -153278,14 +152570,12 @@ SQLITE_PRIVATE int sqlite3ExpandSubquery(Parse *pParse, SrcItem *pFrom){
   while( pSel->pPrior ){ pSel = pSel->pPrior; }
   sqlite3ColumnsFromExprList(pParse, pSel->pEList,&pTab->nCol,&pTab->aCol);
   pTab->iPKey = -1;
-  pTab->eTabType = TABTYP_VIEW;
   pTab->nRowLogEst = 200; assert( 200==sqlite3LogEst(1048576) );
 #ifndef SQLITE_ALLOW_ROWID_IN_VIEW
   /* The usual case - do not allow ROWID on a subquery */
   pTab->tabFlags |= TF_Ephemeral | TF_NoVisibleRowid;
 #else
-  /* Legacy compatibility mode */
-  pTab->tabFlags |= TF_Ephemeral | sqlite3Config.mNoVisibleRowid;
+  pTab->tabFlags |= TF_Ephemeral;  /* Legacy compatibility mode */
 #endif
   return pParse->nErr ? SQLITE_ERROR : SQLITE_OK;
 }
@@ -153553,7 +152843,7 @@ static int selectExpander(Walker *pWalker, Select *p){
             pNestedFrom = pFrom->pSelect->pEList;
             assert( pNestedFrom!=0 );
             assert( pNestedFrom->nExpr==pTab->nCol );
-            assert( VisibleRowid(pTab)==0 || ViewCanHaveRowid );
+            assert( VisibleRowid(pTab)==0 );
           }else{
             if( zTName && sqlite3StrICmp(zTName, zTabName)!=0 ){
               continue;
@@ -153585,8 +152875,7 @@ static int selectExpander(Walker *pWalker, Select *p){
             pUsing = 0;
           }
 
-          nAdd = pTab->nCol;
-          if( VisibleRowid(pTab) && (selFlags & SF_NestedFrom)!=0 ) nAdd++;
+          nAdd = pTab->nCol + (VisibleRowid(pTab) && (selFlags&SF_NestedFrom));
           for(j=0; j<nAdd; j++){
             const char *zName;
             struct ExprList_item *pX; /* Newly added ExprList term */
@@ -153668,8 +152957,7 @@ static int selectExpander(Walker *pWalker, Select *p){
             pX = &pNew->a[pNew->nExpr-1];
             assert( pX->zEName==0 );
             if( (selFlags & SF_NestedFrom)!=0 && !IN_RENAME_OBJECT ){
-              if( pNestedFrom && (!ViewCanHaveRowid || j<pNestedFrom->nExpr) ){
-                assert( j<pNestedFrom->nExpr );
+              if( pNestedFrom ){
                 pX->zEName = sqlite3DbStrDup(db, pNestedFrom->a[j].zEName);
                 testcase( pX->zEName==0 );
               }else{
@@ -154072,7 +153360,6 @@ static void resetAccumulator(Parse *pParse, AggInfo *pAggInfo){
       assert( pFunc->pFExpr->pLeft!=0 );
       assert( pFunc->pFExpr->pLeft->op==TK_ORDER );
       assert( ExprUseXList(pFunc->pFExpr->pLeft) );
-      assert( pFunc->pFunc!=0 );
       pOBList = pFunc->pFExpr->pLeft->x.pList;
       if( !pFunc->bOBUnique ){
         nExtra++;  /* One extra column for the OP_Sequence */
@@ -154080,9 +153367,6 @@ static void resetAccumulator(Parse *pParse, AggInfo *pAggInfo){
       if( pFunc->bOBPayload ){
         /* extra columns for the function arguments */
         assert( ExprUseXList(pFunc->pFExpr) );
-        nExtra += pFunc->pFExpr->x.pList->nExpr;
-      }
-      if( pFunc->bUseSubtype ){
         nExtra += pFunc->pFExpr->x.pList->nExpr;
       }
       pKeyInfo = sqlite3KeyInfoFromExprList(pParse, pOBList, 0, nExtra);
@@ -154111,9 +153395,9 @@ static void finalizeAggFunctions(Parse *pParse, AggInfo *pAggInfo){
     assert( ExprUseXList(pF->pFExpr) );
     pList = pF->pFExpr->x.pList;
     if( pF->iOBTab>=0 ){
-      /* For an ORDER BY aggregate, calls to OP_AggStep were deferred.  Inputs
-      ** were stored in emphermal table pF->iOBTab.  Here, we extract those
-      ** inputs (in ORDER BY order) and make all calls to OP_AggStep
+      /* For an ORDER BY aggregate, calls to OP_AggStep where deferred and
+      ** all content was stored in emphermal table pF->iOBTab.  Extract that
+      ** content now (in ORDER BY order) and make all calls to OP_AggStep
       ** before doing the OP_AggFinal call. */
       int iTop;        /* Start of loop for extracting columns */
       int nArg;        /* Number of columns to extract */
@@ -154121,7 +153405,6 @@ static void finalizeAggFunctions(Parse *pParse, AggInfo *pAggInfo){
       int regAgg;      /* Extract into this array */
       int j;           /* Loop counter */
 
-      assert( pF->pFunc!=0 );
       nArg = pList->nExpr;
       regAgg = sqlite3GetTempRange(pParse, nArg);
 
@@ -154137,15 +153420,6 @@ static void finalizeAggFunctions(Parse *pParse, AggInfo *pAggInfo){
       iTop = sqlite3VdbeAddOp1(v, OP_Rewind, pF->iOBTab); VdbeCoverage(v);
       for(j=nArg-1; j>=0; j--){
         sqlite3VdbeAddOp3(v, OP_Column, pF->iOBTab, nKey+j, regAgg+j);
-      }
-      if( pF->bUseSubtype ){
-        int regSubtype = sqlite3GetTempReg(pParse);
-        int iBaseCol = nKey + nArg + (pF->bOBPayload==0 && pF->bOBUnique==0);
-        for(j=nArg-1; j>=0; j--){
-          sqlite3VdbeAddOp3(v, OP_Column, pF->iOBTab, iBaseCol+j, regSubtype);
-          sqlite3VdbeAddOp2(v, OP_SetSubtype, regSubtype, regAgg+j);
-        }
-        sqlite3ReleaseTempReg(pParse, regSubtype);
       }
       sqlite3VdbeAddOp3(v, OP_AggStep, 0, regAgg, AggInfoFuncReg(pAggInfo,i));
       sqlite3VdbeAppendP4(v, pF->pFunc, P4_FUNCDEF);
@@ -154201,7 +153475,6 @@ static void updateAccumulator(
     ExprList *pList;
     assert( ExprUseXList(pF->pFExpr) );
     assert( !IsWindowFunc(pF->pFExpr) );
-    assert( pF->pFunc!=0 );
     pList = pF->pFExpr->x.pList;
     if( ExprHasProperty(pF->pFExpr, EP_WinFunc) ){
       Expr *pFilter = pF->pFExpr->y.pWin->pFilter;
@@ -154246,9 +153519,6 @@ static void updateAccumulator(
       if( pF->bOBPayload ){
         regAggSz += nArg;
       }
-      if( pF->bUseSubtype ){
-        regAggSz += nArg;
-      }
       regAggSz++;  /* One extra register to hold result of MakeRecord */
       regAgg = sqlite3GetTempRange(pParse, regAggSz);
       regDistinct = regAgg;
@@ -154261,14 +153531,6 @@ static void updateAccumulator(
       if( pF->bOBPayload ){
         regDistinct = regAgg+jj;
         sqlite3ExprCodeExprList(pParse, pList, regDistinct, 0, SQLITE_ECEL_DUP);
-        jj += nArg;
-      }
-      if( pF->bUseSubtype ){
-        int kk;
-        int regBase = pF->bOBPayload ? regDistinct : regAgg;
-        for(kk=0; kk<nArg; kk++, jj++){
-          sqlite3VdbeAddOp2(v, OP_GetSubtype, regBase+kk, regAgg+jj);
-        }
       }
     }else if( pList ){
       nArg = pList->nExpr;
@@ -154473,8 +153735,7 @@ static SrcItem *isSelfJoinView(
 /*
 ** Deallocate a single AggInfo object
 */
-static void agginfoFree(sqlite3 *db, void *pArg){
-  AggInfo *p = (AggInfo*)pArg;
+static void agginfoFree(sqlite3 *db, AggInfo *p){
   sqlite3DbFree(db, p->aCol);
   sqlite3DbFree(db, p->aFunc);
   sqlite3DbFreeNN(db, p);
@@ -154548,7 +153809,7 @@ static int countOfViewOptimization(Parse *pParse, Select *p){
     pSub->selFlags |= SF_Aggregate;
     pSub->selFlags &= ~SF_Compound;
     pSub->nSelectRow = 0;
-    sqlite3ParserAddCleanup(pParse, sqlite3ExprListDeleteGeneric, pSub->pEList);
+    sqlite3ExprListDelete(db, pSub->pEList);
     pTerm = pPrior ? sqlite3ExprDup(db, pCount, 0) : pCount;
     pSub->pEList = sqlite3ExprListAppend(pParse, 0, pTerm);
     pTerm = sqlite3PExpr(pParse, TK_SELECT, 0, 0);
@@ -154728,8 +153989,9 @@ SQLITE_PRIVATE int sqlite3Select(
         sqlite3TreeViewExprList(0, p->pOrderBy, 0, "ORDERBY");
       }
 #endif
-      sqlite3ParserAddCleanup(pParse, sqlite3ExprListDeleteGeneric,
-                              p->pOrderBy);
+      sqlite3ParserAddCleanup(pParse,
+        (void(*)(sqlite3*,void*))sqlite3ExprListDelete,
+        p->pOrderBy);
       testcase( pParse->earlyCleanup );
       p->pOrderBy = 0;
     }
@@ -154921,8 +154183,9 @@ SQLITE_PRIVATE int sqlite3Select(
     ){
       TREETRACE(0x800,pParse,p,
                 ("omit superfluous ORDER BY on %r FROM-clause subquery\n",i+1));
-      sqlite3ParserAddCleanup(pParse, sqlite3ExprListDeleteGeneric,
-                              pSub->pOrderBy);
+      sqlite3ParserAddCleanup(pParse,
+         (void(*)(sqlite3*,void*))sqlite3ExprListDelete,
+         pSub->pOrderBy);
       pSub->pOrderBy = 0;
     }
 
@@ -155451,7 +154714,8 @@ SQLITE_PRIVATE int sqlite3Select(
     */
     pAggInfo = sqlite3DbMallocZero(db, sizeof(*pAggInfo) );
     if( pAggInfo ){
-      sqlite3ParserAddCleanup(pParse, agginfoFree, pAggInfo);
+      sqlite3ParserAddCleanup(pParse,
+          (void(*)(sqlite3*,void*))agginfoFree, pAggInfo);
       testcase( pParse->earlyCleanup );
     }
     if( db->mallocFailed ){
@@ -158603,9 +157867,6 @@ SQLITE_PRIVATE void sqlite3Update(
       }
     }
     if( chngRowid==0 && pPk==0 ){
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-      if( isView ) sqlite3VdbeAddOp2(v, OP_Null, 0, regOldRowid);
-#endif
       sqlite3VdbeAddOp2(v, OP_Copy, regOldRowid, regNewRowid);
     }
   }
@@ -159143,8 +158404,7 @@ SQLITE_PRIVATE Upsert *sqlite3UpsertNew(
 SQLITE_PRIVATE int sqlite3UpsertAnalyzeTarget(
   Parse *pParse,     /* The parsing context */
   SrcList *pTabList, /* Table into which we are inserting */
-  Upsert *pUpsert,   /* The ON CONFLICT clauses */
-  Upsert *pAll       /* Complete list of all ON CONFLICT clauses */
+  Upsert *pUpsert    /* The ON CONFLICT clauses */
 ){
   Table *pTab;            /* That table into which we are inserting */
   int rc;                 /* Result code */
@@ -159247,14 +158507,6 @@ SQLITE_PRIVATE int sqlite3UpsertAnalyzeTarget(
         continue;
       }
       pUpsert->pUpsertIdx = pIdx;
-      if( sqlite3UpsertOfIndex(pAll,pIdx)!=pUpsert ){
-        /* Really this should be an error.  The isDup ON CONFLICT clause will
-        ** never fire.  But this problem was not discovered until three years
-        ** after multi-CONFLICT upsert was added, and so we silently ignore
-        ** the problem to prevent breaking applications that might actually
-        ** have redundant ON CONFLICT clauses. */
-        pUpsert->isDup = 1;
-      }
       break;
     }
     if( pUpsert->pUpsertIdx==0 ){
@@ -159281,13 +158533,9 @@ SQLITE_PRIVATE int sqlite3UpsertNextIsIPK(Upsert *pUpsert){
   Upsert *pNext;
   if( NEVER(pUpsert==0) ) return 0;
   pNext = pUpsert->pNextUpsert;
-  while( 1 /*exit-by-return*/ ){
-    if( pNext==0 ) return 1;
-    if( pNext->pUpsertTarget==0 ) return 1;
-    if( pNext->pUpsertIdx==0 ) return 1;
-    if( !pNext->isDup ) return 0;
-    pNext = pNext->pNextUpsert;
-  }
+  if( pNext==0 ) return 1;
+  if( pNext->pUpsertTarget==0 ) return 1;
+  if( pNext->pUpsertIdx==0 ) return 1;
   return 0;
 }
 
@@ -160129,6 +159377,7 @@ SQLITE_PRIVATE void sqlite3VtabUnlockList(sqlite3 *db){
 
   if( p ){
     db->pDisconnect = 0;
+    sqlite3ExpirePreparedStatements(db, 0);
     do {
       VTable *pNext = p->pNext;
       sqlite3VtabUnlock(p);
@@ -161694,7 +160943,7 @@ SQLITE_PRIVATE Bitmask sqlite3WhereGetMask(WhereMaskSet*,int);
 #ifdef WHERETRACE_ENABLED
 SQLITE_PRIVATE void sqlite3WhereClausePrint(WhereClause *pWC);
 SQLITE_PRIVATE void sqlite3WhereTermPrint(WhereTerm *pTerm, int iTerm);
-SQLITE_PRIVATE void sqlite3WhereLoopPrint(const WhereLoop *p, const WhereClause *pWC);
+SQLITE_PRIVATE void sqlite3WhereLoopPrint(WhereLoop *p, WhereClause *pWC);
 #endif
 SQLITE_PRIVATE WhereTerm *sqlite3WhereFindTerm(
   WhereClause *pWC,     /* The WHERE clause to be searched */
@@ -167156,22 +166405,12 @@ static void translateColumnToCopy(
   for(; iStart<iEnd; iStart++, pOp++){
     if( pOp->p1!=iTabCur ) continue;
     if( pOp->opcode==OP_Column ){
-#ifdef SQLITE_DEBUG
-      if( pParse->db->flags & SQLITE_VdbeAddopTrace ){
-        printf("TRANSLATE OP_Column to OP_Copy at %d\n", iStart);
-      }
-#endif
       pOp->opcode = OP_Copy;
       pOp->p1 = pOp->p2 + iRegister;
       pOp->p2 = pOp->p3;
       pOp->p3 = 0;
       pOp->p5 = 2;  /* Cause the MEM_Subtype flag to be cleared */
     }else if( pOp->opcode==OP_Rowid ){
-#ifdef SQLITE_DEBUG
-      if( pParse->db->flags & SQLITE_VdbeAddopTrace ){
-        printf("TRANSLATE OP_Rowid to OP_Sequence at %d\n", iStart);
-      }
-#endif
       pOp->opcode = OP_Sequence;
       pOp->p1 = iAutoidxCur;
 #ifdef SQLITE_ALLOW_ROWID_IN_VIEW
@@ -168498,8 +167737,7 @@ static int whereRangeScanEst(
           ** sample, then assume they are 4x more selective.  This brings
           ** the estimated selectivity more in line with what it would be
           ** if estimated without the use of STAT4 tables. */
-          if( iLwrIdx==iUprIdx ){ nNew -= 20; }
-          assert( 20==sqlite3LogEst(4) );
+          if( iLwrIdx==iUprIdx ) nNew -= 20;  assert( 20==sqlite3LogEst(4) );
         }else{
           nNew = 10;        assert( 10==sqlite3LogEst(2) );
         }
@@ -168723,34 +167961,17 @@ SQLITE_PRIVATE void sqlite3WhereClausePrint(WhereClause *pWC){
 #ifdef WHERETRACE_ENABLED
 /*
 ** Print a WhereLoop object for debugging purposes
-**
-** Format example:
-**
-**     .--- Position in WHERE clause           rSetup, rRun, nOut ---.
-**     |                                                             |
-**     |  .--- selfMask                       nTerm ------.          |
-**     |  |                                               |          |
-**     |  |   .-- prereq    Idx          wsFlags----.     |          |
-**     |  |   |             Name                    |     |          |
-**     |  |   |           __|__        nEq ---.  ___|__   |        __|__
-**     | / \ / \         /     \              | /      \ / \      /     \
-**     1.002.001         t2.t2xy              2 f 010241 N 2 cost 0,56,31
 */
-SQLITE_PRIVATE void sqlite3WhereLoopPrint(const WhereLoop *p, const WhereClause *pWC){
-  if( pWC ){
-    WhereInfo *pWInfo = pWC->pWInfo;
-    int nb = 1+(pWInfo->pTabList->nSrc+3)/4;
-    SrcItem *pItem = pWInfo->pTabList->a + p->iTab;
-    Table *pTab = pItem->pTab;
-    Bitmask mAll = (((Bitmask)1)<<(nb*4)) - 1;
-    sqlite3DebugPrintf("%c%2d.%0*llx.%0*llx", p->cId,
-                       p->iTab, nb, p->maskSelf, nb, p->prereq & mAll);
-    sqlite3DebugPrintf(" %12s",
-                       pItem->zAlias ? pItem->zAlias : pTab->zName);
-  }else{
-    sqlite3DebugPrintf("%c%2d.%03llx.%03llx %c%d",
-         p->cId, p->iTab, p->maskSelf, p->prereq & 0xfff, p->cId, p->iTab);
-  }
+SQLITE_PRIVATE void sqlite3WhereLoopPrint(WhereLoop *p, WhereClause *pWC){
+  WhereInfo *pWInfo = pWC->pWInfo;
+  int nb = 1+(pWInfo->pTabList->nSrc+3)/4;
+  SrcItem *pItem = pWInfo->pTabList->a + p->iTab;
+  Table *pTab = pItem->pTab;
+  Bitmask mAll = (((Bitmask)1)<<(nb*4)) - 1;
+  sqlite3DebugPrintf("%c%2d.%0*llx.%0*llx", p->cId,
+                     p->iTab, nb, p->maskSelf, nb, p->prereq & mAll);
+  sqlite3DebugPrintf(" %12s",
+                     pItem->zAlias ? pItem->zAlias : pTab->zName);
   if( (p->wsFlags & WHERE_VIRTUALTABLE)==0 ){
     const char *zName;
     if( p->u.btree.pIndex && (zName = p->u.btree.pIndex->zName)!=0 ){
@@ -168785,15 +168006,6 @@ SQLITE_PRIVATE void sqlite3WhereLoopPrint(const WhereLoop *p, const WhereClause 
     for(i=0; i<p->nLTerm; i++){
       sqlite3WhereTermPrint(p->aLTerm[i], i);
     }
-  }
-}
-SQLITE_PRIVATE void sqlite3ShowWhereLoop(const WhereLoop *p){
-  if( p ) sqlite3WhereLoopPrint(p, 0);
-}
-SQLITE_PRIVATE void sqlite3ShowWhereLoopList(const WhereLoop *p){
-  while( p ){
-    sqlite3ShowWhereLoop(p);
-    p = p->pNextLoop;
   }
 }
 #endif
@@ -168908,60 +168120,46 @@ static void whereInfoFree(sqlite3 *db, WhereInfo *pWInfo){
 }
 
 /*
-** Return TRUE if X is a proper subset of Y but is of equal or less cost.
-** In other words, return true if all constraints of X are also part of Y
-** and Y has additional constraints that might speed the search that X lacks
-** but the cost of running X is not more than the cost of running Y.
+** Return TRUE if all of the following are true:
 **
-** In other words, return true if the cost relationwship between X and Y
-** is inverted and needs to be adjusted.
+**   (1)  X has the same or lower cost, or returns the same or fewer rows,
+**        than Y.
+**   (2)  X uses fewer WHERE clause terms than Y
+**   (3)  Every WHERE clause term used by X is also used by Y
+**   (4)  X skips at least as many columns as Y
+**   (5)  If X is a covering index, than Y is too
 **
-** Case 1:
-**
-**   (1a)  X and Y use the same index.
-**   (1b)  X has fewer == terms than Y
-**   (1c)  Neither X nor Y use skip-scan
-**   (1d)  X does not have a a greater cost than Y
-**
-** Case 2:
-**
-**   (2a)  X has the same or lower cost, or returns the same or fewer rows,
-**         than Y.
-**   (2b)  X uses fewer WHERE clause terms than Y
-**   (2c)  Every WHERE clause term used by X is also used by Y
-**   (2d)  X skips at least as many columns as Y
-**   (2e)  If X is a covering index, than Y is too
+** Conditions (2) and (3) mean that X is a "proper subset" of Y.
+** If X is a proper subset of Y then Y is a better choice and ought
+** to have a lower cost.  This routine returns TRUE when that cost
+** relationship is inverted and needs to be adjusted.  Constraint (4)
+** was added because if X uses skip-scan less than Y it still might
+** deserve a lower cost even if it is a proper subset of Y.  Constraint (5)
+** was added because a covering index probably deserves to have a lower cost
+** than a non-covering index even if it is a proper subset.
 */
 static int whereLoopCheaperProperSubset(
   const WhereLoop *pX,       /* First WhereLoop to compare */
   const WhereLoop *pY        /* Compare against this WhereLoop */
 ){
   int i, j;
-  if( pX->rRun>pY->rRun && pX->nOut>pY->nOut ) return 0; /* (1d) and (2a) */
-  assert( (pX->wsFlags & WHERE_VIRTUALTABLE)==0 );
-  assert( (pY->wsFlags & WHERE_VIRTUALTABLE)==0 );
-  if( pX->u.btree.nEq < pY->u.btree.nEq                  /* (1b) */
-   && pX->u.btree.pIndex==pY->u.btree.pIndex             /* (1a) */
-   && pX->nSkip==0 && pY->nSkip==0                       /* (1c) */
-  ){
-    return 1;  /* Case 1 is true */
-  }
   if( pX->nLTerm-pX->nSkip >= pY->nLTerm-pY->nSkip ){
-    return 0;                                            /* (2b) */
+    return 0; /* X is not a subset of Y */
   }
-  if( pY->nSkip > pX->nSkip ) return 0;                  /* (2d) */
+  if( pX->rRun>pY->rRun && pX->nOut>pY->nOut ) return 0;
+  if( pY->nSkip > pX->nSkip ) return 0;
   for(i=pX->nLTerm-1; i>=0; i--){
     if( pX->aLTerm[i]==0 ) continue;
     for(j=pY->nLTerm-1; j>=0; j--){
       if( pY->aLTerm[j]==pX->aLTerm[i] ) break;
     }
-    if( j<0 ) return 0;                                  /* (2c) */
+    if( j<0 ) return 0;  /* X not a subset of Y since term X[i] not used by Y */
   }
   if( (pX->wsFlags&WHERE_IDX_ONLY)!=0
    && (pY->wsFlags&WHERE_IDX_ONLY)==0 ){
-    return 0;                                            /* (2e) */
+    return 0;  /* Constraint (5) */
   }
-  return 1;  /* Case 2 is true */
+  return 1;  /* All conditions meet */
 }
 
 /*
@@ -169451,10 +168649,7 @@ static int whereLoopAddBtreeIndex(
     assert( pNew->u.btree.nBtm==0 );
     opMask = WO_EQ|WO_IN|WO_GT|WO_GE|WO_LT|WO_LE|WO_ISNULL|WO_IS;
   }
-  if( pProbe->bUnordered || pProbe->bLowQual ){
-    if( pProbe->bUnordered ) opMask &= ~(WO_GT|WO_GE|WO_LT|WO_LE);
-    if( pProbe->bLowQual )   opMask &= ~(WO_EQ|WO_IN|WO_IS);
-  }
+  if( pProbe->bUnordered ) opMask &= ~(WO_GT|WO_GE|WO_LT|WO_LE);
 
   assert( pNew->u.btree.nEq<pProbe->nColumn );
   assert( pNew->u.btree.nEq<pProbe->nKeyCol
@@ -172328,10 +171523,16 @@ static SQLITE_NOINLINE void whereAddIndexedExpr(
   for(i=0; i<pIdx->nColumn; i++){
     Expr *pExpr;
     int j = pIdx->aiColumn[i];
+    int bMaybeNullRow;
     if( j==XN_EXPR ){
       pExpr = pIdx->aColExpr->a[i].pExpr;
+      testcase( pTabItem->fg.jointype & JT_LEFT );
+      testcase( pTabItem->fg.jointype & JT_RIGHT );
+      testcase( pTabItem->fg.jointype & JT_LTORJ );
+      bMaybeNullRow = (pTabItem->fg.jointype & (JT_LEFT|JT_LTORJ|JT_RIGHT))!=0;
     }else if( j>=0 && (pTab->aCol[j].colFlags & COLFLAG_VIRTUAL)!=0 ){
       pExpr = sqlite3ColumnExpr(pTab, &pTab->aCol[j]);
+      bMaybeNullRow = 0;
     }else{
       continue;
     }
@@ -172363,7 +171564,7 @@ static SQLITE_NOINLINE void whereAddIndexedExpr(
     p->iDataCur = pTabItem->iCursor;
     p->iIdxCur = iIdxCur;
     p->iIdxCol = i;
-    p->bMaybeNullRow = (pTabItem->fg.jointype & (JT_LEFT|JT_LTORJ|JT_RIGHT))!=0;
+    p->bMaybeNullRow = bMaybeNullRow;
     if( sqlite3IndexAffinityStr(pParse->db, pIdx) ){
       p->aff = pIdx->zColAff[i];
     }
@@ -172528,10 +171729,7 @@ SQLITE_PRIVATE WhereInfo *sqlite3WhereBegin(
 
   /* An ORDER/GROUP BY clause of more than 63 terms cannot be optimized */
   testcase( pOrderBy && pOrderBy->nExpr==BMS-1 );
-  if( pOrderBy && pOrderBy->nExpr>=BMS ){
-    pOrderBy = 0;
-    wctrlFlags &= ~WHERE_WANT_DISTINCT;
-  }
+  if( pOrderBy && pOrderBy->nExpr>=BMS ) pOrderBy = 0;
 
   /* The number of tables in the FROM clause is limited by the number of
   ** bits in a Bitmask
@@ -172556,10 +171754,7 @@ SQLITE_PRIVATE WhereInfo *sqlite3WhereBegin(
   ** field (type Bitmask) it must be aligned on an 8-byte boundary on
   ** some architectures. Hence the ROUND8() below.
   */
-  nByteWInfo = ROUND8P(sizeof(WhereInfo));
-  if( nTabList>1 ){
-    nByteWInfo = ROUND8P(nByteWInfo + (nTabList-1)*sizeof(WhereLevel));
-  }
+  nByteWInfo = ROUND8P(sizeof(WhereInfo)+(nTabList-1)*sizeof(WhereLevel));
   pWInfo = sqlite3DbMallocRawNN(db, nByteWInfo + sizeof(WhereLoop));
   if( db->mallocFailed ){
     sqlite3DbFree(db, pWInfo);
@@ -173121,11 +172316,6 @@ whereBeginError:
     pParse->nQueryLoop = pWInfo->savedNQueryLoop;
     whereInfoFree(db, pWInfo);
   }
-#ifdef WHERETRACE_ENABLED
-  /* Prevent harmless compiler warnings about debugging routines
-  ** being declared but never used */
-  sqlite3ShowWhereLoopList(0);
-#endif /* WHERETRACE_ENABLED */
   return 0;
 }
 
@@ -184568,18 +183758,6 @@ SQLITE_API int sqlite3_config(int op, ...){
     }
 #endif /* SQLITE_OMIT_DESERIALIZE */
 
-    case SQLITE_CONFIG_ROWID_IN_VIEW: {
-      int *pVal = va_arg(ap,int*);
-#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
-      if( 0==*pVal ) sqlite3GlobalConfig.mNoVisibleRowid = TF_NoVisibleRowid;
-      if( 1==*pVal ) sqlite3GlobalConfig.mNoVisibleRowid = 0;
-      *pVal = (sqlite3GlobalConfig.mNoVisibleRowid==0);
-#else
-      *pVal = 0;
-#endif
-      break;
-    }
-
     default: {
       rc = SQLITE_ERROR;
       break;
@@ -188523,28 +187701,6 @@ SQLITE_API int sqlite3_test_control(int op, ...){
       break;
     }
 #endif
-
-    /* sqlite3_test_control(SQLITE_TESTCTRL_JSON_SELFCHECK, &onOff);
-    **
-    ** Activate or deactivate validation of JSONB that is generated from
-    ** text.  Off by default, as the validation is slow.  Validation is
-    ** only available if compiled using SQLITE_DEBUG.
-    **
-    ** If onOff is initially 1, then turn it on.  If onOff is initially
-    ** off, turn it off.  If onOff is initially -1, then change onOff
-    ** to be the current setting.
-    */
-    case SQLITE_TESTCTRL_JSON_SELFCHECK: {
-#if defined(SQLITE_DEBUG) && !defined(SQLITE_OMIT_WSD)
-      int *pOnOff = va_arg(ap, int*);
-      if( *pOnOff<0 ){
-        *pOnOff = sqlite3Config.bJsonSelfcheck;
-      }else{
-        sqlite3Config.bJsonSelfcheck = (u8)((*pOnOff)&0xff);
-      }
-#endif
-      break;
-    }
   }
   va_end(ap);
 #endif /* SQLITE_UNTESTABLE */
@@ -190528,8 +189684,6 @@ SQLITE_PRIVATE int sqlite3FtsUnicodeIsdiacritic(int);
 #endif
 
 SQLITE_PRIVATE int sqlite3Fts3ExprIterate(Fts3Expr*, int (*x)(Fts3Expr*,int,void*), void*);
-
-SQLITE_PRIVATE int sqlite3Fts3IntegrityCheck(Fts3Table *p, int *pbOk);
 
 #endif /* !SQLITE_CORE || SQLITE_ENABLE_FTS3 */
 #endif /* _FTSINT_H */
@@ -194253,7 +193407,7 @@ static int fts3ShadowName(const char *zName){
 ** Implementation of the xIntegrity() method on the FTS3/FTS4 virtual
 ** table.
 */
-static int fts3IntegrityMethod(
+static int fts3Integrity(
   sqlite3_vtab *pVtab,      /* The virtual table to be checked */
   const char *zSchema,      /* Name of schema in which pVtab lives */
   const char *zTabname,     /* Name of the pVTab table */
@@ -194261,21 +193415,30 @@ static int fts3IntegrityMethod(
   char **pzErr              /* Write error message here */
 ){
   Fts3Table *p = (Fts3Table*)pVtab;
+  char *zSql;
   int rc;
-  int bOk = 0;
+  char *zErr = 0;
 
+  assert( pzErr!=0 );
+  assert( *pzErr==0 );
   UNUSED_PARAMETER(isQuick);
-  rc = sqlite3Fts3IntegrityCheck(p, &bOk);
-  assert( rc!=SQLITE_CORRUPT_VTAB || bOk==0 );
-  if( rc!=SQLITE_OK && rc!=SQLITE_CORRUPT_VTAB ){
-    *pzErr = sqlite3_mprintf("unable to validate the inverted index for"
-                             " FTS%d table %s.%s: %s",
-                p->bFts4 ? 4 : 3, zSchema, zTabname, sqlite3_errstr(rc));
-  }else if( bOk==0 ){
+  zSql = sqlite3_mprintf(
+            "INSERT INTO \"%w\".\"%w\"(\"%w\") VALUES('integrity-check');",
+            zSchema, zTabname, zTabname);
+  if( zSql==0 ){
+    return SQLITE_NOMEM;
+  }
+  rc = sqlite3_exec(p->db, zSql, 0, 0, &zErr);
+  sqlite3_free(zSql);
+  if( (rc&0xff)==SQLITE_CORRUPT ){
     *pzErr = sqlite3_mprintf("malformed inverted index for FTS%d table %s.%s",
                 p->bFts4 ? 4 : 3, zSchema, zTabname);
+  }else if( rc!=SQLITE_OK ){
+    *pzErr = sqlite3_mprintf("unable to validate the inverted index for"
+                             " FTS%d table %s.%s: %s",
+                p->bFts4 ? 4 : 3, zSchema, zTabname, zErr);
   }
-  sqlite3Fts3SegmentsClose(p);
+  sqlite3_free(zErr);
   return SQLITE_OK;
 }
 
@@ -194306,7 +193469,7 @@ static const sqlite3_module fts3Module = {
   /* xRelease      */ fts3ReleaseMethod,
   /* xRollbackTo   */ fts3RollbackToMethod,
   /* xShadowName   */ fts3ShadowName,
-  /* xIntegrity    */ fts3IntegrityMethod,
+  /* xIntegrity    */ fts3Integrity,
 };
 
 /*
@@ -205860,7 +205023,7 @@ static u64 fts3ChecksumIndex(
 ** If an error occurs (e.g. an OOM or IO error), return an SQLite error
 ** code. The final value of *pbOk is undefined in this case.
 */
-SQLITE_PRIVATE int sqlite3Fts3IntegrityCheck(Fts3Table *p, int *pbOk){
+static int fts3IntegrityCheck(Fts3Table *p, int *pbOk){
   int rc = SQLITE_OK;             /* Return code */
   u64 cksum1 = 0;                 /* Checksum based on FTS index contents */
   u64 cksum2 = 0;                 /* Checksum based on %_content contents */
@@ -205938,7 +205101,7 @@ SQLITE_PRIVATE int sqlite3Fts3IntegrityCheck(Fts3Table *p, int *pbOk){
     sqlite3_finalize(pStmt);
   }
 
-  *pbOk = (rc==SQLITE_OK && cksum1==cksum2);
+  *pbOk = (cksum1==cksum2);
   return rc;
 }
 
@@ -205978,7 +205141,7 @@ static int fts3DoIntegrityCheck(
 ){
   int rc;
   int bOk = 0;
-  rc = sqlite3Fts3IntegrityCheck(p, &bOk);
+  rc = fts3IntegrityCheck(p, &bOk);
   if( rc==SQLITE_OK && bOk==0 ) rc = FTS_CORRUPT_VTAB;
   return rc;
 }
@@ -208952,145 +208115,24 @@ SQLITE_PRIVATE int sqlite3FtsUnicodeFold(int c, int eRemoveDiacritic){
 **
 ******************************************************************************
 **
-** SQLite JSON functions.
+** This SQLite JSON functions.
 **
 ** This file began as an extension in ext/misc/json1.c in 2015.  That
 ** extension proved so useful that it has now been moved into the core.
 **
-** The original design stored all JSON as pure text, canonical RFC-8259.
-** Support for JSON-5 extensions was added with version 3.42.0 (2023-05-16).
-** All generated JSON text still conforms strictly to RFC-8259, but text
-** with JSON-5 extensions is accepted as input.
-**
-** Beginning with version 3.45.0 (circa 2024-01-01), these routines also
-** accept BLOB values that have JSON encoded using a binary representation
-** called "JSONB".  The name JSONB comes from PostgreSQL, however the on-disk
-** format SQLite JSONB is completely different and incompatible with
-** PostgreSQL JSONB.
-**
-** Decoding and interpreting JSONB is still O(N) where N is the size of
-** the input, the same as text JSON.  However, the constant of proportionality
-** for JSONB is much smaller due to faster parsing.  The size of each
-** element in JSONB is encoded in its header, so there is no need to search
-** for delimiters using persnickety syntax rules.  JSONB seems to be about
-** 3x faster than text JSON as a result.  JSONB is also tends to be slightly
-** smaller than text JSON, by 5% or 10%, but there are corner cases where
-** JSONB can be slightly larger.  So you are not far mistaken to say that
-** a JSONB blob is the same size as the equivalent RFC-8259 text.
-**
-**
-** THE JSONB ENCODING:
-**
-** Every JSON element is encoded in JSONB as a header and a payload.
-** The header is between 1 and 9 bytes in size.  The payload is zero
-** or more bytes.
-**
-** The lower 4 bits of the first byte of the header determines the
-** element type:
-**
-**    0:   NULL
-**    1:   TRUE
-**    2:   FALSE
-**    3:   INT        -- RFC-8259 integer literal
-**    4:   INT5       -- JSON5 integer literal
-**    5:   FLOAT      -- RFC-8259 floating point literal
-**    6:   FLOAT5     -- JSON5 floating point literal
-**    7:   TEXT       -- Text literal acceptable to both SQL and JSON
-**    8:   TEXTJ      -- Text containing RFC-8259 escapes
-**    9:   TEXT5      -- Text containing JSON5 and/or RFC-8259 escapes
-**   10:   TEXTRAW    -- Text containing unescaped syntax characters
-**   11:   ARRAY
-**   12:   OBJECT
-**
-** The other three possible values (13-15) are reserved for future
-** enhancements.
-**
-** The upper 4 bits of the first byte determine the size of the header
-** and sometimes also the size of the payload.  If X is the first byte
-** of the element and if X>>4 is between 0 and 11, then the payload
-** will be that many bytes in size and the header is exactly one byte
-** in size.  Other four values for X>>4 (12-15) indicate that the header
-** is more than one byte in size and that the payload size is determined
-** by the remainder of the header, interpreted as a unsigned big-endian
-** integer.
-**
-**   Value of X>>4         Size integer        Total header size
-**   -------------     --------------------    -----------------
-**        12           1 byte (0-255)                2
-**        13           2 byte (0-65535)              3
-**        14           4 byte (0-4294967295)         5
-**        15           8 byte (0-1.8e19)             9
-**
-** The payload size need not be expressed in its minimal form.  For example,
-** if the payload size is 10, the size can be expressed in any of 5 different
-** ways: (1) (X>>4)==10, (2) (X>>4)==12 following by on 0x0a byte,
-** (3) (X>>4)==13 followed by 0x00 and 0x0a, (4) (X>>4)==14 followed by
-** 0x00 0x00 0x00 0x0a, or (5) (X>>4)==15 followed by 7 bytes of 0x00 and
-** a single byte of 0x0a.  The shorter forms are preferred, of course, but
-** sometimes when generating JSONB, the payload size is not known in advance
-** and it is convenient to reserve sufficient header space to cover the
-** largest possible payload size and then come back later and patch up
-** the size when it becomes known, resulting in a non-minimal encoding.
-**
-** The value (X>>4)==15 is not actually used in the current implementation
-** (as SQLite is currently unable handle BLOBs larger than about 2GB)
-** but is included in the design to allow for future enhancements.
-**
-** The payload follows the header.  NULL, TRUE, and FALSE have no payload and
-** their payload size must always be zero.  The payload for INT, INT5,
-** FLOAT, FLOAT5, TEXT, TEXTJ, TEXT5, and TEXTROW is text.  Note that the
-** "..." or '...' delimiters are omitted from the various text encodings.
-** The payload for ARRAY and OBJECT is a list of additional elements that
-** are the content for the array or object.  The payload for an OBJECT
-** must be an even number of elements.  The first element of each pair is
-** the label and must be of type TEXT, TEXTJ, TEXT5, or TEXTRAW.
-**
-** A valid JSONB blob consists of a single element, as described above.
-** Usually this will be an ARRAY or OBJECT element which has many more
-** elements as its content.  But the overall blob is just a single element.
-**
-** Input validation for JSONB blobs simply checks that the element type
-** code is between 0 and 12 and that the total size of the element
-** (header plus payload) is the same as the size of the BLOB.  If those
-** checks are true, the BLOB is assumed to be JSONB and processing continues.
-** Errors are only raised if some other miscoding is discovered during
-** processing.
-**
-** Additional information can be found in the doc/jsonb.md file of the
-** canonical SQLite source tree.
+** For the time being, all JSON is stored as pure text.  (We might add
+** a JSONB type in the future which stores a binary encoding of JSON in
+** a BLOB, but there is no support for JSONB in the current implementation.
+** This implementation parses JSON text at 250 MB/s, so it is hard to see
+** how JSONB might improve on that.)
 */
 #ifndef SQLITE_OMIT_JSON
 /* #include "sqliteInt.h" */
 
-/* JSONB element types
-*/
-#define JSONB_NULL     0   /* "null" */
-#define JSONB_TRUE     1   /* "true" */
-#define JSONB_FALSE    2   /* "false" */
-#define JSONB_INT      3   /* integer acceptable to JSON and SQL */
-#define JSONB_INT5     4   /* integer in 0x000 notation */
-#define JSONB_FLOAT    5   /* float acceptable to JSON and SQL */
-#define JSONB_FLOAT5   6   /* float with JSON5 extensions */
-#define JSONB_TEXT     7   /* Text compatible with both JSON and SQL */
-#define JSONB_TEXTJ    8   /* Text with JSON escapes */
-#define JSONB_TEXT5    9   /* Text with JSON-5 escape */
-#define JSONB_TEXTRAW 10   /* SQL text that needs escaping for JSON */
-#define JSONB_ARRAY   11   /* An array */
-#define JSONB_OBJECT  12   /* An object */
-
-/* Human-readable names for the JSONB values.  The index for each
-** string must correspond to the JSONB_* integer above.
-*/
-static const char * const jsonbType[] = {
-  "null", "true", "false", "integer", "integer",
-  "real", "real", "text",  "text",    "text",
-  "text", "array", "object", "", "", "", ""
-};
-
 /*
 ** Growing our own isspace() routine this way is twice as fast as
 ** the library isspace() function, resulting in a 7% overall performance
-** increase for the text-JSON parser.  (Ubuntu14.10 gcc 4.8.4 x64 with -Os).
+** increase for the parser.  (Ubuntu14.10 gcc 4.8.4 x64 with -Os).
 */
 static const char jsonIsSpace[] = {
   0, 0, 0, 0, 0, 0, 0, 0,  0, 1, 1, 0, 0, 1, 0, 0,
@@ -209111,19 +208153,11 @@ static const char jsonIsSpace[] = {
   0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,
 };
-#define jsonIsspace(x) (jsonIsSpace[(unsigned char)x])
+#define fast_isspace(x) (jsonIsSpace[(unsigned char)x])
 
 /*
-** The set of all space characters recognized by jsonIsspace().
-** Useful as the second argument to strspn().
-*/
-static const char jsonSpaces[] = "\011\012\015\040";
-
-/*
-** Characters that are special to JSON.  Control characters,
-** '"' and '\\' and '\''.  Actually, '\'' is not special to
-** canonical JSON, but it is special in JSON-5, so we include
-** it in the set of special characters.
+** Characters that are special to JSON.  Control charaters,
+** '"' and '\\'.
 */
 static const char jsonIsOk[256] = {
   0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,
@@ -209145,49 +208179,22 @@ static const char jsonIsOk[256] = {
   1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1
 };
 
+
+#if !defined(SQLITE_DEBUG) && !defined(SQLITE_COVERAGE_TEST)
+#  define VVA(X)
+#else
+#  define VVA(X) X
+#endif
+
 /* Objects */
-typedef struct JsonCache JsonCache;
 typedef struct JsonString JsonString;
+typedef struct JsonNode JsonNode;
 typedef struct JsonParse JsonParse;
-
-/*
-** Magic number used for the JSON parse cache in sqlite3_get_auxdata()
-*/
-#define JSON_CACHE_ID    (-429938)  /* Cache entry */
-#define JSON_CACHE_SIZE  4          /* Max number of cache entries */
-
-/*
-** jsonUnescapeOneChar() returns this invalid code point if it encounters
-** a syntax error.
-*/
-#define JSON_INVALID_CHAR 0x99999
-
-/* A cache mapping JSON text into JSONB blobs.
-**
-** Each cache entry is a JsonParse object with the following restrictions:
-**
-**    *   The bReadOnly flag must be set
-**
-**    *   The aBlob[] array must be owned by the JsonParse object.  In other
-**        words, nBlobAlloc must be non-zero.
-**
-**    *   eEdit and delta must be zero.
-**
-**    *   zJson must be an RCStr.  In other words bJsonIsRCStr must be true.
-*/
-struct JsonCache {
-  sqlite3 *db;                    /* Database connection */
-  int nUsed;                      /* Number of active entries in the cache */
-  JsonParse *a[JSON_CACHE_SIZE];  /* One line for each cache entry */
-};
+typedef struct JsonCleanup JsonCleanup;
 
 /* An instance of this object represents a JSON string
 ** under construction.  Really, this is a generic string accumulator
 ** that can be and is used to create strings other than JSON.
-**
-** If the generated string is longer than will fit into the zSpace[] buffer,
-** then it will be an RCStr string.  This aids with caching of large
-** JSON strings.
 */
 struct JsonString {
   sqlite3_context *pCtx;   /* Function context - put error messages here */
@@ -209195,74 +208202,120 @@ struct JsonString {
   u64 nAlloc;              /* Bytes of storage available in zBuf[] */
   u64 nUsed;               /* Bytes of zBuf[] currently used */
   u8 bStatic;              /* True if zBuf is static space */
-  u8 eErr;                 /* True if an error has been encountered */
+  u8 bErr;                 /* True if an error has been encountered */
   char zSpace[100];        /* Initial static space */
 };
 
-/* Allowed values for JsonString.eErr */
-#define JSTRING_OOM         0x01   /* Out of memory */
-#define JSTRING_MALFORMED   0x02   /* Malformed JSONB */
-#define JSTRING_ERR         0x04   /* Error already sent to sqlite3_result */
-
-/* The "subtype" set for text JSON values passed through using
-** sqlite3_result_subtype() and sqlite3_value_subtype().
+/* A deferred cleanup task.  A list of JsonCleanup objects might be
+** run when the JsonParse object is destroyed.
 */
+struct JsonCleanup {
+  JsonCleanup *pJCNext;    /* Next in a list */
+  void (*xOp)(void*);      /* Routine to run */
+  void *pArg;              /* Argument to xOp() */
+};
+
+/* JSON type values
+*/
+#define JSON_SUBST    0    /* Special edit node.  Uses u.iPrev */
+#define JSON_NULL     1
+#define JSON_TRUE     2
+#define JSON_FALSE    3
+#define JSON_INT      4
+#define JSON_REAL     5
+#define JSON_STRING   6
+#define JSON_ARRAY    7
+#define JSON_OBJECT   8
+
+/* The "subtype" set for JSON values */
 #define JSON_SUBTYPE  74    /* Ascii for "J" */
 
 /*
-** Bit values for the flags passed into various SQL function implementations
-** via the sqlite3_user_data() value.
+** Names of the various JSON types:
 */
-#define JSON_JSON      0x01        /* Result is always JSON */
-#define JSON_SQL       0x02        /* Result is always SQL */
-#define JSON_ABPATH    0x03        /* Allow abbreviated JSON path specs */
-#define JSON_ISSET     0x04        /* json_set(), not json_insert() */
-#define JSON_BLOB      0x08        /* Use the BLOB output format */
+static const char * const jsonType[] = {
+  "subst",
+  "null", "true", "false", "integer", "real", "text", "array", "object"
+};
+
+/* Bit values for the JsonNode.jnFlag field
+*/
+#define JNODE_RAW     0x01  /* Content is raw, not JSON encoded */
+#define JNODE_ESCAPE  0x02  /* Content is text with \ escapes */
+#define JNODE_REMOVE  0x04  /* Do not output */
+#define JNODE_REPLACE 0x08  /* Target of a JSON_SUBST node */
+#define JNODE_APPEND  0x10  /* More ARRAY/OBJECT entries at u.iAppend */
+#define JNODE_LABEL   0x20  /* Is a label of an object */
+#define JNODE_JSON5   0x40  /* Node contains JSON5 enhancements */
 
 
-/* A parsed JSON value.  Lifecycle:
+/* A single node of parsed JSON.  An array of these nodes describes
+** a parse of JSON + edits.
 **
-**   1.  JSON comes in and is parsed into a JSONB value in aBlob.  The
-**       original text is stored in zJson.  This step is skipped if the
-**       input is JSONB instead of text JSON.
+** Use the json_parse() SQL function (available when compiled with
+** -DSQLITE_DEBUG) to see a dump of complete JsonParse objects, including
+** a complete listing and decoding of the array of JsonNodes.
+*/
+struct JsonNode {
+  u8 eType;              /* One of the JSON_ type values */
+  u8 jnFlags;            /* JNODE flags */
+  u8 eU;                 /* Which union element to use */
+  u32 n;                 /* Bytes of content for INT, REAL or STRING
+                         ** Number of sub-nodes for ARRAY and OBJECT
+                         ** Node that SUBST applies to */
+  union {
+    const char *zJContent; /* 1: Content for INT, REAL, and STRING */
+    u32 iAppend;           /* 2: More terms for ARRAY and OBJECT */
+    u32 iKey;              /* 3: Key for ARRAY objects in json_tree() */
+    u32 iPrev;             /* 4: Previous SUBST node, or 0 */
+  } u;
+};
+
+
+/* A parsed and possibly edited JSON string.  Lifecycle:
 **
-**   2.  The aBlob[] array is searched using the JSON path notation, if needed.
+**   1.  JSON comes in and is parsed into an array aNode[].  The original
+**       JSON text is stored in zJson.
 **
-**   3.  Zero or more changes are made to aBlob[] (via json_remove() or
-**       json_replace() or json_patch() or similar).
+**   2.  Zero or more changes are made (via json_remove() or json_replace()
+**       or similar) to the aNode[] array.
 **
-**   4.  New JSON text is generated from the aBlob[] for output.  This step
-**       is skipped if the function is one of the jsonb_* functions that
-**       returns JSONB instead of text JSON.
+**   3.  A new, edited and mimified JSON string is generated from aNode
+**       and stored in zAlt.  The JsonParse object always owns zAlt.
+**
+** Step 1 always happens.  Step 2 and 3 may or may not happen, depending
+** on the operation.
+**
+** aNode[].u.zJContent entries typically point into zJson.  Hence zJson
+** must remain valid for the lifespan of the parse.  For edits,
+** aNode[].u.zJContent might point to malloced space other than zJson.
+** Entries in pClup are responsible for freeing that extra malloced space.
+**
+** When walking the parse tree in aNode[], edits are ignored if useMod is
+** false.
 */
 struct JsonParse {
-  u8 *aBlob;         /* JSONB representation of JSON value */
-  u32 nBlob;         /* Bytes of aBlob[] actually used */
-  u32 nBlobAlloc;    /* Bytes allocated to aBlob[].  0 if aBlob is external */
-  char *zJson;       /* Json text used for parsing */
-  sqlite3 *db;       /* The database connection to which this object belongs */
-  int nJson;         /* Length of the zJson string in bytes */
-  u32 nJPRef;        /* Number of references to this object */
-  u32 iErr;          /* Error location in zJson[] */
+  u32 nNode;         /* Number of slots of aNode[] used */
+  u32 nAlloc;        /* Number of slots of aNode[] allocated */
+  JsonNode *aNode;   /* Array of nodes containing the parse */
+  char *zJson;       /* Original JSON string (before edits) */
+  char *zAlt;        /* Revised and/or mimified JSON */
+  u32 *aUp;          /* Index of parent of each node */
+  JsonCleanup *pClup;/* Cleanup operations prior to freeing this object */
   u16 iDepth;        /* Nesting depth */
   u8 nErr;           /* Number of errors seen */
   u8 oom;            /* Set to true if out of memory */
   u8 bJsonIsRCStr;   /* True if zJson is an RCStr */
   u8 hasNonstd;      /* True if input uses non-standard features like JSON5 */
-  u8 bReadOnly;      /* Do not modify. */
-  /* Search and edit information.  See jsonLookupStep() */
-  u8 eEdit;          /* Edit operation to apply */
-  int delta;         /* Size change due to the edit */
-  u32 nIns;          /* Number of bytes to insert */
-  u32 iLabel;        /* Location of label if search landed on an object value */
-  u8 *aIns;          /* Content to be inserted */
+  u8 useMod;         /* Actually use the edits contain inside aNode */
+  u8 hasMod;         /* aNode contains edits from the original zJson */
+  u32 nJPRef;        /* Number of references to this object */
+  int nJson;         /* Length of the zJson string in bytes */
+  int nAlt;          /* Length of alternative JSON string zAlt, in bytes */
+  u32 iErr;          /* Error location in zJson[] */
+  u32 iSubst;        /* Last JSON_SUBST entry in aNode[] */
+  u32 iHold;         /* Age of this entry in the cache for LRU replacement */
 };
-
-/* Allowed values for JsonParse.eEdit */
-#define JEDIT_DEL   1   /* Delete if exists */
-#define JEDIT_REPL  2   /* Overwrite if exists */
-#define JEDIT_INS   3   /* Insert if not exists */
-#define JEDIT_SET   4   /* Insert or overwrite */
 
 /*
 ** Maximum nesting depth of JSON for this implementation.
@@ -209271,151 +208324,15 @@ struct JsonParse {
 ** descent parser.  A depth of 1000 is far deeper than any sane JSON
 ** should go.  Historical note: This limit was 2000 prior to version 3.42.0
 */
-#ifndef SQLITE_JSON_MAX_DEPTH
-# define JSON_MAX_DEPTH  1000
-#else
-# define JSON_MAX_DEPTH SQLITE_JSON_MAX_DEPTH
-#endif
-
-/*
-** Allowed values for the flgs argument to jsonParseFuncArg();
-*/
-#define JSON_EDITABLE  0x01   /* Generate a writable JsonParse object */
-#define JSON_KEEPERROR 0x02   /* Return non-NULL even if there is an error */
-
-/**************************************************************************
-** Forward references
-**************************************************************************/
-static void jsonReturnStringAsBlob(JsonString*);
-static int jsonFuncArgMightBeBinary(sqlite3_value *pJson);
-static u32 jsonTranslateBlobToText(const JsonParse*,u32,JsonString*);
-static void jsonReturnParse(sqlite3_context*,JsonParse*);
-static JsonParse *jsonParseFuncArg(sqlite3_context*,sqlite3_value*,u32);
-static void jsonParseFree(JsonParse*);
-static u32 jsonbPayloadSize(const JsonParse*, u32, u32*);
-static u32 jsonUnescapeOneChar(const char*, u32, u32*);
-
-/**************************************************************************
-** Utility routines for dealing with JsonCache objects
-**************************************************************************/
-
-/*
-** Free a JsonCache object.
-*/
-static void jsonCacheDelete(JsonCache *p){
-  int i;
-  for(i=0; i<p->nUsed; i++){
-    jsonParseFree(p->a[i]);
-  }
-  sqlite3DbFree(p->db, p);
-}
-static void jsonCacheDeleteGeneric(void *p){
-  jsonCacheDelete((JsonCache*)p);
-}
-
-/*
-** Insert a new entry into the cache.  If the cache is full, expel
-** the least recently used entry.  Return SQLITE_OK on success or a
-** result code otherwise.
-**
-** Cache entries are stored in age order, oldest first.
-*/
-static int jsonCacheInsert(
-  sqlite3_context *ctx,   /* The SQL statement context holding the cache */
-  JsonParse *pParse       /* The parse object to be added to the cache */
-){
-  JsonCache *p;
-
-  assert( pParse->zJson!=0 );
-  assert( pParse->bJsonIsRCStr );
-  assert( pParse->delta==0 );
-  p = sqlite3_get_auxdata(ctx, JSON_CACHE_ID);
-  if( p==0 ){
-    sqlite3 *db = sqlite3_context_db_handle(ctx);
-    p = sqlite3DbMallocZero(db, sizeof(*p));
-    if( p==0 ) return SQLITE_NOMEM;
-    p->db = db;
-    sqlite3_set_auxdata(ctx, JSON_CACHE_ID, p, jsonCacheDeleteGeneric);
-    p = sqlite3_get_auxdata(ctx, JSON_CACHE_ID);
-    if( p==0 ) return SQLITE_NOMEM;
-  }
-  if( p->nUsed >= JSON_CACHE_SIZE ){
-    jsonParseFree(p->a[0]);
-    memmove(p->a, &p->a[1], (JSON_CACHE_SIZE-1)*sizeof(p->a[0]));
-    p->nUsed = JSON_CACHE_SIZE-1;
-  }
-  assert( pParse->nBlobAlloc>0 );
-  pParse->eEdit = 0;
-  pParse->nJPRef++;
-  pParse->bReadOnly = 1;
-  p->a[p->nUsed] = pParse;
-  p->nUsed++;
-  return SQLITE_OK;
-}
-
-/*
-** Search for a cached translation the json text supplied by pArg.  Return
-** the JsonParse object if found.  Return NULL if not found.
-**
-** When a match if found, the matching entry is moved to become the
-** most-recently used entry if it isn't so already.
-**
-** The JsonParse object returned still belongs to the Cache and might
-** be deleted at any moment.  If the caller whants the JsonParse to
-** linger, it needs to increment the nPJRef reference counter.
-*/
-static JsonParse *jsonCacheSearch(
-  sqlite3_context *ctx,    /* The SQL statement context holding the cache */
-  sqlite3_value *pArg      /* Function argument containing SQL text */
-){
-  JsonCache *p;
-  int i;
-  const char *zJson;
-  int nJson;
-
-  if( sqlite3_value_type(pArg)!=SQLITE_TEXT ){
-    return 0;
-  }
-  zJson = (const char*)sqlite3_value_text(pArg);
-  if( zJson==0 ) return 0;
-  nJson = sqlite3_value_bytes(pArg);
-
-  p = sqlite3_get_auxdata(ctx, JSON_CACHE_ID);
-  if( p==0 ){
-    return 0;
-  }
-  for(i=0; i<p->nUsed; i++){
-    if( p->a[i]->zJson==zJson ) break;
-  }
-  if( i>=p->nUsed ){
-    for(i=0; i<p->nUsed; i++){
-      if( p->a[i]->nJson!=nJson ) continue;
-      if( memcmp(p->a[i]->zJson, zJson, nJson)==0 ) break;
-    }
-  }
-  if( i<p->nUsed ){
-    if( i<p->nUsed-1 ){
-      /* Make the matching entry the most recently used entry */
-      JsonParse *tmp = p->a[i];
-      memmove(&p->a[i], &p->a[i+1], (p->nUsed-i-1)*sizeof(tmp));
-      p->a[p->nUsed-1] = tmp;
-      i = p->nUsed - 1;
-    }
-    assert( p->a[i]->delta==0 );
-    return p->a[i];
-  }else{
-    return 0;
-  }
-}
+#define JSON_MAX_DEPTH  1000
 
 /**************************************************************************
 ** Utility routines for dealing with JsonString objects
 **************************************************************************/
 
-/* Turn uninitialized bulk memory into a valid JsonString object
-** holding a zero-length string.
+/* Set the JsonString object to an empty string
 */
-static void jsonStringZero(JsonString *p){
+static void jsonZero(JsonString *p){
   p->zBuf = p->zSpace;
   p->nAlloc = sizeof(p->zSpace);
   p->nUsed = 0;
@@ -209424,39 +208341,39 @@ static void jsonStringZero(JsonString *p){
 
 /* Initialize the JsonString object
 */
-static void jsonStringInit(JsonString *p, sqlite3_context *pCtx){
+static void jsonInit(JsonString *p, sqlite3_context *pCtx){
   p->pCtx = pCtx;
-  p->eErr = 0;
-  jsonStringZero(p);
+  p->bErr = 0;
+  jsonZero(p);
 }
 
 /* Free all allocated memory and reset the JsonString object back to its
 ** initial state.
 */
-static void jsonStringReset(JsonString *p){
+static void jsonReset(JsonString *p){
   if( !p->bStatic ) sqlite3RCStrUnref(p->zBuf);
-  jsonStringZero(p);
+  jsonZero(p);
 }
 
 /* Report an out-of-memory (OOM) condition
 */
-static void jsonStringOom(JsonString *p){
-  p->eErr |= JSTRING_OOM;
-  if( p->pCtx ) sqlite3_result_error_nomem(p->pCtx);
-  jsonStringReset(p);
+static void jsonOom(JsonString *p){
+  p->bErr = 1;
+  sqlite3_result_error_nomem(p->pCtx);
+  jsonReset(p);
 }
 
 /* Enlarge pJson->zBuf so that it can hold at least N more bytes.
 ** Return zero on success.  Return non-zero on an OOM error
 */
-static int jsonStringGrow(JsonString *p, u32 N){
+static int jsonGrow(JsonString *p, u32 N){
   u64 nTotal = N<p->nAlloc ? p->nAlloc*2 : p->nAlloc+N+10;
   char *zNew;
   if( p->bStatic ){
-    if( p->eErr ) return 1;
+    if( p->bErr ) return 1;
     zNew = sqlite3RCStrNew(nTotal);
     if( zNew==0 ){
-      jsonStringOom(p);
+      jsonOom(p);
       return SQLITE_NOMEM;
     }
     memcpy(zNew, p->zBuf, (size_t)p->nUsed);
@@ -209465,8 +208382,8 @@ static int jsonStringGrow(JsonString *p, u32 N){
   }else{
     p->zBuf = sqlite3RCStrResize(p->zBuf, nTotal);
     if( p->zBuf==0 ){
-      p->eErr |= JSTRING_OOM;
-      jsonStringZero(p);
+      p->bErr = 1;
+      jsonZero(p);
       return SQLITE_NOMEM;
     }
   }
@@ -209476,20 +208393,20 @@ static int jsonStringGrow(JsonString *p, u32 N){
 
 /* Append N bytes from zIn onto the end of the JsonString string.
 */
-static SQLITE_NOINLINE void jsonStringExpandAndAppend(
+static SQLITE_NOINLINE void jsonAppendExpand(
   JsonString *p,
   const char *zIn,
   u32 N
 ){
   assert( N>0 );
-  if( jsonStringGrow(p,N) ) return;
+  if( jsonGrow(p,N) ) return;
   memcpy(p->zBuf+p->nUsed, zIn, N);
   p->nUsed += N;
 }
 static void jsonAppendRaw(JsonString *p, const char *zIn, u32 N){
   if( N==0 ) return;
   if( N+p->nUsed >= p->nAlloc ){
-    jsonStringExpandAndAppend(p,zIn,N);
+    jsonAppendExpand(p,zIn,N);
   }else{
     memcpy(p->zBuf+p->nUsed, zIn, N);
     p->nUsed += N;
@@ -209498,7 +208415,7 @@ static void jsonAppendRaw(JsonString *p, const char *zIn, u32 N){
 static void jsonAppendRawNZ(JsonString *p, const char *zIn, u32 N){
   assert( N>0 );
   if( N+p->nUsed >= p->nAlloc ){
-    jsonStringExpandAndAppend(p,zIn,N);
+    jsonAppendExpand(p,zIn,N);
   }else{
     memcpy(p->zBuf+p->nUsed, zIn, N);
     p->nUsed += N;
@@ -209510,7 +208427,7 @@ static void jsonAppendRawNZ(JsonString *p, const char *zIn, u32 N){
 */
 static void jsonPrintf(int N, JsonString *p, const char *zFormat, ...){
   va_list ap;
-  if( (p->nUsed + N >= p->nAlloc) && jsonStringGrow(p, N) ) return;
+  if( (p->nUsed + N >= p->nAlloc) && jsonGrow(p, N) ) return;
   va_start(ap, zFormat);
   sqlite3_vsnprintf(N, p->zBuf+p->nUsed, zFormat, ap);
   va_end(ap);
@@ -209520,7 +208437,7 @@ static void jsonPrintf(int N, JsonString *p, const char *zFormat, ...){
 /* Append a single character
 */
 static SQLITE_NOINLINE void jsonAppendCharExpand(JsonString *p, char c){
-  if( jsonStringGrow(p,1) ) return;
+  if( jsonGrow(p,1) ) return;
   p->zBuf[p->nUsed++] = c;
 }
 static void jsonAppendChar(JsonString *p, char c){
@@ -209531,26 +208448,23 @@ static void jsonAppendChar(JsonString *p, char c){
   }
 }
 
-/* Remove a single character from the end of the string
-*/
-static void jsonStringTrimOneChar(JsonString *p){
-  if( p->eErr==0 ){
-    assert( p->nUsed>0 );
-    p->nUsed--;
-  }
-}
-
-
-/* Make sure there is a zero terminator on p->zBuf[]
+/* Try to force the string to be a zero-terminated RCStr string.
 **
 ** Return true on success.  Return false if an OOM prevents this
 ** from happening.
 */
-static int jsonStringTerminate(JsonString *p){
+static int jsonForceRCStr(JsonString *p){
   jsonAppendChar(p, 0);
-  jsonStringTrimOneChar(p);
-  return p->eErr==0;
+  if( p->bErr ) return 0;
+  p->nUsed--;
+  if( p->bStatic==0 ) return 1;
+  p->nAlloc = 0;
+  p->nUsed++;
+  jsonGrow(p, p->nUsed);
+  p->nUsed--;
+  return p->bStatic==0;
 }
+
 
 /* Append a comma separator to the output buffer, if the previous
 ** character is not '[' or '{'.
@@ -209564,66 +208478,21 @@ static void jsonAppendSeparator(JsonString *p){
 }
 
 /* Append the N-byte string in zIn to the end of the JsonString string
-** under construction.  Enclose the string in double-quotes ("...") and
-** escape any double-quotes or backslash characters contained within the
+** under construction.  Enclose the string in "..." and escape
+** any double-quotes or backslash characters contained within the
 ** string.
-**
-** This routine is a high-runner.  There is a measurable performance
-** increase associated with unwinding the jsonIsOk[] loop.
 */
 static void jsonAppendString(JsonString *p, const char *zIn, u32 N){
-  u32 k;
-  u8 c;
-  const u8 *z = (const u8*)zIn;
-  if( z==0 ) return;
-  if( (N+p->nUsed+2 >= p->nAlloc) && jsonStringGrow(p,N+2)!=0 ) return;
+  u32 i;
+  if( zIn==0 || ((N+p->nUsed+2 >= p->nAlloc) && jsonGrow(p,N+2)!=0) ) return;
   p->zBuf[p->nUsed++] = '"';
-  while( 1 /*exit-by-break*/ ){
-    k = 0;
-    /* The following while() is the 4-way unwound equivalent of
-    **
-    **     while( k<N && jsonIsOk[z[k]] ){ k++; }
-    */
-    while( 1 /* Exit by break */ ){
-      if( k+3>=N ){
-        while( k<N && jsonIsOk[z[k]] ){ k++; }
-        break;
-      }
-      if( !jsonIsOk[z[k]] ){
-        break;
-      }
-      if( !jsonIsOk[z[k+1]] ){
-        k += 1;
-        break;
-      }
-      if( !jsonIsOk[z[k+2]] ){
-        k += 2;
-        break;
-      }
-      if( !jsonIsOk[z[k+3]] ){
-        k += 3;
-        break;
-      }else{
-        k += 4;
-      }
-    }
-    if( k>=N ){
-      if( k>0 ){
-        memcpy(&p->zBuf[p->nUsed], z, k);
-        p->nUsed += k;
-      }
-      break;
-    }
-    if( k>0 ){
-      memcpy(&p->zBuf[p->nUsed], z, k);
-      p->nUsed += k;
-      z += k;
-      N -= k;
-    }
-    c = z[0];
-    if( c=='"' || c=='\\' ){
+  for(i=0; i<N; i++){
+    unsigned char c = ((unsigned const char*)zIn)[i];
+    if( jsonIsOk[c] ){
+      p->zBuf[p->nUsed++] = c;
+    }else if( c=='"' || c=='\\' ){
       json_simple_escape:
-      if( (p->nUsed+N+3 > p->nAlloc) && jsonStringGrow(p,N+3)!=0 ) return;
+      if( (p->nUsed+N+3-i > p->nAlloc) && jsonGrow(p,N+3-i)!=0 ) return;
       p->zBuf[p->nUsed++] = '\\';
       p->zBuf[p->nUsed++] = c;
     }else if( c=='\'' ){
@@ -209644,7 +208513,7 @@ static void jsonAppendString(JsonString *p, const char *zIn, u32 N){
         c = aSpecial[c];
         goto json_simple_escape;
       }
-      if( (p->nUsed+N+7 > p->nAlloc) && jsonStringGrow(p,N+7)!=0 ) return;
+      if( (p->nUsed+N+7+i > p->nAlloc) && jsonGrow(p,N+7-i)!=0 ) return;
       p->zBuf[p->nUsed++] = '\\';
       p->zBuf[p->nUsed++] = 'u';
       p->zBuf[p->nUsed++] = '0';
@@ -209652,18 +208521,146 @@ static void jsonAppendString(JsonString *p, const char *zIn, u32 N){
       p->zBuf[p->nUsed++] = "0123456789abcdef"[c>>4];
       p->zBuf[p->nUsed++] = "0123456789abcdef"[c&0xf];
     }
-    z++;
-    N--;
   }
   p->zBuf[p->nUsed++] = '"';
   assert( p->nUsed<p->nAlloc );
 }
 
 /*
-** Append an sqlite3_value (such as a function parameter) to the JSON
-** string under construction in p.
+** The zIn[0..N] string is a JSON5 string literal.  Append to p a translation
+** of the string literal that standard JSON and that omits all JSON5
+** features.
 */
-static void jsonAppendSqlValue(
+static void jsonAppendNormalizedString(JsonString *p, const char *zIn, u32 N){
+  u32 i;
+  jsonAppendChar(p, '"');
+  zIn++;
+  N -= 2;
+  while( N>0 ){
+    for(i=0; i<N && zIn[i]!='\\' && zIn[i]!='"'; i++){}
+    if( i>0 ){
+      jsonAppendRawNZ(p, zIn, i);
+      zIn += i;
+      N -= i;
+      if( N==0 ) break;
+    }
+    if( zIn[0]=='"' ){
+      jsonAppendRawNZ(p, "\\\"", 2);
+      zIn++;
+      N--;
+      continue;
+    }
+    assert( zIn[0]=='\\' );
+    switch( (u8)zIn[1] ){
+      case '\'':
+        jsonAppendChar(p, '\'');
+        break;
+      case 'v':
+        jsonAppendRawNZ(p, "\\u0009", 6);
+        break;
+      case 'x':
+        jsonAppendRawNZ(p, "\\u00", 4);
+        jsonAppendRawNZ(p, &zIn[2], 2);
+        zIn += 2;
+        N -= 2;
+        break;
+      case '0':
+        jsonAppendRawNZ(p, "\\u0000", 6);
+        break;
+      case '\r':
+        if( zIn[2]=='\n' ){
+          zIn++;
+          N--;
+        }
+        break;
+      case '\n':
+        break;
+      case 0xe2:
+        assert( N>=4 );
+        assert( 0x80==(u8)zIn[2] );
+        assert( 0xa8==(u8)zIn[3] || 0xa9==(u8)zIn[3] );
+        zIn += 2;
+        N -= 2;
+        break;
+      default:
+        jsonAppendRawNZ(p, zIn, 2);
+        break;
+    }
+    zIn += 2;
+    N -= 2;
+  }
+  jsonAppendChar(p, '"');
+}
+
+/*
+** The zIn[0..N] string is a JSON5 integer literal.  Append to p a translation
+** of the string literal that standard JSON and that omits all JSON5
+** features.
+*/
+static void jsonAppendNormalizedInt(JsonString *p, const char *zIn, u32 N){
+  if( zIn[0]=='+' ){
+    zIn++;
+    N--;
+  }else if( zIn[0]=='-' ){
+    jsonAppendChar(p, '-');
+    zIn++;
+    N--;
+  }
+  if( zIn[0]=='0' && (zIn[1]=='x' || zIn[1]=='X') ){
+    sqlite3_int64 i = 0;
+    int rc = sqlite3DecOrHexToI64(zIn, &i);
+    if( rc<=1 ){
+      jsonPrintf(100,p,"%lld",i);
+    }else{
+      assert( rc==2 );
+      jsonAppendRawNZ(p, "9.0e999", 7);
+    }
+    return;
+  }
+  assert( N>0 );
+  jsonAppendRawNZ(p, zIn, N);
+}
+
+/*
+** The zIn[0..N] string is a JSON5 real literal.  Append to p a translation
+** of the string literal that standard JSON and that omits all JSON5
+** features.
+*/
+static void jsonAppendNormalizedReal(JsonString *p, const char *zIn, u32 N){
+  u32 i;
+  if( zIn[0]=='+' ){
+    zIn++;
+    N--;
+  }else if( zIn[0]=='-' ){
+    jsonAppendChar(p, '-');
+    zIn++;
+    N--;
+  }
+  if( zIn[0]=='.' ){
+    jsonAppendChar(p, '0');
+  }
+  for(i=0; i<N; i++){
+    if( zIn[i]=='.' && (i+1==N || !sqlite3Isdigit(zIn[i+1])) ){
+      i++;
+      jsonAppendRaw(p, zIn, i);
+      zIn += i;
+      N -= i;
+      jsonAppendChar(p, '0');
+      break;
+    }
+  }
+  if( N>0 ){
+    jsonAppendRawNZ(p, zIn, N);
+  }
+}
+
+
+
+/*
+** Append a function parameter value to the JSON string under
+** construction.
+*/
+static void jsonAppendValue(
   JsonString *p,                 /* Append to this JSON string */
   sqlite3_value *pValue          /* Value to append */
 ){
@@ -209693,127 +208690,291 @@ static void jsonAppendSqlValue(
       break;
     }
     default: {
-      if( jsonFuncArgMightBeBinary(pValue) ){
-        JsonParse px;
-        memset(&px, 0, sizeof(px));
-        px.aBlob = (u8*)sqlite3_value_blob(pValue);
-        px.nBlob = sqlite3_value_bytes(pValue);
-        jsonTranslateBlobToText(&px, 0, p);
-      }else if( p->eErr==0 ){
+      if( p->bErr==0 ){
         sqlite3_result_error(p->pCtx, "JSON cannot hold BLOB values", -1);
-        p->eErr = JSTRING_ERR;
-        jsonStringReset(p);
+        p->bErr = 2;
+        jsonReset(p);
       }
       break;
     }
   }
 }
 
-/* Make the text in p (which is probably a generated JSON text string)
-** the result of the SQL function.
+
+/* Make the JSON in p the result of the SQL function.
 **
-** The JsonString is reset.
-**
-** If pParse and ctx are both non-NULL, then the SQL string in p is
-** loaded into the zJson field of the pParse object as a RCStr and the
-** pParse is added to the cache.
+** The JSON string is reset.
 */
-static void jsonReturnString(
-  JsonString *p,            /* String to return */
-  JsonParse *pParse,        /* JSONB source or NULL */
-  sqlite3_context *ctx      /* Where to cache */
-){
-  assert( (pParse!=0)==(ctx!=0) );
-  assert( ctx==0 || ctx==p->pCtx );
-  if( p->eErr==0 ){
-    int flags = SQLITE_PTR_TO_INT(sqlite3_user_data(p->pCtx));
-    if( flags & JSON_BLOB ){
-      jsonReturnStringAsBlob(p);
-    }else if( p->bStatic ){
+static void jsonResult(JsonString *p){
+  if( p->bErr==0 ){
+    if( p->bStatic ){
       sqlite3_result_text64(p->pCtx, p->zBuf, p->nUsed,
                             SQLITE_TRANSIENT, SQLITE_UTF8);
-    }else if( jsonStringTerminate(p) ){
-      if( pParse && pParse->bJsonIsRCStr==0 && pParse->nBlobAlloc>0 ){
-        int rc;
-        pParse->zJson = sqlite3RCStrRef(p->zBuf);
-        pParse->nJson = p->nUsed;
-        pParse->bJsonIsRCStr = 1;
-        rc = jsonCacheInsert(ctx, pParse);
-        if( rc==SQLITE_NOMEM ){
-          sqlite3_result_error_nomem(ctx);
-          jsonStringReset(p);
-          return;
-        }
-      }
-      sqlite3_result_text64(p->pCtx, sqlite3RCStrRef(p->zBuf), p->nUsed,
+    }else if( jsonForceRCStr(p) ){
+      sqlite3RCStrRef(p->zBuf);
+      sqlite3_result_text64(p->pCtx, p->zBuf, p->nUsed,
                             sqlite3RCStrUnref,
                             SQLITE_UTF8);
-    }else{
-      sqlite3_result_error_nomem(p->pCtx);
     }
-  }else if( p->eErr & JSTRING_OOM ){
-    sqlite3_result_error_nomem(p->pCtx);
-  }else if( p->eErr & JSTRING_MALFORMED ){
-    sqlite3_result_error(p->pCtx, "malformed JSON", -1);
   }
-  jsonStringReset(p);
+  if( p->bErr==1 ){
+    sqlite3_result_error_nomem(p->pCtx);
+  }
+  jsonReset(p);
 }
 
 /**************************************************************************
-** Utility routines for dealing with JsonParse objects
+** Utility routines for dealing with JsonNode and JsonParse objects
 **************************************************************************/
+
+/*
+** Return the number of consecutive JsonNode slots need to represent
+** the parsed JSON at pNode.  The minimum answer is 1.  For ARRAY and
+** OBJECT types, the number might be larger.
+**
+** Appended elements are not counted.  The value returned is the number
+** by which the JsonNode counter should increment in order to go to the
+** next peer value.
+*/
+static u32 jsonNodeSize(JsonNode *pNode){
+  return pNode->eType>=JSON_ARRAY ? pNode->n+1 : 1;
+}
 
 /*
 ** Reclaim all memory allocated by a JsonParse object.  But do not
 ** delete the JsonParse object itself.
 */
 static void jsonParseReset(JsonParse *pParse){
+  while( pParse->pClup ){
+    JsonCleanup *pTask = pParse->pClup;
+    pParse->pClup = pTask->pJCNext;
+    pTask->xOp(pTask->pArg);
+    sqlite3_free(pTask);
+  }
   assert( pParse->nJPRef<=1 );
+  if( pParse->aNode ){
+    sqlite3_free(pParse->aNode);
+    pParse->aNode = 0;
+  }
+  pParse->nNode = 0;
+  pParse->nAlloc = 0;
+  if( pParse->aUp ){
+    sqlite3_free(pParse->aUp);
+    pParse->aUp = 0;
+  }
   if( pParse->bJsonIsRCStr ){
     sqlite3RCStrUnref(pParse->zJson);
     pParse->zJson = 0;
-    pParse->nJson = 0;
     pParse->bJsonIsRCStr = 0;
   }
-  if( pParse->nBlobAlloc ){
-    sqlite3DbFree(pParse->db, pParse->aBlob);
-    pParse->aBlob = 0;
-    pParse->nBlob = 0;
-    pParse->nBlobAlloc = 0;
+  if( pParse->zAlt ){
+    sqlite3RCStrUnref(pParse->zAlt);
+    pParse->zAlt = 0;
   }
 }
 
 /*
-** Decrement the reference count on the JsonParse object.  When the
-** count reaches zero, free the object.
+** Free a JsonParse object that was obtained from sqlite3_malloc().
+**
+** Note that destroying JsonParse might call sqlite3RCStrUnref() to
+** destroy the zJson value.  The RCStr object might recursively invoke
+** JsonParse to destroy this pParse object again.  Take care to ensure
+** that this recursive destructor sequence terminates harmlessly.
 */
 static void jsonParseFree(JsonParse *pParse){
-  if( pParse ){
-    if( pParse->nJPRef>1 ){
-      pParse->nJPRef--;
-    }else{
-      jsonParseReset(pParse);
-      sqlite3DbFree(pParse->db, pParse);
+  if( pParse->nJPRef>1 ){
+    pParse->nJPRef--;
+  }else{
+    jsonParseReset(pParse);
+    sqlite3_free(pParse);
+  }
+}
+
+/*
+** Add a cleanup task to the JsonParse object.
+**
+** If an OOM occurs, the cleanup operation happens immediately
+** and this function returns SQLITE_NOMEM.
+*/
+static int jsonParseAddCleanup(
+  JsonParse *pParse,          /* Add the cleanup task to this parser */
+  void(*xOp)(void*),          /* The cleanup task */
+  void *pArg                  /* Argument to the cleanup */
+){
+  JsonCleanup *pTask = sqlite3_malloc64( sizeof(*pTask) );
+  if( pTask==0 ){
+    pParse->oom = 1;
+    xOp(pArg);
+    return SQLITE_ERROR;
+  }
+  pTask->pJCNext = pParse->pClup;
+  pParse->pClup = pTask;
+  pTask->xOp = xOp;
+  pTask->pArg = pArg;
+  return SQLITE_OK;
+}
+
+/*
+** Convert the JsonNode pNode into a pure JSON string and
+** append to pOut.  Subsubstructure is also included.  Return
+** the number of JsonNode objects that are encoded.
+*/
+static void jsonRenderNode(
+  JsonParse *pParse,             /* the complete parse of the JSON */
+  JsonNode *pNode,               /* The node to render */
+  JsonString *pOut               /* Write JSON here */
+){
+  assert( pNode!=0 );
+  while( (pNode->jnFlags & JNODE_REPLACE)!=0 && pParse->useMod ){
+    u32 idx = (u32)(pNode - pParse->aNode);
+    u32 i = pParse->iSubst;
+    while( 1 /*exit-by-break*/ ){
+      assert( i<pParse->nNode );
+      assert( pParse->aNode[i].eType==JSON_SUBST );
+      assert( pParse->aNode[i].eU==4 );
+      assert( pParse->aNode[i].u.iPrev<i );
+      if( pParse->aNode[i].n==idx ){
+        pNode = &pParse->aNode[i+1];
+        break;
+      }
+      i = pParse->aNode[i].u.iPrev;
+    }
+  }
+  switch( pNode->eType ){
+    default: {
+      assert( pNode->eType==JSON_NULL );
+      jsonAppendRawNZ(pOut, "null", 4);
+      break;
+    }
+    case JSON_TRUE: {
+      jsonAppendRawNZ(pOut, "true", 4);
+      break;
+    }
+    case JSON_FALSE: {
+      jsonAppendRawNZ(pOut, "false", 5);
+      break;
+    }
+    case JSON_STRING: {
+      assert( pNode->eU==1 );
+      if( pNode->jnFlags & JNODE_RAW ){
+        if( pNode->jnFlags & JNODE_LABEL ){
+          jsonAppendChar(pOut, '"');
+          jsonAppendRaw(pOut, pNode->u.zJContent, pNode->n);
+          jsonAppendChar(pOut, '"');
+        }else{
+          jsonAppendString(pOut, pNode->u.zJContent, pNode->n);
+        }
+      }else if( pNode->jnFlags & JNODE_JSON5 ){
+        jsonAppendNormalizedString(pOut, pNode->u.zJContent, pNode->n);
+      }else{
+        assert( pNode->n>0 );
+        jsonAppendRawNZ(pOut, pNode->u.zJContent, pNode->n);
+      }
+      break;
+    }
+    case JSON_REAL: {
+      assert( pNode->eU==1 );
+      if( pNode->jnFlags & JNODE_JSON5 ){
+        jsonAppendNormalizedReal(pOut, pNode->u.zJContent, pNode->n);
+      }else{
+        assert( pNode->n>0 );
+        jsonAppendRawNZ(pOut, pNode->u.zJContent, pNode->n);
+      }
+      break;
+    }
+    case JSON_INT: {
+      assert( pNode->eU==1 );
+      if( pNode->jnFlags & JNODE_JSON5 ){
+        jsonAppendNormalizedInt(pOut, pNode->u.zJContent, pNode->n);
+      }else{
+        assert( pNode->n>0 );
+        jsonAppendRawNZ(pOut, pNode->u.zJContent, pNode->n);
+      }
+      break;
+    }
+    case JSON_ARRAY: {
+      u32 j = 1;
+      jsonAppendChar(pOut, '[');
+      for(;;){
+        while( j<=pNode->n ){
+          if( (pNode[j].jnFlags & JNODE_REMOVE)==0 || pParse->useMod==0 ){
+            jsonAppendSeparator(pOut);
+            jsonRenderNode(pParse, &pNode[j], pOut);
+          }
+          j += jsonNodeSize(&pNode[j]);
+        }
+        if( (pNode->jnFlags & JNODE_APPEND)==0 ) break;
+        if( pParse->useMod==0 ) break;
+        assert( pNode->eU==2 );
+        pNode = &pParse->aNode[pNode->u.iAppend];
+        j = 1;
+      }
+      jsonAppendChar(pOut, ']');
+      break;
+    }
+    case JSON_OBJECT: {
+      u32 j = 1;
+      jsonAppendChar(pOut, '{');
+      for(;;){
+        while( j<=pNode->n ){
+          if( (pNode[j+1].jnFlags & JNODE_REMOVE)==0 || pParse->useMod==0 ){
+            jsonAppendSeparator(pOut);
+            jsonRenderNode(pParse, &pNode[j], pOut);
+            jsonAppendChar(pOut, ':');
+            jsonRenderNode(pParse, &pNode[j+1], pOut);
+          }
+          j += 1 + jsonNodeSize(&pNode[j+1]);
+        }
+        if( (pNode->jnFlags & JNODE_APPEND)==0 ) break;
+        if( pParse->useMod==0 ) break;
+        assert( pNode->eU==2 );
+        pNode = &pParse->aNode[pNode->u.iAppend];
+        j = 1;
+      }
+      jsonAppendChar(pOut, '}');
+      break;
     }
   }
 }
 
-/**************************************************************************
-** Utility routines for the JSON text parser
-**************************************************************************/
+/*
+** Return a JsonNode and all its descendants as a JSON string.
+*/
+static void jsonReturnJson(
+  JsonParse *pParse,          /* The complete JSON */
+  JsonNode *pNode,            /* Node to return */
+  sqlite3_context *pCtx,      /* Return value for this function */
+  int bGenerateAlt,           /* Also store the rendered text in zAlt */
+  int omitSubtype             /* Do not call sqlite3_result_subtype() */
+){
+  JsonString s;
+  if( pParse->oom ){
+    sqlite3_result_error_nomem(pCtx);
+    return;
+  }
+  if( pParse->nErr==0 ){
+    jsonInit(&s, pCtx);
+    jsonRenderNode(pParse, pNode, &s);
+    if( bGenerateAlt && pParse->zAlt==0 && jsonForceRCStr(&s) ){
+      pParse->zAlt = sqlite3RCStrRef(s.zBuf);
+      pParse->nAlt = s.nUsed;
+    }
+    jsonResult(&s);
+    if( !omitSubtype ) sqlite3_result_subtype(pCtx, JSON_SUBTYPE);
+  }
+}
 
 /*
 ** Translate a single byte of Hex into an integer.
-** This routine only gives a correct answer if h really is a valid hexadecimal
-** character:  0..9a..fA..F.  But unlike sqlite3HexToInt(), it does not
-** assert() if the digit is not hex.
+** This routine only works if h really is a valid hexadecimal
+** character:  0..9a..fA..F
 */
 static u8 jsonHexToInt(int h){
-#ifdef SQLITE_ASCII
-  h += 9*(1&(h>>6));
-#endif
+  assert( (h>='0' && h<='9') ||  (h>='a' && h<='f') ||  (h>='A' && h<='F') );
 #ifdef SQLITE_EBCDIC
   h += 9*(1&~(h>>4));
+#else
+  h += 9*(1&(h>>6));
 #endif
   return (u8)(h & 0xf);
 }
@@ -209823,11 +208984,291 @@ static u8 jsonHexToInt(int h){
 */
 static u32 jsonHexToInt4(const char *z){
   u32 v;
+  assert( sqlite3Isxdigit(z[0]) );
+  assert( sqlite3Isxdigit(z[1]) );
+  assert( sqlite3Isxdigit(z[2]) );
+  assert( sqlite3Isxdigit(z[3]) );
   v = (jsonHexToInt(z[0])<<12)
     + (jsonHexToInt(z[1])<<8)
     + (jsonHexToInt(z[2])<<4)
     + jsonHexToInt(z[3]);
   return v;
+}
+
+/*
+** Make the JsonNode the return value of the function.
+*/
+static void jsonReturn(
+  JsonParse *pParse,          /* Complete JSON parse tree */
+  JsonNode *pNode,            /* Node to return */
+  sqlite3_context *pCtx,      /* Return value for this function */
+  int omitSubtype             /* Do not call sqlite3_result_subtype() */
+){
+  switch( pNode->eType ){
+    default: {
+      assert( pNode->eType==JSON_NULL );
+      sqlite3_result_null(pCtx);
+      break;
+    }
+    case JSON_TRUE: {
+      sqlite3_result_int(pCtx, 1);
+      break;
+    }
+    case JSON_FALSE: {
+      sqlite3_result_int(pCtx, 0);
+      break;
+    }
+    case JSON_INT: {
+      sqlite3_int64 i = 0;
+      int rc;
+      int bNeg = 0;
+      const char *z;
+
+      assert( pNode->eU==1 );
+      z = pNode->u.zJContent;
+      if( z[0]=='-' ){ z++; bNeg = 1; }
+      else if( z[0]=='+' ){ z++; }
+      rc = sqlite3DecOrHexToI64(z, &i);
+      if( rc<=1 ){
+        sqlite3_result_int64(pCtx, bNeg ? -i : i);
+      }else if( rc==3 && bNeg ){
+        sqlite3_result_int64(pCtx, SMALLEST_INT64);
+      }else{
+        goto to_double;
+      }
+      break;
+    }
+    case JSON_REAL: {
+      double r;
+      const char *z;
+      assert( pNode->eU==1 );
+    to_double:
+      z = pNode->u.zJContent;
+      sqlite3AtoF(z, &r, sqlite3Strlen30(z), SQLITE_UTF8);
+      sqlite3_result_double(pCtx, r);
+      break;
+    }
+    case JSON_STRING: {
+      if( pNode->jnFlags & JNODE_RAW ){
+        assert( pNode->eU==1 );
+        sqlite3_result_text(pCtx, pNode->u.zJContent, pNode->n,
+                            SQLITE_TRANSIENT);
+      }else if( (pNode->jnFlags & JNODE_ESCAPE)==0 ){
+        /* JSON formatted without any backslash-escapes */
+        assert( pNode->eU==1 );
+        sqlite3_result_text(pCtx, pNode->u.zJContent+1, pNode->n-2,
+                            SQLITE_TRANSIENT);
+      }else{
+        /* Translate JSON formatted string into raw text */
+        u32 i;
+        u32 n = pNode->n;
+        const char *z;
+        char *zOut;
+        u32 j;
+        u32 nOut = n;
+        assert( pNode->eU==1 );
+        z = pNode->u.zJContent;
+        zOut = sqlite3_malloc( nOut+1 );
+        if( zOut==0 ){
+          sqlite3_result_error_nomem(pCtx);
+          break;
+        }
+        for(i=1, j=0; i<n-1; i++){
+          char c = z[i];
+          if( c=='\\' ){
+            c = z[++i];
+            if( c=='u' ){
+              u32 v = jsonHexToInt4(z+i+1);
+              i += 4;
+              if( v==0 ) break;
+              if( v<=0x7f ){
+                zOut[j++] = (char)v;
+              }else if( v<=0x7ff ){
+                zOut[j++] = (char)(0xc0 | (v>>6));
+                zOut[j++] = 0x80 | (v&0x3f);
+              }else{
+                u32 vlo;
+                if( (v&0xfc00)==0xd800
+                  && i<n-6
+                  && z[i+1]=='\\'
+                  && z[i+2]=='u'
+                  && ((vlo = jsonHexToInt4(z+i+3))&0xfc00)==0xdc00
+                ){
+                  /* We have a surrogate pair */
+                  v = ((v&0x3ff)<<10) + (vlo&0x3ff) + 0x10000;
+                  i += 6;
+                  zOut[j++] = 0xf0 | (v>>18);
+                  zOut[j++] = 0x80 | ((v>>12)&0x3f);
+                  zOut[j++] = 0x80 | ((v>>6)&0x3f);
+                  zOut[j++] = 0x80 | (v&0x3f);
+                }else{
+                  zOut[j++] = 0xe0 | (v>>12);
+                  zOut[j++] = 0x80 | ((v>>6)&0x3f);
+                  zOut[j++] = 0x80 | (v&0x3f);
+                }
+              }
+              continue;
+            }else if( c=='b' ){
+              c = '\b';
+            }else if( c=='f' ){
+              c = '\f';
+            }else if( c=='n' ){
+              c = '\n';
+            }else if( c=='r' ){
+              c = '\r';
+            }else if( c=='t' ){
+              c = '\t';
+            }else if( c=='v' ){
+              c = '\v';
+            }else if( c=='\'' || c=='"' || c=='/' || c=='\\' ){
+              /* pass through unchanged */
+            }else if( c=='0' ){
+              c = 0;
+            }else if( c=='x' ){
+              c = (jsonHexToInt(z[i+1])<<4) | jsonHexToInt(z[i+2]);
+              i += 2;
+            }else if( c=='\r' && z[i+1]=='\n' ){
+              i++;
+              continue;
+            }else if( 0xe2==(u8)c ){
+              assert( 0x80==(u8)z[i+1] );
+              assert( 0xa8==(u8)z[i+2] || 0xa9==(u8)z[i+2] );
+              i += 2;
+              continue;
+            }else{
+              continue;
+            }
+          } /* end if( c=='\\' ) */
+          zOut[j++] = c;
+        } /* end for() */
+        zOut[j] = 0;
+        sqlite3_result_text(pCtx, zOut, j, sqlite3_free);
+      }
+      break;
+    }
+    case JSON_ARRAY:
+    case JSON_OBJECT: {
+      jsonReturnJson(pParse, pNode, pCtx, 0, omitSubtype);
+      break;
+    }
+  }
+}
+
+/* Forward reference */
+static int jsonParseAddNode(JsonParse*,u32,u32,const char*);
+
+/*
+** A macro to hint to the compiler that a function should not be
+** inlined.
+*/
+#if defined(__GNUC__)
+#  define JSON_NOINLINE  __attribute__((noinline))
+#elif defined(_MSC_VER) && _MSC_VER>=1310
+#  define JSON_NOINLINE  __declspec(noinline)
+#else
+#  define JSON_NOINLINE
+#endif
+
+
+/*
+** Add a single node to pParse->aNode after first expanding the
+** size of the aNode array.  Return the index of the new node.
+**
+** If an OOM error occurs, set pParse->oom and return -1.
+*/
+static JSON_NOINLINE int jsonParseAddNodeExpand(
+  JsonParse *pParse,        /* Append the node to this object */
+  u32 eType,                /* Node type */
+  u32 n,                    /* Content size or sub-node count */
+  const char *zContent      /* Content */
+){
+  u32 nNew;
+  JsonNode *pNew;
+  assert( pParse->nNode>=pParse->nAlloc );
+  if( pParse->oom ) return -1;
+  nNew = pParse->nAlloc*2 + 10;
+  pNew = sqlite3_realloc64(pParse->aNode, sizeof(JsonNode)*nNew);
+  if( pNew==0 ){
+    pParse->oom = 1;
+    return -1;
+  }
+  pParse->nAlloc = sqlite3_msize(pNew)/sizeof(JsonNode);
+  pParse->aNode = pNew;
+  assert( pParse->nNode<pParse->nAlloc );
+  return jsonParseAddNode(pParse, eType, n, zContent);
+}
+
+/*
+** Create a new JsonNode instance based on the arguments and append that
+** instance to the JsonParse.  Return the index in pParse->aNode[] of the
+** new node, or -1 if a memory allocation fails.
+*/
+static int jsonParseAddNode(
+  JsonParse *pParse,        /* Append the node to this object */
+  u32 eType,                /* Node type */
+  u32 n,                    /* Content size or sub-node count */
+  const char *zContent      /* Content */
+){
+  JsonNode *p;
+  assert( pParse->aNode!=0 || pParse->nNode>=pParse->nAlloc );
+  if( pParse->nNode>=pParse->nAlloc ){
+    return jsonParseAddNodeExpand(pParse, eType, n, zContent);
+  }
+  assert( pParse->aNode!=0 );
+  p = &pParse->aNode[pParse->nNode];
+  assert( p!=0 );
+  p->eType = (u8)(eType & 0xff);
+  p->jnFlags = (u8)(eType >> 8);
+  VVA( p->eU = zContent ? 1 : 0 );
+  p->n = n;
+  p->u.zJContent = zContent;
+  return pParse->nNode++;
+}
+
+/*
+** Add an array of new nodes to the current pParse->aNode array.
+** Return the index of the first node added.
+**
+** If an OOM error occurs, set pParse->oom.
+*/
+static void jsonParseAddNodeArray(
+  JsonParse *pParse,        /* Append the node to this object */
+  JsonNode *aNode,          /* Array of nodes to add */
+  u32 nNode                 /* Number of elements in aNew */
+){
+  assert( aNode!=0 );
+  assert( nNode>=1 );
+  if( pParse->nNode + nNode > pParse->nAlloc ){
+    u32 nNew = pParse->nNode + nNode;
+    JsonNode *aNew = sqlite3_realloc64(pParse->aNode, nNew*sizeof(JsonNode));
+    if( aNew==0 ){
+      pParse->oom = 1;
+      return;
+    }
+    pParse->nAlloc = sqlite3_msize(aNew)/sizeof(JsonNode);
+    pParse->aNode = aNew;
+  }
+  memcpy(&pParse->aNode[pParse->nNode], aNode, nNode*sizeof(JsonNode));
+  pParse->nNode += nNode;
+}
+
+/*
+** Add a new JSON_SUBST node.  The node immediately following
+** this new node will be the substitute content for iNode.
+*/
+static int jsonParseAddSubstNode(
+  JsonParse *pParse,       /* Add the JSON_SUBST here */
+  u32 iNode                /* References this node */
+){
+  int idx = jsonParseAddNode(pParse, JSON_SUBST, iNode, 0);
+  if( pParse->oom ) return -1;
+  pParse->aNode[iNode].jnFlags |= JNODE_REPLACE;
+  pParse->aNode[idx].eU = 4;
+  pParse->aNode[idx].u.iPrev = pParse->iSubst;
+  pParse->iSubst = idx;
+  pParse->hasMod = 1;
+  pParse->useMod = 1;
+  return idx;
 }
 
 /*
@@ -209983,500 +209424,63 @@ static const struct NanInfName {
   char *zMatch;
   char *zRepl;
 } aNanInfName[] = {
-  { 'i', 'I', 3, JSONB_FLOAT, 7, "inf", "9.0e999" },
-  { 'i', 'I', 8, JSONB_FLOAT, 7, "infinity", "9.0e999" },
-  { 'n', 'N', 3, JSONB_NULL, 4, "NaN", "null" },
-  { 'q', 'Q', 4, JSONB_NULL, 4, "QNaN", "null" },
-  { 's', 'S', 4, JSONB_NULL, 4, "SNaN", "null" },
+  { 'i', 'I', 3, JSON_REAL, 7, "inf", "9.0e999" },
+  { 'i', 'I', 8, JSON_REAL, 7, "infinity", "9.0e999" },
+  { 'n', 'N', 3, JSON_NULL, 4, "NaN", "null" },
+  { 'q', 'Q', 4, JSON_NULL, 4, "QNaN", "null" },
+  { 's', 'S', 4, JSON_NULL, 4, "SNaN", "null" },
 };
 
-
 /*
-** Report the wrong number of arguments for json_insert(), json_replace()
-** or json_set().
-*/
-static void jsonWrongNumArgs(
-  sqlite3_context *pCtx,
-  const char *zFuncName
-){
-  char *zMsg = sqlite3_mprintf("json_%s() needs an odd number of arguments",
-                               zFuncName);
-  sqlite3_result_error(pCtx, zMsg, -1);
-  sqlite3_free(zMsg);
-}
-
-/****************************************************************************
-** Utility routines for dealing with the binary BLOB representation of JSON
-****************************************************************************/
-
-/*
-** Expand pParse->aBlob so that it holds at least N bytes.
+** Parse a single JSON value which begins at pParse->zJson[i].  Return the
+** index of the first character past the end of the value parsed.
 **
-** Return the number of errors.
-*/
-static int jsonBlobExpand(JsonParse *pParse, u32 N){
-  u8 *aNew;
-  u32 t;
-  assert( N>pParse->nBlobAlloc );
-  if( pParse->nBlobAlloc==0 ){
-    t = 100;
-  }else{
-    t = pParse->nBlobAlloc*2;
-  }
-  if( t<N ) t = N+100;
-  aNew = sqlite3DbRealloc(pParse->db, pParse->aBlob, t);
-  if( aNew==0 ){ pParse->oom = 1; return 1; }
-  pParse->aBlob = aNew;
-  pParse->nBlobAlloc = t;
-  return 0;
-}
-
-/*
-** If pParse->aBlob is not previously editable (because it is taken
-** from sqlite3_value_blob(), as indicated by the fact that
-** pParse->nBlobAlloc==0 and pParse->nBlob>0) then make it editable
-** by making a copy into space obtained from malloc.
-**
-** Return true on success.  Return false on OOM.
-*/
-static int jsonBlobMakeEditable(JsonParse *pParse, u32 nExtra){
-  u8 *aOld;
-  u32 nSize;
-  assert( !pParse->bReadOnly );
-  if( pParse->oom ) return 0;
-  if( pParse->nBlobAlloc>0 ) return 1;
-  aOld = pParse->aBlob;
-  nSize = pParse->nBlob + nExtra;
-  pParse->aBlob = 0;
-  if( jsonBlobExpand(pParse, nSize) ){
-    return 0;
-  }
-  assert( pParse->nBlobAlloc >= pParse->nBlob + nExtra );
-  memcpy(pParse->aBlob, aOld, pParse->nBlob);
-  return 1;
-}
-
-/* Expand pParse->aBlob and append one bytes.
-*/
-static SQLITE_NOINLINE void jsonBlobExpandAndAppendOneByte(
-  JsonParse *pParse,
-  u8 c
-){
-  jsonBlobExpand(pParse, pParse->nBlob+1);
-  if( pParse->oom==0 ){
-    assert( pParse->nBlob+1<=pParse->nBlobAlloc );
-    pParse->aBlob[pParse->nBlob++] = c;
-  }
-}
-
-/* Append a single character.
-*/
-static void jsonBlobAppendOneByte(JsonParse *pParse, u8 c){
-  if( pParse->nBlob >= pParse->nBlobAlloc ){
-    jsonBlobExpandAndAppendOneByte(pParse, c);
-  }else{
-    pParse->aBlob[pParse->nBlob++] = c;
-  }
-}
-
-/* Slow version of jsonBlobAppendNode() that first resizes the
-** pParse->aBlob structure.
-*/
-static void jsonBlobAppendNode(JsonParse*,u8,u32,const void*);
-static SQLITE_NOINLINE void jsonBlobExpandAndAppendNode(
-  JsonParse *pParse,
-  u8 eType,
-  u32 szPayload,
-  const void *aPayload
-){
-  if( jsonBlobExpand(pParse, pParse->nBlob+szPayload+9) ) return;
-  jsonBlobAppendNode(pParse, eType, szPayload, aPayload);
-}
-
-
-/* Append an node type byte together with the payload size and
-** possibly also the payload.
-**
-** If aPayload is not NULL, then it is a pointer to the payload which
-** is also appended.  If aPayload is NULL, the pParse->aBlob[] array
-** is resized (if necessary) so that it is big enough to hold the
-** payload, but the payload is not appended and pParse->nBlob is left
-** pointing to where the first byte of payload will eventually be.
-*/
-static void jsonBlobAppendNode(
-  JsonParse *pParse,          /* The JsonParse object under construction */
-  u8 eType,                   /* Node type.  One of JSONB_* */
-  u32 szPayload,              /* Number of bytes of payload */
-  const void *aPayload        /* The payload.  Might be NULL */
-){
-  u8 *a;
-  if( pParse->nBlob+szPayload+9 > pParse->nBlobAlloc ){
-    jsonBlobExpandAndAppendNode(pParse,eType,szPayload,aPayload);
-    return;
-  }
-  assert( pParse->aBlob!=0 );
-  a = &pParse->aBlob[pParse->nBlob];
-  if( szPayload<=11 ){
-    a[0] = eType | (szPayload<<4);
-    pParse->nBlob += 1;
-  }else if( szPayload<=0xff ){
-    a[0] = eType | 0xc0;
-    a[1] = szPayload & 0xff;
-    pParse->nBlob += 2;
-  }else if( szPayload<=0xffff ){
-    a[0] = eType | 0xd0;
-    a[1] = (szPayload >> 8) & 0xff;
-    a[2] = szPayload & 0xff;
-    pParse->nBlob += 3;
-  }else{
-    a[0] = eType | 0xe0;
-    a[1] = (szPayload >> 24) & 0xff;
-    a[2] = (szPayload >> 16) & 0xff;
-    a[3] = (szPayload >> 8) & 0xff;
-    a[4] = szPayload & 0xff;
-    pParse->nBlob += 5;
-  }
-  if( aPayload ){
-    pParse->nBlob += szPayload;
-    memcpy(&pParse->aBlob[pParse->nBlob-szPayload], aPayload, szPayload);
-  }
-}
-
-/* Change the payload size for the node at index i to be szPayload.
-*/
-static int jsonBlobChangePayloadSize(
-  JsonParse *pParse,
-  u32 i,
-  u32 szPayload
-){
-  u8 *a;
-  u8 szType;
-  u8 nExtra;
-  u8 nNeeded;
-  int delta;
-  if( pParse->oom ) return 0;
-  a = &pParse->aBlob[i];
-  szType = a[0]>>4;
-  if( szType<=11 ){
-    nExtra = 0;
-  }else if( szType==12 ){
-    nExtra = 1;
-  }else if( szType==13 ){
-    nExtra = 2;
-  }else{
-    nExtra = 4;
-  }
-  if( szPayload<=11 ){
-    nNeeded = 0;
-  }else if( szPayload<=0xff ){
-    nNeeded = 1;
-  }else if( szPayload<=0xffff ){
-    nNeeded = 2;
-  }else{
-    nNeeded = 4;
-  }
-  delta = nNeeded - nExtra;
-  if( delta ){
-    u32 newSize = pParse->nBlob + delta;
-    if( delta>0 ){
-      if( newSize>pParse->nBlobAlloc && jsonBlobExpand(pParse, newSize) ){
-        return 0;  /* OOM error.  Error state recorded in pParse->oom. */
-      }
-      a = &pParse->aBlob[i];
-      memmove(&a[1+delta], &a[1], pParse->nBlob - (i+1));
-    }else{
-      memmove(&a[1], &a[1-delta], pParse->nBlob - (i+1-delta));
-    }
-    pParse->nBlob = newSize;
-  }
-  if( nNeeded==0 ){
-    a[0] = (a[0] & 0x0f) | (szPayload<<4);
-  }else if( nNeeded==1 ){
-    a[0] = (a[0] & 0x0f) | 0xc0;
-    a[1] = szPayload & 0xff;
-  }else if( nNeeded==2 ){
-    a[0] = (a[0] & 0x0f) | 0xd0;
-    a[1] = (szPayload >> 8) & 0xff;
-    a[2] = szPayload & 0xff;
-  }else{
-    a[0] = (a[0] & 0x0f) | 0xe0;
-    a[1] = (szPayload >> 24) & 0xff;
-    a[2] = (szPayload >> 16) & 0xff;
-    a[3] = (szPayload >> 8) & 0xff;
-    a[4] = szPayload & 0xff;
-  }
-  return delta;
-}
-
-/*
-** If z[0] is 'u' and is followed by exactly 4 hexadecimal character,
-** then set *pOp to JSONB_TEXTJ and return true.  If not, do not make
-** any changes to *pOp and return false.
-*/
-static int jsonIs4HexB(const char *z, int *pOp){
-  if( z[0]!='u' ) return 0;
-  if( !jsonIs4Hex(&z[1]) ) return 0;
-  *pOp = JSONB_TEXTJ;
-  return 1;
-}
-
-/*
-** Check a single element of the JSONB in pParse for validity.
-**
-** The element to be checked starts at offset i and must end at on the
-** last byte before iEnd.
-**
-** Return 0 if everything is correct.  Return the 1-based byte offset of the
-** error if a problem is detected.  (In other words, if the error is at offset
-** 0, return 1).
-*/
-static u32 jsonbValidityCheck(
-  const JsonParse *pParse,    /* Input JSONB.  Only aBlob and nBlob are used */
-  u32 i,                      /* Start of element as pParse->aBlob[i] */
-  u32 iEnd,                   /* One more than the last byte of the element */
-  u32 iDepth                  /* Current nesting depth */
-){
-  u32 n, sz, j, k;
-  const u8 *z;
-  u8 x;
-  if( iDepth>JSON_MAX_DEPTH ) return i+1;
-  sz = 0;
-  n = jsonbPayloadSize(pParse, i, &sz);
-  if( NEVER(n==0) ) return i+1;          /* Checked by caller */
-  if( NEVER(i+n+sz!=iEnd) ) return i+1;  /* Checked by caller */
-  z = pParse->aBlob;
-  x = z[i] & 0x0f;
-  switch( x ){
-    case JSONB_NULL:
-    case JSONB_TRUE:
-    case JSONB_FALSE: {
-      return n+sz==1 ? 0 : i+1;
-    }
-    case JSONB_INT: {
-      if( sz<1 ) return i+1;
-      j = i+n;
-      if( z[j]=='-' ){
-        j++;
-        if( sz<2 ) return i+1;
-      }
-      k = i+n+sz;
-      while( j<k ){
-        if( sqlite3Isdigit(z[j]) ){
-          j++;
-        }else{
-          return j+1;
-        }
-      }
-      return 0;
-    }
-    case JSONB_INT5: {
-      if( sz<3 ) return i+1;
-      j = i+n;
-      if( z[j]=='-' ){
-        if( sz<4 ) return i+1;
-        j++;
-      }
-      if( z[j]!='0' ) return i+1;
-      if( z[j+1]!='x' && z[j+1]!='X' ) return j+2;
-      j += 2;
-      k = i+n+sz;
-      while( j<k ){
-        if( sqlite3Isxdigit(z[j]) ){
-          j++;
-        }else{
-          return j+1;
-        }
-      }
-      return 0;
-    }
-    case JSONB_FLOAT:
-    case JSONB_FLOAT5: {
-      u8 seen = 0;   /* 0: initial.  1: '.' seen  2: 'e' seen */
-      if( sz<2 ) return i+1;
-      j = i+n;
-      k = j+sz;
-      if( z[j]=='-' ){
-        j++;
-        if( sz<3 ) return i+1;
-      }
-      if( z[j]=='.' ){
-        if( x==JSONB_FLOAT ) return j+1;
-        if( !sqlite3Isdigit(z[j+1]) ) return j+1;
-        j += 2;
-        seen = 1;
-      }else if( z[j]=='0' && x==JSONB_FLOAT ){
-        if( j+3>k ) return j+1;
-        if( z[j+1]!='.' && z[j+1]!='e' && z[j+1]!='E' ) return j+1;
-        j++;
-      }
-      for(; j<k; j++){
-        if( sqlite3Isdigit(z[j]) ) continue;
-        if( z[j]=='.' ){
-          if( seen>0 ) return j+1;
-          if( x==JSONB_FLOAT && (j==k-1 || !sqlite3Isdigit(z[j+1])) ){
-            return j+1;
-          }
-          seen = 1;
-          continue;
-        }
-        if( z[j]=='e' || z[j]=='E' ){
-          if( seen==2 ) return j+1;
-          if( j==k-1 ) return j+1;
-          if( z[j+1]=='+' || z[j+1]=='-' ){
-            j++;
-            if( j==k-1 ) return j+1;
-          }
-          seen = 2;
-          continue;
-        }
-        return j+1;
-      }
-      if( seen==0 ) return i+1;
-      return 0;
-    }
-    case JSONB_TEXT: {
-      j = i+n;
-      k = j+sz;
-      while( j<k ){
-        if( !jsonIsOk[z[j]] && z[j]!='\'' ) return j+1;
-        j++;
-      }
-      return 0;
-    }
-    case JSONB_TEXTJ:
-    case JSONB_TEXT5: {
-      j = i+n;
-      k = j+sz;
-      while( j<k ){
-        if( !jsonIsOk[z[j]] && z[j]!='\'' ){
-          if( z[j]=='"' ){
-            if( x==JSONB_TEXTJ ) return j+1;
-          }else if( z[j]!='\\' || j+1>=k ){
-            return j+1;
-          }else if( strchr("\"\\/bfnrt",z[j+1])!=0 ){
-            j++;
-          }else if( z[j+1]=='u' ){
-            if( j+5>=k ) return j+1;
-            if( !jsonIs4Hex((const char*)&z[j+2]) ) return j+1;
-            j++;
-          }else if( x!=JSONB_TEXT5 ){
-            return j+1;
-          }else{
-            u32 c = 0;
-            u32 szC = jsonUnescapeOneChar((const char*)&z[j], k-j, &c);
-            if( c==JSON_INVALID_CHAR ) return j+1;
-            j += szC - 1;
-          }
-        }
-        j++;
-      }
-      return 0;
-    }
-    case JSONB_TEXTRAW: {
-      return 0;
-    }
-    case JSONB_ARRAY: {
-      u32 sub;
-      j = i+n;
-      k = j+sz;
-      while( j<k ){
-        sz = 0;
-        n = jsonbPayloadSize(pParse, j, &sz);
-        if( n==0 ) return j+1;
-        if( j+n+sz>k ) return j+1;
-        sub = jsonbValidityCheck(pParse, j, j+n+sz, iDepth+1);
-        if( sub ) return sub;
-        j += n + sz;
-      }
-      assert( j==k );
-      return 0;
-    }
-    case JSONB_OBJECT: {
-      u32 cnt = 0;
-      u32 sub;
-      j = i+n;
-      k = j+sz;
-      while( j<k ){
-        sz = 0;
-        n = jsonbPayloadSize(pParse, j, &sz);
-        if( n==0 ) return j+1;
-        if( j+n+sz>k ) return j+1;
-        if( (cnt & 1)==0 ){
-          x = z[j] & 0x0f;
-          if( x<JSONB_TEXT || x>JSONB_TEXTRAW ) return j+1;
-        }
-        sub = jsonbValidityCheck(pParse, j, j+n+sz, iDepth+1);
-        if( sub ) return sub;
-        cnt++;
-        j += n + sz;
-      }
-      assert( j==k );
-      if( (cnt & 1)!=0 ) return j+1;
-      return 0;
-    }
-    default: {
-      return i+1;
-    }
-  }
-}
-
-/*
-** Translate a single element of JSON text at pParse->zJson[i] into
-** its equivalent binary JSONB representation.  Append the translation into
-** pParse->aBlob[] beginning at pParse->nBlob.  The size of
-** pParse->aBlob[] is increased as necessary.
-**
-** Return the index of the first character past the end of the element parsed,
-** or one of the following special result codes:
+** Special return values:
 **
 **      0    End of input
-**     -1    Syntax error or OOM
-**     -2    '}' seen   \
-**     -3    ']' seen    \___  For these returns, pParse->iErr is set to
-**     -4    ',' seen    /     the index in zJson[] of the seen character
-**     -5    ':' seen   /
+**     -1    Syntax error
+**     -2    '}' seen
+**     -3    ']' seen
+**     -4    ',' seen
+**     -5    ':' seen
 */
-static int jsonTranslateTextToBlob(JsonParse *pParse, u32 i){
+static int jsonParseValue(JsonParse *pParse, u32 i){
   char c;
   u32 j;
-  u32 iThis, iStart;
+  int iThis;
   int x;
-  u8 t;
+  JsonNode *pNode;
   const char *z = pParse->zJson;
 json_parse_restart:
   switch( (u8)z[i] ){
   case '{': {
     /* Parse object */
-    iThis = pParse->nBlob;
-    jsonBlobAppendNode(pParse, JSONB_OBJECT, pParse->nJson-i, 0);
+    iThis = jsonParseAddNode(pParse, JSON_OBJECT, 0, 0);
+    if( iThis<0 ) return -1;
     if( ++pParse->iDepth > JSON_MAX_DEPTH ){
       pParse->iErr = i;
       return -1;
     }
-    iStart = pParse->nBlob;
     for(j=i+1;;j++){
-      u32 iBlob = pParse->nBlob;
-      x = jsonTranslateTextToBlob(pParse, j);
+      u32 nNode = pParse->nNode;
+      x = jsonParseValue(pParse, j);
       if( x<=0 ){
-        int op;
         if( x==(-2) ){
           j = pParse->iErr;
-          if( pParse->nBlob!=(u32)iStart ) pParse->hasNonstd = 1;
+          if( pParse->nNode!=(u32)iThis+1 ) pParse->hasNonstd = 1;
           break;
         }
         j += json5Whitespace(&z[j]);
-        op = JSONB_TEXT;
         if( sqlite3JsonId1(z[j])
-         || (z[j]=='\\' && jsonIs4HexB(&z[j+1], &op))
+         || (z[j]=='\\' && z[j+1]=='u' && jsonIs4Hex(&z[j+2]))
         ){
           int k = j+1;
           while( (sqlite3JsonId2(z[k]) && json5Whitespace(&z[k])==0)
-            || (z[k]=='\\' && jsonIs4HexB(&z[k+1], &op))
+            || (z[k]=='\\' && z[k+1]=='u' && jsonIs4Hex(&z[k+2]))
           ){
             k++;
           }
-          assert( iBlob==pParse->nBlob );
-          jsonBlobAppendNode(pParse, op, k-j, &z[j]);
+          jsonParseAddNode(pParse, JSON_STRING | (JNODE_RAW<<8), k-j, &z[j]);
           pParse->hasNonstd = 1;
           x = k;
         }else{
@@ -210485,24 +209489,24 @@ json_parse_restart:
         }
       }
       if( pParse->oom ) return -1;
-      t = pParse->aBlob[iBlob] & 0x0f;
-      if( t<JSONB_TEXT || t>JSONB_TEXTRAW ){
+      pNode = &pParse->aNode[nNode];
+      if( pNode->eType!=JSON_STRING ){
         pParse->iErr = j;
         return -1;
       }
+      pNode->jnFlags |= JNODE_LABEL;
       j = x;
       if( z[j]==':' ){
         j++;
       }else{
-        if( jsonIsspace(z[j]) ){
-          /* strspn() is not helpful here */
-          do{ j++; }while( jsonIsspace(z[j]) );
+        if( fast_isspace(z[j]) ){
+          do{ j++; }while( fast_isspace(z[j]) );
           if( z[j]==':' ){
             j++;
             goto parse_object_value;
           }
         }
-        x = jsonTranslateTextToBlob(pParse, j);
+        x = jsonParseValue(pParse, j);
         if( x!=(-5) ){
           if( x!=(-1) ) pParse->iErr = j;
           return -1;
@@ -210510,7 +209514,7 @@ json_parse_restart:
         j = pParse->iErr+1;
       }
     parse_object_value:
-      x = jsonTranslateTextToBlob(pParse, j);
+      x = jsonParseValue(pParse, j);
       if( x<=0 ){
         if( x!=(-1) ) pParse->iErr = j;
         return -1;
@@ -210521,15 +209525,15 @@ json_parse_restart:
       }else if( z[j]=='}' ){
         break;
       }else{
-        if( jsonIsspace(z[j]) ){
-          j += 1 + (u32)strspn(&z[j+1], jsonSpaces);
+        if( fast_isspace(z[j]) ){
+          do{ j++; }while( fast_isspace(z[j]) );
           if( z[j]==',' ){
             continue;
           }else if( z[j]=='}' ){
             break;
           }
         }
-        x = jsonTranslateTextToBlob(pParse, j);
+        x = jsonParseValue(pParse, j);
         if( x==(-4) ){
           j = pParse->iErr;
           continue;
@@ -210542,27 +209546,25 @@ json_parse_restart:
       pParse->iErr = j;
       return -1;
     }
-    jsonBlobChangePayloadSize(pParse, iThis, pParse->nBlob - iStart);
+    pParse->aNode[iThis].n = pParse->nNode - (u32)iThis - 1;
     pParse->iDepth--;
     return j+1;
   }
   case '[': {
     /* Parse array */
-    iThis = pParse->nBlob;
-    assert( i<=(u32)pParse->nJson );
-    jsonBlobAppendNode(pParse, JSONB_ARRAY, pParse->nJson - i, 0);
-    iStart = pParse->nBlob;
-    if( pParse->oom ) return -1;
+    iThis = jsonParseAddNode(pParse, JSON_ARRAY, 0, 0);
+    if( iThis<0 ) return -1;
     if( ++pParse->iDepth > JSON_MAX_DEPTH ){
       pParse->iErr = i;
       return -1;
     }
+    memset(&pParse->aNode[iThis].u, 0, sizeof(pParse->aNode[iThis].u));
     for(j=i+1;;j++){
-      x = jsonTranslateTextToBlob(pParse, j);
+      x = jsonParseValue(pParse, j);
       if( x<=0 ){
         if( x==(-3) ){
           j = pParse->iErr;
-          if( pParse->nBlob!=iStart ) pParse->hasNonstd = 1;
+          if( pParse->nNode!=(u32)iThis+1 ) pParse->hasNonstd = 1;
           break;
         }
         if( x!=(-1) ) pParse->iErr = j;
@@ -210574,15 +209576,15 @@ json_parse_restart:
       }else if( z[j]==']' ){
         break;
       }else{
-        if( jsonIsspace(z[j]) ){
-          j += 1 + (u32)strspn(&z[j+1], jsonSpaces);
+        if( fast_isspace(z[j]) ){
+          do{ j++; }while( fast_isspace(z[j]) );
           if( z[j]==',' ){
             continue;
           }else if( z[j]==']' ){
             break;
           }
         }
-        x = jsonTranslateTextToBlob(pParse, j);
+        x = jsonParseValue(pParse, j);
         if( x==(-4) ){
           j = pParse->iErr;
           continue;
@@ -210595,33 +209597,23 @@ json_parse_restart:
       pParse->iErr = j;
       return -1;
     }
-    jsonBlobChangePayloadSize(pParse, iThis, pParse->nBlob - iStart);
+    pParse->aNode[iThis].n = pParse->nNode - (u32)iThis - 1;
     pParse->iDepth--;
     return j+1;
   }
   case '\'': {
-    u8 opcode;
+    u8 jnFlags;
     char cDelim;
     pParse->hasNonstd = 1;
-    opcode = JSONB_TEXT;
+    jnFlags = JNODE_JSON5;
     goto parse_string;
   case '"':
     /* Parse string */
-    opcode = JSONB_TEXT;
+    jnFlags = 0;
   parse_string:
     cDelim = z[i];
-    j = i+1;
-    while( 1 /*exit-by-break*/ ){
-      if( jsonIsOk[(u8)z[j]] ){
-        if( !jsonIsOk[(u8)z[j+1]] ){
-          j += 1;
-        }else if( !jsonIsOk[(u8)z[j+2]] ){
-          j += 2;
-        }else{
-          j += 3;
-          continue;
-        }
-      }
+    for(j=i+1; 1; j++){
+      if( jsonIsOk[(unsigned char)z[j]] ) continue;
       c = z[j];
       if( c==cDelim ){
         break;
@@ -210630,16 +209622,16 @@ json_parse_restart:
         if( c=='"' || c=='\\' || c=='/' || c=='b' || c=='f'
            || c=='n' || c=='r' || c=='t'
            || (c=='u' && jsonIs4Hex(&z[j+1])) ){
-          if( opcode==JSONB_TEXT ) opcode = JSONB_TEXTJ;
+          jnFlags |= JNODE_ESCAPE;
         }else if( c=='\'' || c=='0' || c=='v' || c=='\n'
            || (0xe2==(u8)c && 0x80==(u8)z[j+1]
                 && (0xa8==(u8)z[j+2] || 0xa9==(u8)z[j+2]))
            || (c=='x' && jsonIs2Hex(&z[j+1])) ){
-          opcode = JSONB_TEXT5;
+          jnFlags |= (JNODE_ESCAPE|JNODE_JSON5);
           pParse->hasNonstd = 1;
         }else if( c=='\r' ){
           if( z[j+1]=='\n' ) j++;
-          opcode = JSONB_TEXT5;
+          jnFlags |= (JNODE_ESCAPE|JNODE_JSON5);
           pParse->hasNonstd = 1;
         }else{
           pParse->iErr = j;
@@ -210649,17 +209641,14 @@ json_parse_restart:
         /* Control characters are not allowed in strings */
         pParse->iErr = j;
         return -1;
-      }else if( c=='"' ){
-        opcode = JSONB_TEXT5;
       }
-      j++;
     }
-    jsonBlobAppendNode(pParse, opcode, j-1-i, &z[i+1]);
+    jsonParseAddNode(pParse, JSON_STRING | (jnFlags<<8), j+1-i, &z[i]);
     return j+1;
   }
   case 't': {
     if( strncmp(z+i,"true",4)==0 && !sqlite3Isalnum(z[i+4]) ){
-      jsonBlobAppendOneByte(pParse, JSONB_TRUE);
+      jsonParseAddNode(pParse, JSON_TRUE, 0, 0);
       return i+4;
     }
     pParse->iErr = i;
@@ -210667,22 +209656,23 @@ json_parse_restart:
   }
   case 'f': {
     if( strncmp(z+i,"false",5)==0 && !sqlite3Isalnum(z[i+5]) ){
-      jsonBlobAppendOneByte(pParse, JSONB_FALSE);
+      jsonParseAddNode(pParse, JSON_FALSE, 0, 0);
       return i+5;
     }
     pParse->iErr = i;
     return -1;
   }
   case '+': {
-    u8 seenE;
+    u8 seenDP, seenE, jnFlags;
     pParse->hasNonstd = 1;
-    t = 0x00;            /* Bit 0x01:  JSON5.   Bit 0x02:  FLOAT */
+    jnFlags = JNODE_JSON5;
     goto parse_number;
   case '.':
     if( sqlite3Isdigit(z[i+1]) ){
       pParse->hasNonstd = 1;
-      t = 0x03;          /* Bit 0x01:  JSON5.   Bit 0x02:  FLOAT */
+      jnFlags = JNODE_JSON5;
       seenE = 0;
+      seenDP = JSON_REAL;
       goto parse_number_2;
     }
     pParse->iErr = i;
@@ -210699,8 +209689,9 @@ json_parse_restart:
   case '8':
   case '9':
     /* Parse number */
-    t = 0x00;            /* Bit 0x01:  JSON5.   Bit 0x02:  FLOAT */
+    jnFlags = 0;
   parse_number:
+    seenDP = JSON_INT;
     seenE = 0;
     assert( '-' < '0' );
     assert( '+' < '0' );
@@ -210710,9 +209701,9 @@ json_parse_restart:
     if( c<='0' ){
       if( c=='0' ){
         if( (z[i+1]=='x' || z[i+1]=='X') && sqlite3Isxdigit(z[i+2]) ){
-          assert( t==0x00 );
+          assert( seenDP==JSON_INT );
           pParse->hasNonstd = 1;
-          t = 0x01;
+          jnFlags |= JNODE_JSON5;
           for(j=i+3; sqlite3Isxdigit(z[j]); j++){}
           goto parse_number_finish;
         }else if( sqlite3Isdigit(z[i+1]) ){
@@ -210729,15 +209720,15 @@ json_parse_restart:
           ){
             pParse->hasNonstd = 1;
             if( z[i]=='-' ){
-              jsonBlobAppendNode(pParse, JSONB_FLOAT, 6, "-9e999");
+              jsonParseAddNode(pParse, JSON_REAL, 8, "-9.0e999");
             }else{
-              jsonBlobAppendNode(pParse, JSONB_FLOAT, 5, "9e999");
+              jsonParseAddNode(pParse, JSON_REAL, 7, "9.0e999");
             }
             return i + (sqlite3StrNICmp(&z[i+4],"inity",5)==0 ? 9 : 4);
           }
           if( z[i+1]=='.' ){
             pParse->hasNonstd = 1;
-            t |= 0x01;
+            jnFlags |= JNODE_JSON5;
             goto parse_number_2;
           }
           pParse->iErr = i;
@@ -210749,31 +209740,30 @@ json_parse_restart:
             return -1;
           }else if( (z[i+2]=='x' || z[i+2]=='X') && sqlite3Isxdigit(z[i+3]) ){
             pParse->hasNonstd = 1;
-            t |= 0x01;
+            jnFlags |= JNODE_JSON5;
             for(j=i+4; sqlite3Isxdigit(z[j]); j++){}
             goto parse_number_finish;
           }
         }
       }
     }
-
   parse_number_2:
     for(j=i+1;; j++){
       c = z[j];
       if( sqlite3Isdigit(c) ) continue;
       if( c=='.' ){
-        if( (t & 0x02)!=0 ){
+        if( seenDP==JSON_REAL ){
           pParse->iErr = j;
           return -1;
         }
-        t |= 0x02;
+        seenDP = JSON_REAL;
         continue;
       }
       if( c=='e' || c=='E' ){
         if( z[j-1]<'0' ){
           if( ALWAYS(z[j-1]=='.') && ALWAYS(j-2>=i) && sqlite3Isdigit(z[j-2]) ){
             pParse->hasNonstd = 1;
-            t |= 0x01;
+            jnFlags |= JNODE_JSON5;
           }else{
             pParse->iErr = j;
             return -1;
@@ -210783,7 +209773,7 @@ json_parse_restart:
           pParse->iErr = j;
           return -1;
         }
-        t |= 0x02;
+        seenDP = JSON_REAL;
         seenE = 1;
         c = z[j+1];
         if( c=='+' || c=='-' ){
@@ -210801,18 +209791,14 @@ json_parse_restart:
     if( z[j-1]<'0' ){
       if( ALWAYS(z[j-1]=='.') && ALWAYS(j-2>=i) && sqlite3Isdigit(z[j-2]) ){
         pParse->hasNonstd = 1;
-        t |= 0x01;
+        jnFlags |= JNODE_JSON5;
       }else{
         pParse->iErr = j;
         return -1;
       }
     }
   parse_number_finish:
-    assert( JSONB_INT+0x01==JSONB_INT5 );
-    assert( JSONB_FLOAT+0x01==JSONB_FLOAT5 );
-    assert( JSONB_INT+0x02==JSONB_FLOAT );
-    if( z[i]=='+' ) i++;
-    jsonBlobAppendNode(pParse, JSONB_INT+t, j-i, &z[i]);
+    jsonParseAddNode(pParse, seenDP | (jnFlags<<8), j - i, &z[i]);
     return j;
   }
   case '}': {
@@ -210838,7 +209824,9 @@ json_parse_restart:
   case 0x0a:
   case 0x0d:
   case 0x20: {
-    i += 1 + (u32)strspn(&z[i+1], jsonSpaces);
+    do{
+      i++;
+    }while( fast_isspace(z[i]) );
     goto json_parse_restart;
   }
   case 0x0b:
@@ -210860,7 +209848,7 @@ json_parse_restart:
   }
   case 'n': {
     if( strncmp(z+i,"null",4)==0 && !sqlite3Isalnum(z[i+4]) ){
-      jsonBlobAppendOneByte(pParse, JSONB_NULL);
+      jsonParseAddNode(pParse, JSON_NULL, 0, 0);
       return i+4;
     }
     /* fall-through into the default case that checks for NaN */
@@ -210876,11 +209864,8 @@ json_parse_restart:
         continue;
       }
       if( sqlite3Isalnum(z[i+nn]) ) continue;
-      if( aNanInfName[k].eType==JSONB_FLOAT ){
-        jsonBlobAppendNode(pParse, JSONB_FLOAT, 5, "9e999");
-      }else{
-        jsonBlobAppendOneByte(pParse, JSONB_NULL);
-      }
+      jsonParseAddNode(pParse, aNanInfName[k].eType,
+          aNanInfName[k].nRepl, aNanInfName[k].zRepl);
       pParse->hasNonstd = 1;
       return i + nn;
     }
@@ -210890,7 +209875,6 @@ json_parse_restart:
   } /* End switch(z[i]) */
 }
 
-
 /*
 ** Parse a complete JSON string.  Return 0 on success or non-zero if there
 ** are any errors.  If an error occurs, free all memory held by pParse,
@@ -210899,26 +209883,20 @@ json_parse_restart:
 ** pParse must be initialized to an empty parse object prior to calling
 ** this routine.
 */
-static int jsonConvertTextToBlob(
+static int jsonParse(
   JsonParse *pParse,           /* Initialize and fill this JsonParse object */
   sqlite3_context *pCtx        /* Report errors here */
 ){
   int i;
   const char *zJson = pParse->zJson;
-  i = jsonTranslateTextToBlob(pParse, 0);
+  i = jsonParseValue(pParse, 0);
   if( pParse->oom ) i = -1;
   if( i>0 ){
-#ifdef SQLITE_DEBUG
     assert( pParse->iDepth==0 );
-    if( sqlite3Config.bJsonSelfcheck ){
-      assert( jsonbValidityCheck(pParse, 0, pParse->nBlob, 0)==0 );
-    }
-#endif
-    while( jsonIsspace(zJson[i]) ) i++;
+    while( fast_isspace(zJson[i]) ) i++;
     if( zJson[i] ){
       i += json5Whitespace(&zJson[i]);
       if( zJson[i] ){
-        if( pCtx ) sqlite3_result_error(pCtx, "malformed JSON", -1);
         jsonParseReset(pParse);
         return 1;
       }
@@ -210939,719 +209917,248 @@ static int jsonConvertTextToBlob(
   return 0;
 }
 
-/*
-** The input string pStr is a well-formed JSON text string.  Convert
-** this into the JSONB format and make it the return value of the
-** SQL function.
+
+/* Mark node i of pParse as being a child of iParent.  Call recursively
+** to fill in all the descendants of node i.
 */
-static void jsonReturnStringAsBlob(JsonString *pStr){
-  JsonParse px;
-  memset(&px, 0, sizeof(px));
-  jsonStringTerminate(pStr);
-  if( pStr->eErr ){
-    sqlite3_result_error_nomem(pStr->pCtx);
-    return;
-  }
-  px.zJson = pStr->zBuf;
-  px.nJson = pStr->nUsed;
-  px.db = sqlite3_context_db_handle(pStr->pCtx);
-  (void)jsonTranslateTextToBlob(&px, 0);
-  if( px.oom ){
-    sqlite3DbFree(px.db, px.aBlob);
-    sqlite3_result_error_nomem(pStr->pCtx);
-  }else{
-    assert( px.nBlobAlloc>0 );
-    assert( !px.bReadOnly );
-    sqlite3_result_blob(pStr->pCtx, px.aBlob, px.nBlob, SQLITE_DYNAMIC);
+static void jsonParseFillInParentage(JsonParse *pParse, u32 i, u32 iParent){
+  JsonNode *pNode = &pParse->aNode[i];
+  u32 j;
+  pParse->aUp[i] = iParent;
+  switch( pNode->eType ){
+    case JSON_ARRAY: {
+      for(j=1; j<=pNode->n; j += jsonNodeSize(pNode+j)){
+        jsonParseFillInParentage(pParse, i+j, i);
+      }
+      break;
+    }
+    case JSON_OBJECT: {
+      for(j=1; j<=pNode->n; j += jsonNodeSize(pNode+j+1)+1){
+        pParse->aUp[i+j] = i;
+        jsonParseFillInParentage(pParse, i+j+1, i);
+      }
+      break;
+    }
+    default: {
+      break;
+    }
   }
 }
 
-/* The byte at index i is a node type-code.  This routine
-** determines the payload size for that node and writes that
-** payload size in to *pSz.  It returns the offset from i to the
-** beginning of the payload.  Return 0 on error.
+/*
+** Compute the parentage of all nodes in a completed parse.
 */
-static u32 jsonbPayloadSize(const JsonParse *pParse, u32 i, u32 *pSz){
-  u8 x;
-  u32 sz;
-  u32 n;
-  if( NEVER(i>pParse->nBlob) ){
-    *pSz = 0;
+static int jsonParseFindParents(JsonParse *pParse){
+  u32 *aUp;
+  assert( pParse->aUp==0 );
+  aUp = pParse->aUp = sqlite3_malloc64( sizeof(u32)*pParse->nNode );
+  if( aUp==0 ){
+    pParse->oom = 1;
+    return SQLITE_NOMEM;
+  }
+  jsonParseFillInParentage(pParse, 0, 0);
+  return SQLITE_OK;
+}
+
+/*
+** Magic number used for the JSON parse cache in sqlite3_get_auxdata()
+*/
+#define JSON_CACHE_ID  (-429938)  /* First cache entry */
+#define JSON_CACHE_SZ  4          /* Max number of cache entries */
+
+/*
+** Obtain a complete parse of the JSON found in the pJson argument
+**
+** Use the sqlite3_get_auxdata() cache to find a preexisting parse
+** if it is available.  If the cache is not available or if it
+** is no longer valid, parse the JSON again and return the new parse.
+** Also register the new parse so that it will be available for
+** future sqlite3_get_auxdata() calls.
+**
+** If an error occurs and pErrCtx!=0 then report the error on pErrCtx
+** and return NULL.
+**
+** The returned pointer (if it is not NULL) is owned by the cache in
+** most cases, not the caller.  The caller does NOT need to invoke
+** jsonParseFree(), in most cases.
+**
+** Except, if an error occurs and pErrCtx==0 then return the JsonParse
+** object with JsonParse.nErr non-zero and the caller will own the JsonParse
+** object.  In that case, it will be the responsibility of the caller to
+** invoke jsonParseFree().  To summarize:
+**
+**   pErrCtx!=0 || p->nErr==0      ==>   Return value p is owned by the
+**                                       cache.  Call does not need to
+**                                       free it.
+**
+**   pErrCtx==0 && p->nErr!=0      ==>   Return value is owned by the caller
+**                                       and so the caller must free it.
+*/
+static JsonParse *jsonParseCached(
+  sqlite3_context *pCtx,         /* Context to use for cache search */
+  sqlite3_value *pJson,          /* Function param containing JSON text */
+  sqlite3_context *pErrCtx,      /* Write parse errors here if not NULL */
+  int bUnedited                  /* No prior edits allowed */
+){
+  char *zJson = (char*)sqlite3_value_text(pJson);
+  int nJson = sqlite3_value_bytes(pJson);
+  JsonParse *p;
+  JsonParse *pMatch = 0;
+  int iKey;
+  int iMinKey = 0;
+  u32 iMinHold = 0xffffffff;
+  u32 iMaxHold = 0;
+  int bJsonRCStr;
+
+  if( zJson==0 ) return 0;
+  for(iKey=0; iKey<JSON_CACHE_SZ; iKey++){
+    p = (JsonParse*)sqlite3_get_auxdata(pCtx, JSON_CACHE_ID+iKey);
+    if( p==0 ){
+      iMinKey = iKey;
+      break;
+    }
+    if( pMatch==0
+     && p->nJson==nJson
+     && (p->hasMod==0 || bUnedited==0)
+     && (p->zJson==zJson || memcmp(p->zJson,zJson,nJson)==0)
+    ){
+      p->nErr = 0;
+      p->useMod = 0;
+      pMatch = p;
+    }else
+    if( pMatch==0
+     && p->zAlt!=0
+     && bUnedited==0
+     && p->nAlt==nJson
+     && memcmp(p->zAlt, zJson, nJson)==0
+    ){
+      p->nErr = 0;
+      p->useMod = 1;
+      pMatch = p;
+    }else if( p->iHold<iMinHold ){
+      iMinHold = p->iHold;
+      iMinKey = iKey;
+    }
+    if( p->iHold>iMaxHold ){
+      iMaxHold = p->iHold;
+    }
+  }
+  if( pMatch ){
+    /* The input JSON text was found in the cache.  Use the preexisting
+    ** parse of this JSON */
+    pMatch->nErr = 0;
+    pMatch->iHold = iMaxHold+1;
+    assert( pMatch->nJPRef>0 ); /* pMatch is owned by the cache */
+    return pMatch;
+  }
+
+  /* The input JSON was not found anywhere in the cache.  We will need
+  ** to parse it ourselves and generate a new JsonParse object.
+  */
+  bJsonRCStr = sqlite3ValueIsOfClass(pJson,sqlite3RCStrUnref);
+  p = sqlite3_malloc64( sizeof(*p) + (bJsonRCStr ? 0 : nJson+1) );
+  if( p==0 ){
+    sqlite3_result_error_nomem(pCtx);
     return 0;
   }
-  x = pParse->aBlob[i]>>4;
-  if( x<=11 ){
-    sz = x;
-    n = 1;
-  }else if( x==12 ){
-    if( i+1>=pParse->nBlob ){
-      *pSz = 0;
-      return 0;
-    }
-    sz = pParse->aBlob[i+1];
-    n = 2;
-  }else if( x==13 ){
-    if( i+2>=pParse->nBlob ){
-      *pSz = 0;
-      return 0;
-    }
-    sz = (pParse->aBlob[i+1]<<8) + pParse->aBlob[i+2];
-    n = 3;
-  }else if( x==14 ){
-    if( i+4>=pParse->nBlob ){
-      *pSz = 0;
-      return 0;
-    }
-    sz = ((u32)pParse->aBlob[i+1]<<24) + (pParse->aBlob[i+2]<<16) +
-         (pParse->aBlob[i+3]<<8) + pParse->aBlob[i+4];
-    n = 5;
+  memset(p, 0, sizeof(*p));
+  if( bJsonRCStr ){
+    p->zJson = sqlite3RCStrRef(zJson);
+    p->bJsonIsRCStr = 1;
   }else{
-    if( i+8>=pParse->nBlob
-     || pParse->aBlob[i+1]!=0
-     || pParse->aBlob[i+2]!=0
-     || pParse->aBlob[i+3]!=0
-     || pParse->aBlob[i+4]!=0
-    ){
-      *pSz = 0;
-      return 0;
-    }
-    sz = (pParse->aBlob[i+5]<<24) + (pParse->aBlob[i+6]<<16) +
-         (pParse->aBlob[i+7]<<8) + pParse->aBlob[i+8];
-    n = 9;
+    p->zJson = (char*)&p[1];
+    memcpy(p->zJson, zJson, nJson+1);
   }
-  if( (i64)i+sz+n > pParse->nBlob
-   && (i64)i+sz+n > pParse->nBlob-pParse->delta
-  ){
-    sz = 0;
-    n = 0;
+  p->nJPRef = 1;
+  if( jsonParse(p, pErrCtx) ){
+    if( pErrCtx==0 ){
+      p->nErr = 1;
+      assert( p->nJPRef==1 ); /* Caller will own the new JsonParse object p */
+      return p;
+    }
+    jsonParseFree(p);
+    return 0;
   }
-  *pSz = sz;
-  return n;
-}
-
-
-/*
-** Translate the binary JSONB representation of JSON beginning at
-** pParse->aBlob[i] into a JSON text string.  Append the JSON
-** text onto the end of pOut.  Return the index in pParse->aBlob[]
-** of the first byte past the end of the element that is translated.
-**
-** If an error is detected in the BLOB input, the pOut->eErr flag
-** might get set to JSTRING_MALFORMED.  But not all BLOB input errors
-** are detected.  So a malformed JSONB input might either result
-** in an error, or in incorrect JSON.
-**
-** The pOut->eErr JSTRING_OOM flag is set on a OOM.
-*/
-static u32 jsonTranslateBlobToText(
-  const JsonParse *pParse,       /* the complete parse of the JSON */
-  u32 i,                         /* Start rendering at this index */
-  JsonString *pOut               /* Write JSON here */
-){
-  u32 sz, n, j, iEnd;
-
-  n = jsonbPayloadSize(pParse, i, &sz);
-  if( n==0 ){
-    pOut->eErr |= JSTRING_MALFORMED;
-    return pParse->nBlob+1;
-  }
-  switch( pParse->aBlob[i] & 0x0f ){
-    case JSONB_NULL: {
-      jsonAppendRawNZ(pOut, "null", 4);
-      return i+1;
-    }
-    case JSONB_TRUE: {
-      jsonAppendRawNZ(pOut, "true", 4);
-      return i+1;
-    }
-    case JSONB_FALSE: {
-      jsonAppendRawNZ(pOut, "false", 5);
-      return i+1;
-    }
-    case JSONB_INT:
-    case JSONB_FLOAT: {
-      if( sz==0 ) goto malformed_jsonb;
-      jsonAppendRaw(pOut, (const char*)&pParse->aBlob[i+n], sz);
-      break;
-    }
-    case JSONB_INT5: {  /* Integer literal in hexadecimal notation */
-      u32 k = 2;
-      sqlite3_uint64 u = 0;
-      const char *zIn = (const char*)&pParse->aBlob[i+n];
-      int bOverflow = 0;
-      if( sz==0 ) goto malformed_jsonb;
-      if( zIn[0]=='-' ){
-        jsonAppendChar(pOut, '-');
-        k++;
-      }else if( zIn[0]=='+' ){
-        k++;
-      }
-      for(; k<sz; k++){
-        if( !sqlite3Isxdigit(zIn[k]) ){
-          pOut->eErr |= JSTRING_MALFORMED;
-          break;
-        }else if( (u>>60)!=0 ){
-          bOverflow = 1;
-        }else{
-          u = u*16 + sqlite3HexToInt(zIn[k]);
-        }
-      }
-      jsonPrintf(100,pOut,bOverflow?"9.0e999":"%llu", u);
-      break;
-    }
-    case JSONB_FLOAT5: { /* Float literal missing digits beside "." */
-      u32 k = 0;
-      const char *zIn = (const char*)&pParse->aBlob[i+n];
-      if( sz==0 ) goto malformed_jsonb;
-      if( zIn[0]=='-' ){
-        jsonAppendChar(pOut, '-');
-        k++;
-      }
-      if( zIn[k]=='.' ){
-        jsonAppendChar(pOut, '0');
-      }
-      for(; k<sz; k++){
-        jsonAppendChar(pOut, zIn[k]);
-        if( zIn[k]=='.' && (k+1==sz || !sqlite3Isdigit(zIn[k+1])) ){
-          jsonAppendChar(pOut, '0');
-        }
-      }
-      break;
-    }
-    case JSONB_TEXT:
-    case JSONB_TEXTJ: {
-      jsonAppendChar(pOut, '"');
-      jsonAppendRaw(pOut, (const char*)&pParse->aBlob[i+n], sz);
-      jsonAppendChar(pOut, '"');
-      break;
-    }
-    case JSONB_TEXT5: {
-      const char *zIn;
-      u32 k;
-      u32 sz2 = sz;
-      zIn = (const char*)&pParse->aBlob[i+n];
-      jsonAppendChar(pOut, '"');
-      while( sz2>0 ){
-        for(k=0; k<sz2 && zIn[k]!='\\' && zIn[k]!='"'; k++){}
-        if( k>0 ){
-          jsonAppendRawNZ(pOut, zIn, k);
-          if( k>=sz2 ){
-            break;
-          }
-          zIn += k;
-          sz2 -= k;
-        }
-        if( zIn[0]=='"' ){
-          jsonAppendRawNZ(pOut, "\\\"", 2);
-          zIn++;
-          sz2--;
-          continue;
-        }
-        assert( zIn[0]=='\\' );
-        assert( sz2>=1 );
-        if( sz2<2 ){
-          pOut->eErr |= JSTRING_MALFORMED;
-          break;
-        }
-        switch( (u8)zIn[1] ){
-          case '\'':
-            jsonAppendChar(pOut, '\'');
-            break;
-          case 'v':
-            jsonAppendRawNZ(pOut, "\\u0009", 6);
-            break;
-          case 'x':
-            if( sz2<4 ){
-              pOut->eErr |= JSTRING_MALFORMED;
-              sz2 = 2;
-              break;
-            }
-            jsonAppendRawNZ(pOut, "\\u00", 4);
-            jsonAppendRawNZ(pOut, &zIn[2], 2);
-            zIn += 2;
-            sz2 -= 2;
-            break;
-          case '0':
-            jsonAppendRawNZ(pOut, "\\u0000", 6);
-            break;
-          case '\r':
-            if( sz2>2 && zIn[2]=='\n' ){
-              zIn++;
-              sz2--;
-            }
-            break;
-          case '\n':
-            break;
-          case 0xe2:
-            /* '\' followed by either U+2028 or U+2029 is ignored as
-            ** whitespace.  Not that in UTF8, U+2028 is 0xe2 0x80 0x29.
-            ** U+2029 is the same except for the last byte */
-            if( sz2<4
-             || 0x80!=(u8)zIn[2]
-             || (0xa8!=(u8)zIn[3] && 0xa9!=(u8)zIn[3])
-            ){
-              pOut->eErr |= JSTRING_MALFORMED;
-              sz2 = 2;
-              break;
-            }
-            zIn += 2;
-            sz2 -= 2;
-            break;
-          default:
-            jsonAppendRawNZ(pOut, zIn, 2);
-            break;
-        }
-        assert( sz2>=2 );
-        zIn += 2;
-        sz2 -= 2;
-      }
-      jsonAppendChar(pOut, '"');
-      break;
-    }
-    case JSONB_TEXTRAW: {
-      jsonAppendString(pOut, (const char*)&pParse->aBlob[i+n], sz);
-      break;
-    }
-    case JSONB_ARRAY: {
-      jsonAppendChar(pOut, '[');
-      j = i+n;
-      iEnd = j+sz;
-      while( j<iEnd && pOut->eErr==0 ){
-        j = jsonTranslateBlobToText(pParse, j, pOut);
-        jsonAppendChar(pOut, ',');
-      }
-      if( j>iEnd ) pOut->eErr |= JSTRING_MALFORMED;
-      if( sz>0 ) jsonStringTrimOneChar(pOut);
-      jsonAppendChar(pOut, ']');
-      break;
-    }
-    case JSONB_OBJECT: {
-      int x = 0;
-      jsonAppendChar(pOut, '{');
-      j = i+n;
-      iEnd = j+sz;
-      while( j<iEnd && pOut->eErr==0 ){
-        j = jsonTranslateBlobToText(pParse, j, pOut);
-        jsonAppendChar(pOut, (x++ & 1) ? ',' : ':');
-      }
-      if( (x & 1)!=0 || j>iEnd ) pOut->eErr |= JSTRING_MALFORMED;
-      if( sz>0 ) jsonStringTrimOneChar(pOut);
-      jsonAppendChar(pOut, '}');
-      break;
-    }
-
-    default: {
-      malformed_jsonb:
-      pOut->eErr |= JSTRING_MALFORMED;
-      break;
-    }
-  }
-  return i+n+sz;
-}
-
-/* Return true if the input pJson
-**
-** For performance reasons, this routine does not do a detailed check of the
-** input BLOB to ensure that it is well-formed.  Hence, false positives are
-** possible.  False negatives should never occur, however.
-*/
-static int jsonFuncArgMightBeBinary(sqlite3_value *pJson){
-  u32 sz, n;
-  const u8 *aBlob;
-  int nBlob;
-  JsonParse s;
-  if( sqlite3_value_type(pJson)!=SQLITE_BLOB ) return 0;
-  aBlob = sqlite3_value_blob(pJson);
-  nBlob = sqlite3_value_bytes(pJson);
-  if( nBlob<1 ) return 0;
-  if( NEVER(aBlob==0) || (aBlob[0] & 0x0f)>JSONB_OBJECT ) return 0;
-  memset(&s, 0, sizeof(s));
-  s.aBlob = (u8*)aBlob;
-  s.nBlob = nBlob;
-  n = jsonbPayloadSize(&s, 0, &sz);
-  if( n==0 ) return 0;
-  if( sz+n!=(u32)nBlob ) return 0;
-  if( (aBlob[0] & 0x0f)<=JSONB_FALSE && sz>0 ) return 0;
-  return sz+n==(u32)nBlob;
+  p->nJson = nJson;
+  p->iHold = iMaxHold+1;
+  /* Transfer ownership of the new JsonParse to the cache */
+  sqlite3_set_auxdata(pCtx, JSON_CACHE_ID+iMinKey, p,
+                      (void(*)(void*))jsonParseFree);
+  return (JsonParse*)sqlite3_get_auxdata(pCtx, JSON_CACHE_ID+iMinKey);
 }
 
 /*
-** Given that a JSONB_ARRAY object starts at offset i, return
-** the number of entries in that array.
+** Compare the OBJECT label at pNode against zKey,nKey.  Return true on
+** a match.
 */
-static u32 jsonbArrayCount(JsonParse *pParse, u32 iRoot){
-  u32 n, sz, i, iEnd;
-  u32 k = 0;
-  n = jsonbPayloadSize(pParse, iRoot, &sz);
-  iEnd = iRoot+n+sz;
-  for(i=iRoot+n; n>0 && i<iEnd; i+=sz+n, k++){
-    n = jsonbPayloadSize(pParse, i, &sz);
-  }
-  return k;
-}
-
-/*
-** Edit the payload size of the element at iRoot by the amount in
-** pParse->delta.
-*/
-static void jsonAfterEditSizeAdjust(JsonParse *pParse, u32 iRoot){
-  u32 sz = 0;
-  u32 nBlob;
-  assert( pParse->delta!=0 );
-  assert( pParse->nBlobAlloc >= pParse->nBlob );
-  nBlob = pParse->nBlob;
-  pParse->nBlob = pParse->nBlobAlloc;
-  (void)jsonbPayloadSize(pParse, iRoot, &sz);
-  pParse->nBlob = nBlob;
-  sz += pParse->delta;
-  pParse->delta += jsonBlobChangePayloadSize(pParse, iRoot, sz);
-}
-
-/*
-** Modify the JSONB blob at pParse->aBlob by removing nDel bytes of
-** content beginning at iDel, and replacing them with nIns bytes of
-** content given by aIns.
-**
-** nDel may be zero, in which case no bytes are removed.  But iDel is
-** still important as new bytes will be insert beginning at iDel.
-**
-** aIns may be zero, in which case space is created to hold nIns bytes
-** beginning at iDel, but that space is uninitialized.
-**
-** Set pParse->oom if an OOM occurs.
-*/
-static void jsonBlobEdit(
-  JsonParse *pParse,     /* The JSONB to be modified is in pParse->aBlob */
-  u32 iDel,              /* First byte to be removed */
-  u32 nDel,              /* Number of bytes to remove */
-  const u8 *aIns,        /* Content to insert */
-  u32 nIns               /* Bytes of content to insert */
-){
-  i64 d = (i64)nIns - (i64)nDel;
-  if( d!=0 ){
-    if( pParse->nBlob + d > pParse->nBlobAlloc ){
-      jsonBlobExpand(pParse, pParse->nBlob+d);
-      if( pParse->oom ) return;
-    }
-    memmove(&pParse->aBlob[iDel+nIns],
-            &pParse->aBlob[iDel+nDel],
-            pParse->nBlob - (iDel+nDel));
-    pParse->nBlob += d;
-    pParse->delta += d;
-  }
-  if( nIns && aIns ) memcpy(&pParse->aBlob[iDel], aIns, nIns);
-}
-
-/*
-** Return the number of escaped newlines to be ignored.
-** An escaped newline is a one of the following byte sequences:
-**
-**    0x5c 0x0a
-**    0x5c 0x0d
-**    0x5c 0x0d 0x0a
-**    0x5c 0xe2 0x80 0xa8
-**    0x5c 0xe2 0x80 0xa9
-*/
-static u32 jsonBytesToBypass(const char *z, u32 n){
-  u32 i = 0;
-  while( i+1<n ){
-    if( z[i]!='\\' ) return i;
-    if( z[i+1]=='\n' ){
-      i += 2;
-      continue;
-    }
-    if( z[i+1]=='\r' ){
-      if( i+2<n && z[i+2]=='\n' ){
-        i += 3;
-      }else{
-        i += 2;
-      }
-      continue;
-    }
-    if( 0xe2==(u8)z[i+1]
-     && i+3<n
-     && 0x80==(u8)z[i+2]
-     && (0xa8==(u8)z[i+3] || 0xa9==(u8)z[i+3])
-    ){
-      i += 4;
-      continue;
-    }
-    break;
-  }
-  return i;
-}
-
-/*
-** Input z[0..n] defines JSON escape sequence including the leading '\\'.
-** Decode that escape sequence into a single character.  Write that
-** character into *piOut.  Return the number of bytes in the escape sequence.
-**
-** If there is a syntax error of some kind (for example too few characters
-** after the '\\' to complete the encoding) then *piOut is set to
-** JSON_INVALID_CHAR.
-*/
-static u32 jsonUnescapeOneChar(const char *z, u32 n, u32 *piOut){
-  assert( n>0 );
-  assert( z[0]=='\\' );
-  if( n<2 ){
-    *piOut = JSON_INVALID_CHAR;
-    return n;
-  }
-  switch( (u8)z[1] ){
-    case 'u': {
-      u32 v, vlo;
-      if( n<6 ){
-        *piOut = JSON_INVALID_CHAR;
-        return n;
-      }
-      v = jsonHexToInt4(&z[2]);
-      if( (v & 0xfc00)==0xd800
-       && n>=12
-       && z[6]=='\\'
-       && z[7]=='u'
-       && ((vlo = jsonHexToInt4(&z[8]))&0xfc00)==0xdc00
-      ){
-        *piOut = ((v&0x3ff)<<10) + (vlo&0x3ff) + 0x10000;
-        return 12;
-      }else{
-        *piOut = v;
-        return 6;
-      }
-    }
-    case 'b': {   *piOut = '\b';  return 2; }
-    case 'f': {   *piOut = '\f';  return 2; }
-    case 'n': {   *piOut = '\n';  return 2; }
-    case 'r': {   *piOut = '\r';  return 2; }
-    case 't': {   *piOut = '\t';  return 2; }
-    case 'v': {   *piOut = '\v';  return 2; }
-    case '0': {   *piOut = 0;     return 2; }
-    case '\'':
-    case '"':
-    case '/':
-    case '\\':{   *piOut = z[1];  return 2; }
-    case 'x': {
-      if( n<4 ){
-        *piOut = JSON_INVALID_CHAR;
-        return n;
-      }
-      *piOut = (jsonHexToInt(z[2])<<4) | jsonHexToInt(z[3]);
-      return 4;
-    }
-    case 0xe2:
-    case '\r':
-    case '\n': {
-      u32 nSkip = jsonBytesToBypass(z, n);
-      if( nSkip==0 ){
-        *piOut = JSON_INVALID_CHAR;
-        return n;
-      }else if( nSkip==n ){
-        *piOut = 0;
-        return n;
-      }else if( z[nSkip]=='\\' ){
-        return nSkip + jsonUnescapeOneChar(&z[nSkip], n-nSkip, piOut);
-      }else{
-        int sz = sqlite3Utf8ReadLimited((u8*)&z[nSkip], n-nSkip, piOut);
-        return nSkip + sz;
-      }
-    }
-    default: {
-      *piOut = JSON_INVALID_CHAR;
-      return 2;
-    }
-  }
-}
-
-
-/*
-** Compare two object labels.  Return 1 if they are equal and
-** 0 if they differ.
-**
-** In this version, we know that one or the other or both of the
-** two comparands contains an escape sequence.
-*/
-static SQLITE_NOINLINE int jsonLabelCompareEscaped(
-  const char *zLeft,          /* The left label */
-  u32 nLeft,                  /* Size of the left label in bytes */
-  int rawLeft,                /* True if zLeft contains no escapes */
-  const char *zRight,         /* The right label */
-  u32 nRight,                 /* Size of the right label in bytes */
-  int rawRight                /* True if zRight is escape-free */
-){
-  u32 cLeft, cRight;
-  assert( rawLeft==0 || rawRight==0 );
-  while( 1 /*exit-by-return*/ ){
-    if( nLeft==0 ){
-      cLeft = 0;
-    }else if( rawLeft || zLeft[0]!='\\' ){
-      cLeft = ((u8*)zLeft)[0];
-      if( cLeft>=0xc0 ){
-        int sz = sqlite3Utf8ReadLimited((u8*)zLeft, nLeft, &cLeft);
-        zLeft += sz;
-        nLeft -= sz;
-      }else{
-        zLeft++;
-        nLeft--;
-      }
-    }else{
-      u32 n = jsonUnescapeOneChar(zLeft, nLeft, &cLeft);
-      zLeft += n;
-      assert( n<=nLeft );
-      nLeft -= n;
-    }
-    if( nRight==0 ){
-      cRight = 0;
-    }else if( rawRight || zRight[0]!='\\' ){
-      cRight = ((u8*)zRight)[0];
-      if( cRight>=0xc0 ){
-        int sz = sqlite3Utf8ReadLimited((u8*)zRight, nRight, &cRight);
-        zRight += sz;
-        nRight -= sz;
-      }else{
-        zRight++;
-        nRight--;
-      }
-    }else{
-      u32 n = jsonUnescapeOneChar(zRight, nRight, &cRight);
-      zRight += n;
-      assert( n<=nRight );
-      nRight -= n;
-    }
-    if( cLeft!=cRight ) return 0;
-    if( cLeft==0 ) return 1;
-  }
-}
-
-/*
-** Compare two object labels.  Return 1 if they are equal and
-** 0 if they differ.  Return -1 if an OOM occurs.
-*/
-static int jsonLabelCompare(
-  const char *zLeft,          /* The left label */
-  u32 nLeft,                  /* Size of the left label in bytes */
-  int rawLeft,                /* True if zLeft contains no escapes */
-  const char *zRight,         /* The right label */
-  u32 nRight,                 /* Size of the right label in bytes */
-  int rawRight                /* True if zRight is escape-free */
-){
-  if( rawLeft && rawRight ){
-    /* Simpliest case:  Neither label contains escapes.  A simple
-    ** memcmp() is sufficient. */
-    if( nLeft!=nRight ) return 0;
-    return memcmp(zLeft, zRight, nLeft)==0;
+static int jsonLabelCompare(const JsonNode *pNode, const char *zKey, u32 nKey){
+  assert( pNode->eU==1 );
+  if( pNode->jnFlags & JNODE_RAW ){
+    if( pNode->n!=nKey ) return 0;
+    return strncmp(pNode->u.zJContent, zKey, nKey)==0;
   }else{
-    return jsonLabelCompareEscaped(zLeft, nLeft, rawLeft,
-                                   zRight, nRight, rawRight);
+    if( pNode->n!=nKey+2 ) return 0;
+    return strncmp(pNode->u.zJContent+1, zKey, nKey)==0;
   }
 }
-
-/*
-** Error returns from jsonLookupStep()
-*/
-#define JSON_LOOKUP_ERROR      0xffffffff
-#define JSON_LOOKUP_NOTFOUND   0xfffffffe
-#define JSON_LOOKUP_PATHERROR  0xfffffffd
-#define JSON_LOOKUP_ISERROR(x) ((x)>=JSON_LOOKUP_PATHERROR)
-
-/* Forward declaration */
-static u32 jsonLookupStep(JsonParse*,u32,const char*,u32);
-
-
-/* This helper routine for jsonLookupStep() populates pIns with
-** binary data that is to be inserted into pParse.
-**
-** In the common case, pIns just points to pParse->aIns and pParse->nIns.
-** But if the zPath of the original edit operation includes path elements
-** that go deeper, additional substructure must be created.
-**
-** For example:
-**
-**     json_insert('{}', '$.a.b.c', 123);
-**
-** The search stops at '$.a'  But additional substructure must be
-** created for the ".b.c" part of the patch so that the final result
-** is:  {"a":{"b":{"c"::123}}}.  This routine populates pIns with
-** the binary equivalent of {"b":{"c":123}} so that it can be inserted.
-**
-** The caller is responsible for resetting pIns when it has finished
-** using the substructure.
-*/
-static u32 jsonCreateEditSubstructure(
-  JsonParse *pParse,  /* The original JSONB that is being edited */
-  JsonParse *pIns,    /* Populate this with the blob data to insert */
-  const char *zTail   /* Tail of the path that determins substructure */
-){
-  static const u8 emptyObject[] = { JSONB_ARRAY, JSONB_OBJECT };
-  int rc;
-  memset(pIns, 0, sizeof(*pIns));
-  pIns->db = pParse->db;
-  if( zTail[0]==0 ){
-    /* No substructure.  Just insert what is given in pParse. */
-    pIns->aBlob = pParse->aIns;
-    pIns->nBlob = pParse->nIns;
-    rc = 0;
+static int jsonSameLabel(const JsonNode *p1, const JsonNode *p2){
+  if( p1->jnFlags & JNODE_RAW ){
+    return jsonLabelCompare(p2, p1->u.zJContent, p1->n);
+  }else if( p2->jnFlags & JNODE_RAW ){
+    return jsonLabelCompare(p1, p2->u.zJContent, p2->n);
   }else{
-    /* Construct the binary substructure */
-    pIns->nBlob = 1;
-    pIns->aBlob = (u8*)&emptyObject[zTail[0]=='.'];
-    pIns->eEdit = pParse->eEdit;
-    pIns->nIns = pParse->nIns;
-    pIns->aIns = pParse->aIns;
-    rc = jsonLookupStep(pIns, 0, zTail, 0);
-    pParse->oom |= pIns->oom;
+    return p1->n==p2->n && strncmp(p1->u.zJContent,p2->u.zJContent,p1->n)==0;
   }
-  return rc;  /* Error code only */
 }
 
+/* forward declaration */
+static JsonNode *jsonLookupAppend(JsonParse*,const char*,int*,const char**);
+
 /*
-** Search along zPath to find the Json element specified.  Return an
-** index into pParse->aBlob[] for the start of that element's value.
+** Search along zPath to find the node specified.  Return a pointer
+** to that node, or NULL if zPath is malformed or if there is no such
+** node.
 **
-** If the value found by this routine is the value half of label/value pair
-** within an object, then set pPath->iLabel to the start of the corresponding
-** label, before returning.
-**
-** Return one of the JSON_LOOKUP error codes if problems are seen.
-**
-** This routine will also modify the blob.  If pParse->eEdit is one of
-** JEDIT_DEL, JEDIT_REPL, JEDIT_INS, or JEDIT_SET, then changes might be
-** made to the selected value.  If an edit is performed, then the return
-** value does not necessarily point to the select element.  If an edit
-** is performed, the return value is only useful for detecting error
-** conditions.
+** If pApnd!=0, then try to append new nodes to complete zPath if it is
+** possible to do so and if no existing node corresponds to zPath.  If
+** new nodes are appended *pApnd is set to 1.
 */
-static u32 jsonLookupStep(
+static JsonNode *jsonLookupStep(
   JsonParse *pParse,      /* The JSON to search */
-  u32 iRoot,              /* Begin the search at this element of aBlob[] */
+  u32 iRoot,              /* Begin the search at this node */
   const char *zPath,      /* The path to search */
-  u32 iLabel              /* Label if iRoot is a value of in an object */
+  int *pApnd,             /* Append nodes to complete path if not NULL */
+  const char **pzErr      /* Make *pzErr point to any syntax error in zPath */
 ){
-  u32 i, j, k, nKey, sz, n, iEnd, rc;
+  u32 i, j, nKey;
   const char *zKey;
-  u8 x;
-
-  if( zPath[0]==0 ){
-    if( pParse->eEdit && jsonBlobMakeEditable(pParse, pParse->nIns) ){
-      n = jsonbPayloadSize(pParse, iRoot, &sz);
-      sz += n;
-      if( pParse->eEdit==JEDIT_DEL ){
-        if( iLabel>0 ){
-          sz += iRoot - iLabel;
-          iRoot = iLabel;
+  JsonNode *pRoot;
+  if( pParse->oom ) return 0;
+  pRoot = &pParse->aNode[iRoot];
+  if( pRoot->jnFlags & (JNODE_REPLACE|JNODE_REMOVE) && pParse->useMod ){
+    while( (pRoot->jnFlags & JNODE_REPLACE)!=0 ){
+      u32 idx = (u32)(pRoot - pParse->aNode);
+      i = pParse->iSubst;
+      while( 1 /*exit-by-break*/ ){
+        assert( i<pParse->nNode );
+        assert( pParse->aNode[i].eType==JSON_SUBST );
+        assert( pParse->aNode[i].eU==4 );
+        assert( pParse->aNode[i].u.iPrev<i );
+        if( pParse->aNode[i].n==idx ){
+          pRoot = &pParse->aNode[i+1];
+          iRoot = i+1;
+          break;
         }
-        jsonBlobEdit(pParse, iRoot, sz, 0, 0);
-      }else if( pParse->eEdit==JEDIT_INS ){
-        /* Already exists, so json_insert() is a no-op */
-      }else{
-        /* json_set() or json_replace() */
-        jsonBlobEdit(pParse, iRoot, sz, pParse->aIns, pParse->nIns);
+        i = pParse->aNode[i].u.iPrev;
       }
     }
-    pParse->iLabel = iLabel;
-    return iRoot;
+    if( pRoot->jnFlags & JNODE_REMOVE ){
+      return 0;
+    }
   }
+  if( zPath[0]==0 ) return pRoot;
   if( zPath[0]=='.' ){
-    int rawKey = 1;
-    x = pParse->aBlob[iRoot];
+    if( pRoot->eType!=JSON_OBJECT ) return 0;
     zPath++;
     if( zPath[0]=='"' ){
       zKey = zPath + 1;
@@ -211660,705 +210167,251 @@ static u32 jsonLookupStep(
       if( zPath[i] ){
         i++;
       }else{
-        return JSON_LOOKUP_PATHERROR;
+        *pzErr = zPath;
+        return 0;
       }
       testcase( nKey==0 );
-      rawKey = memchr(zKey, '\\', nKey)==0;
     }else{
       zKey = zPath;
       for(i=0; zPath[i] && zPath[i]!='.' && zPath[i]!='['; i++){}
       nKey = i;
       if( nKey==0 ){
-        return JSON_LOOKUP_PATHERROR;
+        *pzErr = zPath;
+        return 0;
       }
     }
-    if( (x & 0x0f)!=JSONB_OBJECT ) return JSON_LOOKUP_NOTFOUND;
-    n = jsonbPayloadSize(pParse, iRoot, &sz);
-    j = iRoot + n;  /* j is the index of a label */
-    iEnd = j+sz;
-    while( j<iEnd ){
-      int rawLabel;
-      const char *zLabel;
-      x = pParse->aBlob[j] & 0x0f;
-      if( x<JSONB_TEXT || x>JSONB_TEXTRAW ) return JSON_LOOKUP_ERROR;
-      n = jsonbPayloadSize(pParse, j, &sz);
-      if( n==0 ) return JSON_LOOKUP_ERROR;
-      k = j+n;  /* k is the index of the label text */
-      if( k+sz>=iEnd ) return JSON_LOOKUP_ERROR;
-      zLabel = (const char*)&pParse->aBlob[k];
-      rawLabel = x==JSONB_TEXT || x==JSONB_TEXTRAW;
-      if( jsonLabelCompare(zKey, nKey, rawKey, zLabel, sz, rawLabel) ){
-        u32 v = k+sz;  /* v is the index of the value */
-        if( ((pParse->aBlob[v])&0x0f)>JSONB_OBJECT ) return JSON_LOOKUP_ERROR;
-        n = jsonbPayloadSize(pParse, v, &sz);
-        if( n==0 || v+n+sz>iEnd ) return JSON_LOOKUP_ERROR;
-        assert( j>0 );
-        rc = jsonLookupStep(pParse, v, &zPath[i], j);
-        if( pParse->delta ) jsonAfterEditSizeAdjust(pParse, iRoot);
-        return rc;
-      }
-      j = k+sz;
-      if( ((pParse->aBlob[j])&0x0f)>JSONB_OBJECT ) return JSON_LOOKUP_ERROR;
-      n = jsonbPayloadSize(pParse, j, &sz);
-      if( n==0 ) return JSON_LOOKUP_ERROR;
-      j += n+sz;
-    }
-    if( j>iEnd ) return JSON_LOOKUP_ERROR;
-    if( pParse->eEdit>=JEDIT_INS ){
-      u32 nIns;          /* Total bytes to insert (label+value) */
-      JsonParse v;       /* BLOB encoding of the value to be inserted */
-      JsonParse ix;      /* Header of the label to be inserted */
-      testcase( pParse->eEdit==JEDIT_INS );
-      testcase( pParse->eEdit==JEDIT_SET );
-      memset(&ix, 0, sizeof(ix));
-      ix.db = pParse->db;
-      jsonBlobAppendNode(&ix, rawKey?JSONB_TEXTRAW:JSONB_TEXT5, nKey, 0);
-      pParse->oom |= ix.oom;
-      rc = jsonCreateEditSubstructure(pParse, &v, &zPath[i]);
-      if( !JSON_LOOKUP_ISERROR(rc)
-       && jsonBlobMakeEditable(pParse, ix.nBlob+nKey+v.nBlob)
-      ){
-        assert( !pParse->oom );
-        nIns = ix.nBlob + nKey + v.nBlob;
-        jsonBlobEdit(pParse, j, 0, 0, nIns);
-        if( !pParse->oom ){
-          assert( pParse->aBlob!=0 ); /* Because pParse->oom!=0 */
-          assert( ix.aBlob!=0 );      /* Because pPasre->oom!=0 */
-          memcpy(&pParse->aBlob[j], ix.aBlob, ix.nBlob);
-          k = j + ix.nBlob;
-          memcpy(&pParse->aBlob[k], zKey, nKey);
-          k += nKey;
-          memcpy(&pParse->aBlob[k], v.aBlob, v.nBlob);
-          if( ALWAYS(pParse->delta) ) jsonAfterEditSizeAdjust(pParse, iRoot);
+    j = 1;
+    for(;;){
+      while( j<=pRoot->n ){
+        if( jsonLabelCompare(pRoot+j, zKey, nKey) ){
+          return jsonLookupStep(pParse, iRoot+j+1, &zPath[i], pApnd, pzErr);
         }
+        j++;
+        j += jsonNodeSize(&pRoot[j]);
       }
-      jsonParseReset(&v);
-      jsonParseReset(&ix);
-      return rc;
+      if( (pRoot->jnFlags & JNODE_APPEND)==0 ) break;
+      if( pParse->useMod==0 ) break;
+      assert( pRoot->eU==2 );
+      iRoot = pRoot->u.iAppend;
+      pRoot = &pParse->aNode[iRoot];
+      j = 1;
+    }
+    if( pApnd ){
+      u32 iStart, iLabel;
+      JsonNode *pNode;
+      assert( pParse->useMod );
+      iStart = jsonParseAddNode(pParse, JSON_OBJECT, 2, 0);
+      iLabel = jsonParseAddNode(pParse, JSON_STRING, nKey, zKey);
+      zPath += i;
+      pNode = jsonLookupAppend(pParse, zPath, pApnd, pzErr);
+      if( pParse->oom ) return 0;
+      if( pNode ){
+        pRoot = &pParse->aNode[iRoot];
+        assert( pRoot->eU==0 );
+        pRoot->u.iAppend = iStart;
+        pRoot->jnFlags |= JNODE_APPEND;
+        VVA( pRoot->eU = 2 );
+        pParse->aNode[iLabel].jnFlags |= JNODE_RAW;
+      }
+      return pNode;
     }
   }else if( zPath[0]=='[' ){
-    x = pParse->aBlob[iRoot] & 0x0f;
-    if( x!=JSONB_ARRAY )  return JSON_LOOKUP_NOTFOUND;
-    n = jsonbPayloadSize(pParse, iRoot, &sz);
-    k = 0;
-    i = 1;
-    while( sqlite3Isdigit(zPath[i]) ){
-      k = k*10 + zPath[i] - '0';
-      i++;
+    i = 0;
+    j = 1;
+    while( sqlite3Isdigit(zPath[j]) ){
+      i = i*10 + zPath[j] - '0';
+      j++;
     }
-    if( i<2 || zPath[i]!=']' ){
+    if( j<2 || zPath[j]!=']' ){
       if( zPath[1]=='#' ){
-        k = jsonbArrayCount(pParse, iRoot);
-        i = 2;
-        if( zPath[2]=='-' && sqlite3Isdigit(zPath[3]) ){
-          unsigned int nn = 0;
-          i = 3;
-          do{
-            nn = nn*10 + zPath[i] - '0';
-            i++;
-          }while( sqlite3Isdigit(zPath[i]) );
-          if( nn>k ) return JSON_LOOKUP_NOTFOUND;
-          k -= nn;
+        JsonNode *pBase = pRoot;
+        int iBase = iRoot;
+        if( pRoot->eType!=JSON_ARRAY ) return 0;
+        for(;;){
+          while( j<=pBase->n ){
+            if( (pBase[j].jnFlags & JNODE_REMOVE)==0 || pParse->useMod==0 ) i++;
+            j += jsonNodeSize(&pBase[j]);
+          }
+          if( (pBase->jnFlags & JNODE_APPEND)==0 ) break;
+          if( pParse->useMod==0 ) break;
+          assert( pBase->eU==2 );
+          iBase = pBase->u.iAppend;
+          pBase = &pParse->aNode[iBase];
+          j = 1;
         }
-        if( zPath[i]!=']' ){
-          return JSON_LOOKUP_PATHERROR;
+        j = 2;
+        if( zPath[2]=='-' && sqlite3Isdigit(zPath[3]) ){
+          unsigned int x = 0;
+          j = 3;
+          do{
+            x = x*10 + zPath[j] - '0';
+            j++;
+          }while( sqlite3Isdigit(zPath[j]) );
+          if( x>i ) return 0;
+          i -= x;
+        }
+        if( zPath[j]!=']' ){
+          *pzErr = zPath;
+          return 0;
         }
       }else{
-        return JSON_LOOKUP_PATHERROR;
+        *pzErr = zPath;
+        return 0;
       }
     }
-    j = iRoot+n;
-    iEnd = j+sz;
-    while( j<iEnd ){
-      if( k==0 ){
-        rc = jsonLookupStep(pParse, j, &zPath[i+1], 0);
-        if( pParse->delta ) jsonAfterEditSizeAdjust(pParse, iRoot);
-        return rc;
-      }
-      k--;
-      n = jsonbPayloadSize(pParse, j, &sz);
-      if( n==0 ) return JSON_LOOKUP_ERROR;
-      j += n+sz;
-    }
-    if( j>iEnd ) return JSON_LOOKUP_ERROR;
-    if( k>0 ) return JSON_LOOKUP_NOTFOUND;
-    if( pParse->eEdit>=JEDIT_INS ){
-      JsonParse v;
-      testcase( pParse->eEdit==JEDIT_INS );
-      testcase( pParse->eEdit==JEDIT_SET );
-      rc = jsonCreateEditSubstructure(pParse, &v, &zPath[i+1]);
-      if( !JSON_LOOKUP_ISERROR(rc)
-       && jsonBlobMakeEditable(pParse, v.nBlob)
+    if( pRoot->eType!=JSON_ARRAY ) return 0;
+    zPath += j + 1;
+    j = 1;
+    for(;;){
+      while( j<=pRoot->n
+         && (i>0 || ((pRoot[j].jnFlags & JNODE_REMOVE)!=0 && pParse->useMod))
       ){
-        assert( !pParse->oom );
-        jsonBlobEdit(pParse, j, 0, v.aBlob, v.nBlob);
+        if( (pRoot[j].jnFlags & JNODE_REMOVE)==0 || pParse->useMod==0 ) i--;
+        j += jsonNodeSize(&pRoot[j]);
       }
-      jsonParseReset(&v);
-      if( pParse->delta ) jsonAfterEditSizeAdjust(pParse, iRoot);
-      return rc;
+      if( i==0 && j<=pRoot->n ) break;
+      if( (pRoot->jnFlags & JNODE_APPEND)==0 ) break;
+      if( pParse->useMod==0 ) break;
+      assert( pRoot->eU==2 );
+      iRoot = pRoot->u.iAppend;
+      pRoot = &pParse->aNode[iRoot];
+      j = 1;
+    }
+    if( j<=pRoot->n ){
+      return jsonLookupStep(pParse, iRoot+j, zPath, pApnd, pzErr);
+    }
+    if( i==0 && pApnd ){
+      u32 iStart;
+      JsonNode *pNode;
+      assert( pParse->useMod );
+      iStart = jsonParseAddNode(pParse, JSON_ARRAY, 1, 0);
+      pNode = jsonLookupAppend(pParse, zPath, pApnd, pzErr);
+      if( pParse->oom ) return 0;
+      if( pNode ){
+        pRoot = &pParse->aNode[iRoot];
+        assert( pRoot->eU==0 );
+        pRoot->u.iAppend = iStart;
+        pRoot->jnFlags |= JNODE_APPEND;
+        VVA( pRoot->eU = 2 );
+      }
+      return pNode;
     }
   }else{
-    return JSON_LOOKUP_PATHERROR;
+    *pzErr = zPath;
   }
-  return JSON_LOOKUP_NOTFOUND;
+  return 0;
 }
 
 /*
-** Convert a JSON BLOB into text and make that text the return value
-** of an SQL function.
+** Append content to pParse that will complete zPath.  Return a pointer
+** to the inserted node, or return NULL if the append fails.
 */
-static void jsonReturnTextJsonFromBlob(
-  sqlite3_context *ctx,
-  const u8 *aBlob,
-  u32 nBlob
+static JsonNode *jsonLookupAppend(
+  JsonParse *pParse,     /* Append content to the JSON parse */
+  const char *zPath,     /* Description of content to append */
+  int *pApnd,            /* Set this flag to 1 */
+  const char **pzErr     /* Make this point to any syntax error */
 ){
-  JsonParse x;
-  JsonString s;
-
-  if( NEVER(aBlob==0) ) return;
-  memset(&x, 0, sizeof(x));
-  x.aBlob = (u8*)aBlob;
-  x.nBlob = nBlob;
-  jsonStringInit(&s, ctx);
-  jsonTranslateBlobToText(&x, 0, &s);
-  jsonReturnString(&s, 0, 0);
-}
-
-
-/*
-** Return the value of the BLOB node at index i.
-**
-** If the value is a primitive, return it as an SQL value.
-** If the value is an array or object, return it as either
-** JSON text or the BLOB encoding, depending on the JSON_B flag
-** on the userdata.
-*/
-static void jsonReturnFromBlob(
-  JsonParse *pParse,          /* Complete JSON parse tree */
-  u32 i,                      /* Index of the node */
-  sqlite3_context *pCtx,      /* Return value for this function */
-  int textOnly                /* return text JSON.  Disregard user-data */
-){
-  u32 n, sz;
-  int rc;
-  sqlite3 *db = sqlite3_context_db_handle(pCtx);
-
-  n = jsonbPayloadSize(pParse, i, &sz);
-  if( n==0 ){
-    sqlite3_result_error(pCtx, "malformed JSON", -1);
-    return;
+  *pApnd = 1;
+  if( zPath[0]==0 ){
+    jsonParseAddNode(pParse, JSON_NULL, 0, 0);
+    return pParse->oom ? 0 : &pParse->aNode[pParse->nNode-1];
   }
-  switch( pParse->aBlob[i] & 0x0f ){
-    case JSONB_NULL: {
-      if( sz ) goto returnfromblob_malformed;
-      sqlite3_result_null(pCtx);
-      break;
-    }
-    case JSONB_TRUE: {
-      if( sz ) goto returnfromblob_malformed;
-      sqlite3_result_int(pCtx, 1);
-      break;
-    }
-    case JSONB_FALSE: {
-      if( sz ) goto returnfromblob_malformed;
-      sqlite3_result_int(pCtx, 0);
-      break;
-    }
-    case JSONB_INT5:
-    case JSONB_INT: {
-      sqlite3_int64 iRes = 0;
-      char *z;
-      int bNeg = 0;
-      char x;
-      if( sz==0 ) goto returnfromblob_malformed;
-      x = (char)pParse->aBlob[i+n];
-      if( x=='-' ){
-        if( sz<2 ) goto returnfromblob_malformed;
-        n++;
-        sz--;
-        bNeg = 1;
-      }
-      z = sqlite3DbStrNDup(db, (const char*)&pParse->aBlob[i+n], (int)sz);
-      if( z==0 ) goto returnfromblob_oom;
-      rc = sqlite3DecOrHexToI64(z, &iRes);
-      sqlite3DbFree(db, z);
-      if( rc==0 ){
-        sqlite3_result_int64(pCtx, bNeg ? -iRes : iRes);
-      }else if( rc==3 && bNeg ){
-        sqlite3_result_int64(pCtx, SMALLEST_INT64);
-      }else if( rc==1 ){
-        goto returnfromblob_malformed;
-      }else{
-        if( bNeg ){ n--; sz++; }
-        goto to_double;
-      }
-      break;
-    }
-    case JSONB_FLOAT5:
-    case JSONB_FLOAT: {
-      double r;
-      char *z;
-      if( sz==0 ) goto returnfromblob_malformed;
-    to_double:
-      z = sqlite3DbStrNDup(db, (const char*)&pParse->aBlob[i+n], (int)sz);
-      if( z==0 ) goto returnfromblob_oom;
-      rc = sqlite3AtoF(z, &r, sqlite3Strlen30(z), SQLITE_UTF8);
-      sqlite3DbFree(db, z);
-      if( rc<=0 ) goto returnfromblob_malformed;
-      sqlite3_result_double(pCtx, r);
-      break;
-    }
-    case JSONB_TEXTRAW:
-    case JSONB_TEXT: {
-      sqlite3_result_text(pCtx, (char*)&pParse->aBlob[i+n], sz,
-                          SQLITE_TRANSIENT);
-      break;
-    }
-    case JSONB_TEXT5:
-    case JSONB_TEXTJ: {
-      /* Translate JSON formatted string into raw text */
-      u32 iIn, iOut;
-      const char *z;
-      char *zOut;
-      u32 nOut = sz;
-      z = (const char*)&pParse->aBlob[i+n];
-      zOut = sqlite3DbMallocRaw(db, nOut+1);
-      if( zOut==0 ) goto returnfromblob_oom;
-      for(iIn=iOut=0; iIn<sz; iIn++){
-        char c = z[iIn];
-        if( c=='\\' ){
-          u32 v;
-          u32 szEscape = jsonUnescapeOneChar(&z[iIn], sz-iIn, &v);
-          if( v<=0x7f ){
-            zOut[iOut++] = (char)v;
-          }else if( v<=0x7ff ){
-            assert( szEscape>=2 );
-            zOut[iOut++] = (char)(0xc0 | (v>>6));
-            zOut[iOut++] = 0x80 | (v&0x3f);
-          }else if( v<0x10000 ){
-            assert( szEscape>=3 );
-            zOut[iOut++] = 0xe0 | (v>>12);
-            zOut[iOut++] = 0x80 | ((v>>6)&0x3f);
-            zOut[iOut++] = 0x80 | (v&0x3f);
-          }else if( v==JSON_INVALID_CHAR ){
-            /* Silently ignore illegal unicode */
-          }else{
-            assert( szEscape>=4 );
-            zOut[iOut++] = 0xf0 | (v>>18);
-            zOut[iOut++] = 0x80 | ((v>>12)&0x3f);
-            zOut[iOut++] = 0x80 | ((v>>6)&0x3f);
-            zOut[iOut++] = 0x80 | (v&0x3f);
-          }
-          iIn += szEscape - 1;
-        }else{
-          zOut[iOut++] = c;
-        }
-      } /* end for() */
-      assert( iOut<=nOut );
-      zOut[iOut] = 0;
-      sqlite3_result_text(pCtx, zOut, iOut, SQLITE_DYNAMIC);
-      break;
-    }
-    case JSONB_ARRAY:
-    case JSONB_OBJECT: {
-      int flags = textOnly ? 0 : SQLITE_PTR_TO_INT(sqlite3_user_data(pCtx));
-      if( flags & JSON_BLOB ){
-        sqlite3_result_blob(pCtx, &pParse->aBlob[i], sz+n, SQLITE_TRANSIENT);
-      }else{
-        jsonReturnTextJsonFromBlob(pCtx, &pParse->aBlob[i], sz+n);
-      }
-      break;
-    }
-    default: {
-      goto returnfromblob_malformed;
-    }
-  }
-  return;
-
-returnfromblob_oom:
-  sqlite3_result_error_nomem(pCtx);
-  return;
-
-returnfromblob_malformed:
-  sqlite3_result_error(pCtx, "malformed JSON", -1);
-  return;
-}
-
-/*
-** pArg is a function argument that might be an SQL value or a JSON
-** value.  Figure out what it is and encode it as a JSONB blob.
-** Return the results in pParse.
-**
-** pParse is uninitialized upon entry.  This routine will handle the
-** initialization of pParse.  The result will be contained in
-** pParse->aBlob and pParse->nBlob.  pParse->aBlob might be dynamically
-** allocated (if pParse->nBlobAlloc is greater than zero) in which case
-** the caller is responsible for freeing the space allocated to pParse->aBlob
-** when it has finished with it.  Or pParse->aBlob might be a static string
-** or a value obtained from sqlite3_value_blob(pArg).
-**
-** If the argument is a BLOB that is clearly not a JSONB, then this
-** function might set an error message in ctx and return non-zero.
-** It might also set an error message and return non-zero on an OOM error.
-*/
-static int jsonFunctionArgToBlob(
-  sqlite3_context *ctx,
-  sqlite3_value *pArg,
-  JsonParse *pParse
-){
-  int eType = sqlite3_value_type(pArg);
-  static u8 aNull[] = { 0x00 };
-  memset(pParse, 0, sizeof(pParse[0]));
-  pParse->db = sqlite3_context_db_handle(ctx);
-  switch( eType ){
-    default: {
-      pParse->aBlob = aNull;
-      pParse->nBlob = 1;
-      return 0;
-    }
-    case SQLITE_BLOB: {
-      if( jsonFuncArgMightBeBinary(pArg) ){
-        pParse->aBlob = (u8*)sqlite3_value_blob(pArg);
-        pParse->nBlob = sqlite3_value_bytes(pArg);
-      }else{
-        sqlite3_result_error(ctx, "JSON cannot hold BLOB values", -1);
-        return 1;
-      }
-      break;
-    }
-    case SQLITE_TEXT: {
-      const char *zJson = (const char*)sqlite3_value_text(pArg);
-      int nJson = sqlite3_value_bytes(pArg);
-      if( zJson==0 ) return 1;
-      if( sqlite3_value_subtype(pArg)==JSON_SUBTYPE ){
-        pParse->zJson = (char*)zJson;
-        pParse->nJson = nJson;
-        if( jsonConvertTextToBlob(pParse, ctx) ){
-          sqlite3_result_error(ctx, "malformed JSON", -1);
-          sqlite3DbFree(pParse->db, pParse->aBlob);
-          memset(pParse, 0, sizeof(pParse[0]));
-          return 1;
-        }
-      }else{
-        jsonBlobAppendNode(pParse, JSONB_TEXTRAW, nJson, zJson);
-      }
-      break;
-    }
-    case SQLITE_FLOAT: {
-      double r = sqlite3_value_double(pArg);
-      if( NEVER(sqlite3IsNaN(r)) ){
-        jsonBlobAppendNode(pParse, JSONB_NULL, 0, 0);
-      }else{
-        int n = sqlite3_value_bytes(pArg);
-        const char *z = (const char*)sqlite3_value_text(pArg);
-        if( z==0 ) return 1;
-        if( z[0]=='I' ){
-          jsonBlobAppendNode(pParse, JSONB_FLOAT, 5, "9e999");
-        }else if( z[0]=='-' && z[1]=='I' ){
-          jsonBlobAppendNode(pParse, JSONB_FLOAT, 6, "-9e999");
-        }else{
-          jsonBlobAppendNode(pParse, JSONB_FLOAT, n, z);
-        }
-      }
-      break;
-    }
-    case SQLITE_INTEGER: {
-      int n = sqlite3_value_bytes(pArg);
-      const char *z = (const char*)sqlite3_value_text(pArg);
-      if( z==0 ) return 1;
-      jsonBlobAppendNode(pParse, JSONB_INT, n, z);
-      break;
-    }
-  }
-  if( pParse->oom ){
-    sqlite3_result_error_nomem(ctx);
-    return 1;
+  if( zPath[0]=='.' ){
+    jsonParseAddNode(pParse, JSON_OBJECT, 0, 0);
+  }else if( strncmp(zPath,"[0]",3)==0 ){
+    jsonParseAddNode(pParse, JSON_ARRAY, 0, 0);
   }else{
     return 0;
   }
+  if( pParse->oom ) return 0;
+  return jsonLookupStep(pParse, pParse->nNode-1, zPath, pApnd, pzErr);
 }
 
 /*
-** Generate a bad path error.
-**
-** If ctx is not NULL then push the error message into ctx and return NULL.
-** If ctx is NULL, then return the text of the error message.
+** Return the text of a syntax error message on a JSON path.  Space is
+** obtained from sqlite3_malloc().
 */
-static char *jsonBadPathError(
-  sqlite3_context *ctx,     /* The function call containing the error */
-  const char *zPath         /* The path with the problem */
+static char *jsonPathSyntaxError(const char *zErr){
+  return sqlite3_mprintf("JSON path error near '%q'", zErr);
+}
+
+/*
+** Do a node lookup using zPath.  Return a pointer to the node on success.
+** Return NULL if not found or if there is an error.
+**
+** On an error, write an error message into pCtx and increment the
+** pParse->nErr counter.
+**
+** If pApnd!=NULL then try to append missing nodes and set *pApnd = 1 if
+** nodes are appended.
+*/
+static JsonNode *jsonLookup(
+  JsonParse *pParse,      /* The JSON to search */
+  const char *zPath,      /* The path to search */
+  int *pApnd,             /* Append nodes to complete path if not NULL */
+  sqlite3_context *pCtx   /* Report errors here, if not NULL */
 ){
-  char *zMsg = sqlite3_mprintf("bad JSON path: %Q", zPath);
-  if( ctx==0 ) return zMsg;
+  const char *zErr = 0;
+  JsonNode *pNode = 0;
+  char *zMsg;
+
+  if( zPath==0 ) return 0;
+  if( zPath[0]!='$' ){
+    zErr = zPath;
+    goto lookup_err;
+  }
+  zPath++;
+  pNode = jsonLookupStep(pParse, 0, zPath, pApnd, &zErr);
+  if( zErr==0 ) return pNode;
+
+lookup_err:
+  pParse->nErr++;
+  assert( zErr!=0 && pCtx!=0 );
+  zMsg = jsonPathSyntaxError(zErr);
   if( zMsg ){
-    sqlite3_result_error(ctx, zMsg, -1);
+    sqlite3_result_error(pCtx, zMsg, -1);
     sqlite3_free(zMsg);
   }else{
-    sqlite3_result_error_nomem(ctx);
+    sqlite3_result_error_nomem(pCtx);
   }
   return 0;
 }
 
-/* argv[0] is a BLOB that seems likely to be a JSONB.  Subsequent
-** arguments come in parse where each pair contains a JSON path and
-** content to insert or set at that patch.  Do the updates
-** and return the result.
-**
-** The specific operation is determined by eEdit, which can be one
-** of JEDIT_INS, JEDIT_REPL, or JEDIT_SET.
+
+/*
+** Report the wrong number of arguments for json_insert(), json_replace()
+** or json_set().
 */
-static void jsonInsertIntoBlob(
-  sqlite3_context *ctx,
-  int argc,
-  sqlite3_value **argv,
-  int eEdit                /* JEDIT_INS, JEDIT_REPL, or JEDIT_SET */
+static void jsonWrongNumArgs(
+  sqlite3_context *pCtx,
+  const char *zFuncName
 ){
-  int i;
-  u32 rc = 0;
-  const char *zPath = 0;
-  int flgs;
-  JsonParse *p;
-  JsonParse ax;
-
-  assert( (argc&1)==1 );
-  flgs = argc==1 ? 0 : JSON_EDITABLE;
-  p = jsonParseFuncArg(ctx, argv[0], flgs);
-  if( p==0 ) return;
-  for(i=1; i<argc-1; i+=2){
-    if( sqlite3_value_type(argv[i])==SQLITE_NULL ) continue;
-    zPath = (const char*)sqlite3_value_text(argv[i]);
-    if( zPath==0 ){
-      sqlite3_result_error_nomem(ctx);
-      jsonParseFree(p);
-      return;
-    }
-    if( zPath[0]!='$' ) goto jsonInsertIntoBlob_patherror;
-    if( jsonFunctionArgToBlob(ctx, argv[i+1], &ax) ){
-      jsonParseReset(&ax);
-      jsonParseFree(p);
-      return;
-    }
-    if( zPath[1]==0 ){
-      if( eEdit==JEDIT_REPL || eEdit==JEDIT_SET ){
-        jsonBlobEdit(p, 0, p->nBlob, ax.aBlob, ax.nBlob);
-      }
-      rc = 0;
-   }else{
-      p->eEdit = eEdit;
-      p->nIns = ax.nBlob;
-      p->aIns = ax.aBlob;
-      p->delta = 0;
-      rc = jsonLookupStep(p, 0, zPath+1, 0);
-    }
-    jsonParseReset(&ax);
-    if( rc==JSON_LOOKUP_NOTFOUND ) continue;
-    if( JSON_LOOKUP_ISERROR(rc) ) goto jsonInsertIntoBlob_patherror;
-  }
-  jsonReturnParse(ctx, p);
-  jsonParseFree(p);
-  return;
-
-jsonInsertIntoBlob_patherror:
-  jsonParseFree(p);
-  if( rc==JSON_LOOKUP_ERROR ){
-    sqlite3_result_error(ctx, "malformed JSON", -1);
-  }else{
-    jsonBadPathError(ctx, zPath);
-  }
-  return;
+  char *zMsg = sqlite3_mprintf("json_%s() needs an odd number of arguments",
+                               zFuncName);
+  sqlite3_result_error(pCtx, zMsg, -1);
+  sqlite3_free(zMsg);
 }
 
 /*
-** If pArg is a blob that seems like a JSONB blob, then initialize
-** p to point to that JSONB and return TRUE.  If pArg does not seem like
-** a JSONB blob, then return FALSE;
-**
-** This routine is only called if it is already known that pArg is a
-** blob.  The only open question is whether or not the blob appears
-** to be a JSONB blob.
+** Mark all NULL entries in the Object passed in as JNODE_REMOVE.
 */
-static int jsonArgIsJsonb(sqlite3_value *pArg, JsonParse *p){
-  u32 n, sz = 0;
-  p->aBlob = (u8*)sqlite3_value_blob(pArg);
-  p->nBlob = (u32)sqlite3_value_bytes(pArg);
-  if( p->nBlob==0 ){
-    p->aBlob = 0;
-    return 0;
+static void jsonRemoveAllNulls(JsonNode *pNode){
+  int i, n;
+  assert( pNode->eType==JSON_OBJECT );
+  n = pNode->n;
+  for(i=2; i<=n; i += jsonNodeSize(&pNode[i])+1){
+    switch( pNode[i].eType ){
+      case JSON_NULL:
+        pNode[i].jnFlags |= JNODE_REMOVE;
+        break;
+      case JSON_OBJECT:
+        jsonRemoveAllNulls(&pNode[i]);
+        break;
+    }
   }
-  if( NEVER(p->aBlob==0) ){
-    return 0;
-  }
-  if( (p->aBlob[0] & 0x0f)<=JSONB_OBJECT
-   && (n = jsonbPayloadSize(p, 0, &sz))>0
-   && sz+n==p->nBlob
-   && ((p->aBlob[0] & 0x0f)>JSONB_FALSE || sz==0)
-  ){
-    return 1;
-  }
-  p->aBlob = 0;
-  p->nBlob = 0;
-  return 0;
 }
 
-/*
-** Generate a JsonParse object, containing valid JSONB in aBlob and nBlob,
-** from the SQL function argument pArg.  Return a pointer to the new
-** JsonParse object.
-**
-** Ownership of the new JsonParse object is passed to the caller.  The
-** caller should invoke jsonParseFree() on the return value when it
-** has finished using it.
-**
-** If any errors are detected, an appropriate error messages is set
-** using sqlite3_result_error() or the equivalent and this routine
-** returns NULL.  This routine also returns NULL if the pArg argument
-** is an SQL NULL value, but no error message is set in that case.  This
-** is so that SQL functions that are given NULL arguments will return
-** a NULL value.
-*/
-static JsonParse *jsonParseFuncArg(
-  sqlite3_context *ctx,
-  sqlite3_value *pArg,
-  u32 flgs
-){
-  int eType;                   /* Datatype of pArg */
-  JsonParse *p = 0;            /* Value to be returned */
-  JsonParse *pFromCache = 0;   /* Value taken from cache */
-  sqlite3 *db;                 /* The database connection */
-
-  assert( ctx!=0 );
-  eType = sqlite3_value_type(pArg);
-  if( eType==SQLITE_NULL ){
-    return 0;
-  }
-  pFromCache = jsonCacheSearch(ctx, pArg);
-  if( pFromCache ){
-    pFromCache->nJPRef++;
-    if( (flgs & JSON_EDITABLE)==0 ){
-      return pFromCache;
-    }
-  }
-  db = sqlite3_context_db_handle(ctx);
-rebuild_from_cache:
-  p = sqlite3DbMallocZero(db, sizeof(*p));
-  if( p==0 ) goto json_pfa_oom;
-  memset(p, 0, sizeof(*p));
-  p->db = db;
-  p->nJPRef = 1;
-  if( pFromCache!=0 ){
-    u32 nBlob = pFromCache->nBlob;
-    p->aBlob = sqlite3DbMallocRaw(db, nBlob);
-    if( p->aBlob==0 ) goto json_pfa_oom;
-    memcpy(p->aBlob, pFromCache->aBlob, nBlob);
-    p->nBlobAlloc = p->nBlob = nBlob;
-    p->hasNonstd = pFromCache->hasNonstd;
-    jsonParseFree(pFromCache);
-    return p;
-  }
-  if( eType==SQLITE_BLOB ){
-    if( jsonArgIsJsonb(pArg,p) ){
-      if( (flgs & JSON_EDITABLE)!=0 && jsonBlobMakeEditable(p, 0)==0 ){
-        goto json_pfa_oom;
-      }
-      return p;
-    }
-    /* If the blob is not valid JSONB, fall through into trying to cast
-    ** the blob into text which is then interpreted as JSON.  (tag-20240123-a)
-    **
-    ** This goes against all historical documentation about how the SQLite
-    ** JSON functions were suppose to work.  From the beginning, blob was
-    ** reserved for expansion and a blob value should have raised an error.
-    ** But it did not, due to a bug.  And many applications came to depend
-    ** upon this buggy behavior, espeically when using the CLI and reading
-    ** JSON text using readfile(), which returns a blob.  For this reason
-    ** we will continue to support the bug moving forward.
-    ** See for example https://sqlite.org/forum/forumpost/012136abd5292b8d
-    */
-  }
-  p->zJson = (char*)sqlite3_value_text(pArg);
-  p->nJson = sqlite3_value_bytes(pArg);
-  if( db->mallocFailed ) goto json_pfa_oom;
-  if( p->nJson==0 ) goto json_pfa_malformed;
-  assert( p->zJson!=0 );
-  if( jsonConvertTextToBlob(p, (flgs & JSON_KEEPERROR) ? 0 : ctx) ){
-    if( flgs & JSON_KEEPERROR ){
-      p->nErr = 1;
-      return p;
-    }else{
-      jsonParseFree(p);
-      return 0;
-    }
-  }else{
-    int isRCStr = sqlite3ValueIsOfClass(pArg, sqlite3RCStrUnref);
-    int rc;
-    if( !isRCStr ){
-      char *zNew = sqlite3RCStrNew( p->nJson );
-      if( zNew==0 ) goto json_pfa_oom;
-      memcpy(zNew, p->zJson, p->nJson);
-      p->zJson = zNew;
-      p->zJson[p->nJson] = 0;
-    }else{
-      sqlite3RCStrRef(p->zJson);
-    }
-    p->bJsonIsRCStr = 1;
-    rc = jsonCacheInsert(ctx, p);
-    if( rc==SQLITE_NOMEM ) goto json_pfa_oom;
-    if( flgs & JSON_EDITABLE ){
-      pFromCache = p;
-      p = 0;
-      goto rebuild_from_cache;
-    }
-  }
-  return p;
-
-json_pfa_malformed:
-  if( flgs & JSON_KEEPERROR ){
-    p->nErr = 1;
-    return p;
-  }else{
-    jsonParseFree(p);
-    sqlite3_result_error(ctx, "malformed JSON", -1);
-    return 0;
-  }
-
-json_pfa_oom:
-  jsonParseFree(pFromCache);
-  jsonParseFree(p);
-  sqlite3_result_error_nomem(ctx);
-  return 0;
-}
-
-/*
-** Make the return value of a JSON function either the raw JSONB blob
-** or make it JSON text, depending on whether the JSON_BLOB flag is
-** set on the function.
-*/
-static void jsonReturnParse(
-  sqlite3_context *ctx,
-  JsonParse *p
-){
-  int flgs;
-  if( p->oom ){
-    sqlite3_result_error_nomem(ctx);
-    return;
-  }
-  flgs = SQLITE_PTR_TO_INT(sqlite3_user_data(ctx));
-  if( flgs & JSON_BLOB ){
-    if( p->nBlobAlloc>0 && !p->bReadOnly ){
-      sqlite3_result_blob(ctx, p->aBlob, p->nBlob, SQLITE_DYNAMIC);
-      p->nBlobAlloc = 0;
-    }else{
-      sqlite3_result_blob(ctx, p->aBlob, p->nBlob, SQLITE_TRANSIENT);
-    }
-  }else{
-    JsonString s;
-    jsonStringInit(&s, ctx);
-    p->delta = 0;
-    jsonTranslateBlobToText(p, 0, &s);
-    jsonReturnString(&s, p, ctx);
-    sqlite3_result_subtype(ctx, JSON_SUBTYPE);
-  }
-}
 
 /****************************************************************************
 ** SQL functions used for testing and debugging
@@ -212366,124 +210419,63 @@ static void jsonReturnParse(
 
 #if SQLITE_DEBUG
 /*
-** Decode JSONB bytes in aBlob[] starting at iStart through but not
-** including iEnd.  Indent the
-** content by nIndent spaces.
+** Print N node entries.
 */
-static void jsonDebugPrintBlob(
-  JsonParse *pParse, /* JSON content */
-  u32 iStart,        /* Start rendering here */
-  u32 iEnd,          /* Do not render this byte or any byte after this one */
-  int nIndent,       /* Indent by this many spaces */
-  sqlite3_str *pOut  /* Generate output into this sqlite3_str object */
+static void jsonDebugPrintNodeEntries(
+  JsonNode *aNode,  /* First node entry to print */
+  int N             /* Number of node entries to print */
 ){
-  while( iStart<iEnd ){
-    u32 i, n, nn, sz = 0;
-    int showContent = 1;
-    u8 x = pParse->aBlob[iStart] & 0x0f;
-    u32 savedNBlob = pParse->nBlob;
-    sqlite3_str_appendf(pOut, "%5d:%*s", iStart, nIndent, "");
-    if( pParse->nBlobAlloc>pParse->nBlob ){
-      pParse->nBlob = pParse->nBlobAlloc;
+  int i;
+  for(i=0; i<N; i++){
+    const char *zType;
+    if( aNode[i].jnFlags & JNODE_LABEL ){
+      zType = "label";
+    }else{
+      zType = jsonType[aNode[i].eType];
     }
-    nn = n = jsonbPayloadSize(pParse, iStart, &sz);
-    if( nn==0 ) nn = 1;
-    if( sz>0 && x<JSONB_ARRAY ){
-      nn += sz;
+    printf("node %4u: %-7s n=%-5d", i, zType, aNode[i].n);
+    if( (aNode[i].jnFlags & ~JNODE_LABEL)!=0 ){
+      u8 f = aNode[i].jnFlags;
+      if( f & JNODE_RAW )     printf(" RAW");
+      if( f & JNODE_ESCAPE )  printf(" ESCAPE");
+      if( f & JNODE_REMOVE )  printf(" REMOVE");
+      if( f & JNODE_REPLACE ) printf(" REPLACE");
+      if( f & JNODE_APPEND )  printf(" APPEND");
+      if( f & JNODE_JSON5 )   printf(" JSON5");
     }
-    for(i=0; i<nn; i++){
-      sqlite3_str_appendf(pOut, " %02x", pParse->aBlob[iStart+i]);
+    switch( aNode[i].eU ){
+      case 1:  printf(" zJContent=[%.*s]\n",
+                      aNode[i].n, aNode[i].u.zJContent);           break;
+      case 2:  printf(" iAppend=%u\n", aNode[i].u.iAppend);        break;
+      case 3:  printf(" iKey=%u\n", aNode[i].u.iKey);              break;
+      case 4:  printf(" iPrev=%u\n", aNode[i].u.iPrev);            break;
+      default: printf("\n");
     }
-    if( n==0 ){
-      sqlite3_str_appendf(pOut, "   ERROR invalid node size\n");
-      iStart = n==0 ? iStart+1 : iEnd;
-      continue;
-    }
-    pParse->nBlob = savedNBlob;
-    if( iStart+n+sz>iEnd ){
-      iEnd = iStart+n+sz;
-      if( iEnd>pParse->nBlob ){
-        if( pParse->nBlobAlloc>0 && iEnd>pParse->nBlobAlloc ){
-          iEnd = pParse->nBlobAlloc;
-        }else{
-          iEnd = pParse->nBlob;
-        }
-      }
-    }
-    sqlite3_str_appendall(pOut,"  <-- ");
-    switch( x ){
-      case JSONB_NULL:     sqlite3_str_appendall(pOut,"null"); break;
-      case JSONB_TRUE:     sqlite3_str_appendall(pOut,"true"); break;
-      case JSONB_FALSE:    sqlite3_str_appendall(pOut,"false"); break;
-      case JSONB_INT:      sqlite3_str_appendall(pOut,"int"); break;
-      case JSONB_INT5:     sqlite3_str_appendall(pOut,"int5"); break;
-      case JSONB_FLOAT:    sqlite3_str_appendall(pOut,"float"); break;
-      case JSONB_FLOAT5:   sqlite3_str_appendall(pOut,"float5"); break;
-      case JSONB_TEXT:     sqlite3_str_appendall(pOut,"text"); break;
-      case JSONB_TEXTJ:    sqlite3_str_appendall(pOut,"textj"); break;
-      case JSONB_TEXT5:    sqlite3_str_appendall(pOut,"text5"); break;
-      case JSONB_TEXTRAW:  sqlite3_str_appendall(pOut,"textraw"); break;
-      case JSONB_ARRAY: {
-        sqlite3_str_appendf(pOut,"array, %u bytes\n", sz);
-        jsonDebugPrintBlob(pParse, iStart+n, iStart+n+sz, nIndent+2, pOut);
-        showContent = 0;
-        break;
-      }
-      case JSONB_OBJECT: {
-        sqlite3_str_appendf(pOut, "object, %u bytes\n", sz);
-        jsonDebugPrintBlob(pParse, iStart+n, iStart+n+sz, nIndent+2, pOut);
-        showContent = 0;
-        break;
-      }
-      default: {
-        sqlite3_str_appendall(pOut, "ERROR: unknown node type\n");
-        showContent = 0;
-        break;
-      }
-    }
-    if( showContent ){
-      if( sz==0 && x<=JSONB_FALSE ){
-        sqlite3_str_append(pOut, "\n", 1);
-      }else{
-        u32 j;
-        sqlite3_str_appendall(pOut, ": \"");
-        for(j=iStart+n; j<iStart+n+sz; j++){
-          u8 c = pParse->aBlob[j];
-          if( c<0x20 || c>=0x7f ) c = '.';
-          sqlite3_str_append(pOut, (char*)&c, 1);
-        }
-        sqlite3_str_append(pOut, "\"\n", 2);
-      }
-    }
-    iStart += n + sz;
   }
-}
-static void jsonShowParse(JsonParse *pParse){
-  sqlite3_str out;
-  char zBuf[1000];
-  if( pParse==0 ){
-    printf("NULL pointer\n");
-    return;
-  }else{
-    printf("nBlobAlloc = %u\n", pParse->nBlobAlloc);
-    printf("nBlob = %u\n", pParse->nBlob);
-    printf("delta = %d\n", pParse->delta);
-    if( pParse->nBlob==0 ) return;
-    printf("content (bytes 0..%u):\n", pParse->nBlob-1);
-  }
-  sqlite3StrAccumInit(&out, 0, zBuf, sizeof(zBuf), 1000000);
-  jsonDebugPrintBlob(pParse, 0, pParse->nBlob, 0, &out);
-  printf("%s", sqlite3_str_value(&out));
-  sqlite3_str_reset(&out);
 }
 #endif /* SQLITE_DEBUG */
+
+
+#if 0  /* 1 for debugging.  0 normally.  Requires -DSQLITE_DEBUG too */
+static void jsonDebugPrintParse(JsonParse *p){
+  jsonDebugPrintNodeEntries(p->aNode, p->nNode);
+}
+static void jsonDebugPrintNode(JsonNode *pNode){
+  jsonDebugPrintNodeEntries(pNode, jsonNodeSize(pNode));
+}
+#else
+   /* The usual case */
+# define jsonDebugPrintNode(X)
+# define jsonDebugPrintParse(X)
+#endif
 
 #ifdef SQLITE_DEBUG
 /*
 ** SQL function:   json_parse(JSON)
 **
-** Parse JSON using jsonParseFuncArg().  Return text that is a
-** human-readable dump of the binary JSONB for the input parameter.
+** Parse JSON using jsonParseCached().  Then print a dump of that
+** parse on standard output.  Return the mimified JSON result, just
+** like the json() function.
 */
 static void jsonParseFunc(
   sqlite3_context *ctx,
@@ -212491,19 +210483,38 @@ static void jsonParseFunc(
   sqlite3_value **argv
 ){
   JsonParse *p;        /* The parse */
-  sqlite3_str out;
 
-  assert( argc>=1 );
-  sqlite3StrAccumInit(&out, 0, 0, 0, 1000000);
-  p = jsonParseFuncArg(ctx, argv[0], 0);
+  assert( argc==1 );
+  p = jsonParseCached(ctx, argv[0], ctx, 0);
   if( p==0 ) return;
-  if( argc==1 ){
-    jsonDebugPrintBlob(p, 0, p->nBlob, 0, &out);
-    sqlite3_result_text64(ctx, out.zText, out.nChar, SQLITE_DYNAMIC, SQLITE_UTF8);
-  }else{
-    jsonShowParse(p);
-  }
-  jsonParseFree(p);
+  printf("nNode     = %u\n", p->nNode);
+  printf("nAlloc    = %u\n", p->nAlloc);
+  printf("nJson     = %d\n", p->nJson);
+  printf("nAlt      = %d\n", p->nAlt);
+  printf("nErr      = %u\n", p->nErr);
+  printf("oom       = %u\n", p->oom);
+  printf("hasNonstd = %u\n", p->hasNonstd);
+  printf("useMod    = %u\n", p->useMod);
+  printf("hasMod    = %u\n", p->hasMod);
+  printf("nJPRef    = %u\n", p->nJPRef);
+  printf("iSubst    = %u\n", p->iSubst);
+  printf("iHold     = %u\n", p->iHold);
+  jsonDebugPrintNodeEntries(p->aNode, p->nNode);
+  jsonReturnJson(p, p->aNode, ctx, 1, 0);
+}
+
+/*
+** The json_test1(JSON) function return true (1) if the input is JSON
+** text generated by another json function.  It returns (0) if the input
+** is not known to be JSON.
+*/
+static void jsonTest1Func(
+  sqlite3_context *ctx,
+  int argc,
+  sqlite3_value **argv
+){
+  UNUSED_PARAMETER(argc);
+  sqlite3_result_int(ctx, sqlite3_value_subtype(argv[0])==JSON_SUBTYPE);
 }
 #endif /* SQLITE_DEBUG */
 
@@ -212512,7 +210523,7 @@ static void jsonParseFunc(
 ****************************************************************************/
 
 /*
-** Implementation of the json_quote(VALUE) function.  Return a JSON value
+** Implementation of the json_QUOTE(VALUE) function.  Return a JSON value
 ** corresponding to the SQL value input.  Mostly this means putting
 ** double-quotes around strings and returning the unquoted string "null"
 ** when given a NULL input.
@@ -212525,9 +210536,9 @@ static void jsonQuoteFunc(
   JsonString jx;
   UNUSED_PARAMETER(argc);
 
-  jsonStringInit(&jx, ctx);
-  jsonAppendSqlValue(&jx, argv[0]);
-  jsonReturnString(&jx, 0, 0);
+  jsonInit(&jx, ctx);
+  jsonAppendValue(&jx, argv[0]);
+  jsonResult(&jx);
   sqlite3_result_subtype(ctx, JSON_SUBTYPE);
 }
 
@@ -212544,16 +210555,17 @@ static void jsonArrayFunc(
   int i;
   JsonString jx;
 
-  jsonStringInit(&jx, ctx);
+  jsonInit(&jx, ctx);
   jsonAppendChar(&jx, '[');
   for(i=0; i<argc; i++){
     jsonAppendSeparator(&jx);
-    jsonAppendSqlValue(&jx, argv[i]);
+    jsonAppendValue(&jx, argv[i]);
   }
   jsonAppendChar(&jx, ']');
-  jsonReturnString(&jx, 0, 0);
+  jsonResult(&jx);
   sqlite3_result_subtype(ctx, JSON_SUBTYPE);
 }
+
 
 /*
 ** json_array_length(JSON)
@@ -212568,53 +210580,46 @@ static void jsonArrayLengthFunc(
   sqlite3_value **argv
 ){
   JsonParse *p;          /* The parse */
-  sqlite3_int64 cnt = 0;
+  sqlite3_int64 n = 0;
   u32 i;
-  u8 eErr = 0;
+  JsonNode *pNode;
 
-  p = jsonParseFuncArg(ctx, argv[0], 0);
+  p = jsonParseCached(ctx, argv[0], ctx, 0);
   if( p==0 ) return;
+  assert( p->nNode );
   if( argc==2 ){
     const char *zPath = (const char*)sqlite3_value_text(argv[1]);
-    if( zPath==0 ){
-      jsonParseFree(p);
-      return;
-    }
-    i = jsonLookupStep(p, 0, zPath[0]=='$' ? zPath+1 : "@", 0);
-    if( JSON_LOOKUP_ISERROR(i) ){
-      if( i==JSON_LOOKUP_NOTFOUND ){
-        /* no-op */
-      }else if( i==JSON_LOOKUP_PATHERROR ){
-        jsonBadPathError(ctx, zPath);
-      }else{
-        sqlite3_result_error(ctx, "malformed JSON", -1);
-      }
-      eErr = 1;
-      i = 0;
-    }
+    pNode = jsonLookup(p, zPath, 0, ctx);
   }else{
-    i = 0;
+    pNode = p->aNode;
   }
-  if( (p->aBlob[i] & 0x0f)==JSONB_ARRAY ){
-    cnt = jsonbArrayCount(p, i);
+  if( pNode==0 ){
+    return;
   }
-  if( !eErr ) sqlite3_result_int64(ctx, cnt);
-  jsonParseFree(p);
+  if( pNode->eType==JSON_ARRAY ){
+    while( 1 /*exit-by-break*/ ){
+      i = 1;
+      while( i<=pNode->n ){
+        if( (pNode[i].jnFlags & JNODE_REMOVE)==0 ) n++;
+        i += jsonNodeSize(&pNode[i]);
+      }
+      if( (pNode->jnFlags & JNODE_APPEND)==0 ) break;
+      if( p->useMod==0 ) break;
+      assert( pNode->eU==2 );
+      pNode = &p->aNode[pNode->u.iAppend];
+    }
+  }
+  sqlite3_result_int64(ctx, n);
 }
 
-/* True if the string is all digits */
-static int jsonAllDigits(const char *z, int n){
-  int i;
-  for(i=0; i<n && sqlite3Isdigit(z[i]); i++){}
-  return i==n;
-}
-
-/* True if the string is all alphanumerics and underscores */
-static int jsonAllAlphanum(const char *z, int n){
-  int i;
-  for(i=0; i<n && (sqlite3Isalnum(z[i]) || z[i]=='_'); i++){}
-  return i==n;
-}
+/*
+** Bit values for the flags passed into jsonExtractFunc() or
+** jsonSetFunc() via the user-data value.
+*/
+#define JSON_JSON      0x01        /* Result is always JSON */
+#define JSON_SQL       0x02        /* Result is always SQL */
+#define JSON_ABPATH    0x03        /* Allow abbreviated JSON path specs */
+#define JSON_ISSET     0x04        /* json_set(), not json_insert() */
 
 /*
 ** json_extract(JSON, PATH, ...)
@@ -212641,306 +210646,150 @@ static void jsonExtractFunc(
   int argc,
   sqlite3_value **argv
 ){
-  JsonParse *p = 0;      /* The parse */
-  int flags;             /* Flags associated with the function */
-  int i;                 /* Loop counter */
-  JsonString jx;         /* String for array result */
+  JsonParse *p;          /* The parse */
+  JsonNode *pNode;
+  const char *zPath;
+  int flags = SQLITE_PTR_TO_INT(sqlite3_user_data(ctx));
+  JsonString jx;
 
   if( argc<2 ) return;
-  p = jsonParseFuncArg(ctx, argv[0], 0);
+  p = jsonParseCached(ctx, argv[0], ctx, 0);
   if( p==0 ) return;
-  flags = SQLITE_PTR_TO_INT(sqlite3_user_data(ctx));
-  jsonStringInit(&jx, ctx);
-  if( argc>2 ){
-    jsonAppendChar(&jx, '[');
-  }
-  for(i=1; i<argc; i++){
+  if( argc==2 ){
     /* With a single PATH argument */
-    const char *zPath = (const char*)sqlite3_value_text(argv[i]);
-    int nPath;
-    u32 j;
-    if( zPath==0 ) goto json_extract_error;
-    nPath = sqlite3Strlen30(zPath);
-    if( zPath[0]=='$' ){
-      j = jsonLookupStep(p, 0, zPath+1, 0);
-    }else if( (flags & JSON_ABPATH) ){
-      /* The -> and ->> operators accept abbreviated PATH arguments.  This
-      ** is mostly for compatibility with PostgreSQL, but also for
-      ** convenience.
-      **
-      **     NUMBER   ==>  $[NUMBER]     // PG compatible
-      **     LABEL    ==>  $.LABEL       // PG compatible
-      **     [NUMBER] ==>  $[NUMBER]     // Not PG.  Purely for convenience
-      */
-      jsonStringInit(&jx, ctx);
-      if( jsonAllDigits(zPath, nPath) ){
-        jsonAppendRawNZ(&jx, "[", 1);
-        jsonAppendRaw(&jx, zPath, nPath);
-        jsonAppendRawNZ(&jx, "]", 2);
-      }else if( jsonAllAlphanum(zPath, nPath) ){
-        jsonAppendRawNZ(&jx, ".", 1);
-        jsonAppendRaw(&jx, zPath, nPath);
-      }else if( zPath[0]=='[' && nPath>=3 && zPath[nPath-1]==']' ){
-        jsonAppendRaw(&jx, zPath, nPath);
-      }else{
-        jsonAppendRawNZ(&jx, ".\"", 2);
-        jsonAppendRaw(&jx, zPath, nPath);
-        jsonAppendRawNZ(&jx, "\"", 1);
-      }
-      jsonStringTerminate(&jx);
-      j = jsonLookupStep(p, 0, jx.zBuf, 0);
-      jsonStringReset(&jx);
-    }else{
-      jsonBadPathError(ctx, zPath);
-      goto json_extract_error;
-    }
-    if( j<p->nBlob ){
-      if( argc==2 ){
-        if( flags & JSON_JSON ){
-          jsonStringInit(&jx, ctx);
-          jsonTranslateBlobToText(p, j, &jx);
-          jsonReturnString(&jx, 0, 0);
-          jsonStringReset(&jx);
-          assert( (flags & JSON_BLOB)==0 );
-          sqlite3_result_subtype(ctx, JSON_SUBTYPE);
+    zPath = (const char*)sqlite3_value_text(argv[1]);
+    if( zPath==0 ) return;
+    if( flags & JSON_ABPATH ){
+      if( zPath[0]!='$' || (zPath[1]!='.' && zPath[1]!='[' && zPath[1]!=0) ){
+        /* The -> and ->> operators accept abbreviated PATH arguments.  This
+        ** is mostly for compatibility with PostgreSQL, but also for
+        ** convenience.
+        **
+        **     NUMBER   ==>  $[NUMBER]     // PG compatible
+        **     LABEL    ==>  $.LABEL       // PG compatible
+        **     [NUMBER] ==>  $[NUMBER]     // Not PG.  Purely for convenience
+        */
+        jsonInit(&jx, ctx);
+        if( sqlite3Isdigit(zPath[0]) ){
+          jsonAppendRawNZ(&jx, "$[", 2);
+          jsonAppendRaw(&jx, zPath, (int)strlen(zPath));
+          jsonAppendRawNZ(&jx, "]", 2);
         }else{
-          jsonReturnFromBlob(p, j, ctx, 0);
-          if( (flags & (JSON_SQL|JSON_BLOB))==0
-           && (p->aBlob[j]&0x0f)>=JSONB_ARRAY
-          ){
-            sqlite3_result_subtype(ctx, JSON_SUBTYPE);
-          }
+          jsonAppendRawNZ(&jx, "$.", 1 + (zPath[0]!='['));
+          jsonAppendRaw(&jx, zPath, (int)strlen(zPath));
+          jsonAppendChar(&jx, 0);
         }
+        pNode = jx.bErr ? 0 : jsonLookup(p, jx.zBuf, 0, ctx);
+        jsonReset(&jx);
       }else{
-        jsonAppendSeparator(&jx);
-        jsonTranslateBlobToText(p, j, &jx);
+        pNode = jsonLookup(p, zPath, 0, ctx);
       }
-    }else if( j==JSON_LOOKUP_NOTFOUND ){
-      if( argc==2 ){
-        goto json_extract_error;  /* Return NULL if not found */
+      if( pNode ){
+        if( flags & JSON_JSON ){
+          jsonReturnJson(p, pNode, ctx, 0, 0);
+        }else{
+          jsonReturn(p, pNode, ctx, 1);
+        }
+      }
+    }else{
+      pNode = jsonLookup(p, zPath, 0, ctx);
+      if( p->nErr==0 && pNode ) jsonReturn(p, pNode, ctx, 0);
+    }
+  }else{
+    /* Two or more PATH arguments results in a JSON array with each
+    ** element of the array being the value selected by one of the PATHs */
+    int i;
+    jsonInit(&jx, ctx);
+    jsonAppendChar(&jx, '[');
+    for(i=1; i<argc; i++){
+      zPath = (const char*)sqlite3_value_text(argv[i]);
+      pNode = jsonLookup(p, zPath, 0, ctx);
+      if( p->nErr ) break;
+      jsonAppendSeparator(&jx);
+      if( pNode ){
+        jsonRenderNode(p, pNode, &jx);
       }else{
-        jsonAppendSeparator(&jx);
         jsonAppendRawNZ(&jx, "null", 4);
       }
-    }else if( j==JSON_LOOKUP_ERROR ){
-      sqlite3_result_error(ctx, "malformed JSON", -1);
-      goto json_extract_error;
-    }else{
-      jsonBadPathError(ctx, zPath);
-      goto json_extract_error;
     }
-  }
-  if( argc>2 ){
-    jsonAppendChar(&jx, ']');
-    jsonReturnString(&jx, 0, 0);
-    if( (flags & JSON_BLOB)==0 ){
+    if( i==argc ){
+      jsonAppendChar(&jx, ']');
+      jsonResult(&jx);
       sqlite3_result_subtype(ctx, JSON_SUBTYPE);
     }
+    jsonReset(&jx);
   }
-json_extract_error:
-  jsonStringReset(&jx);
-  jsonParseFree(p);
-  return;
 }
 
-/*
-** Return codes for jsonMergePatch()
+/* This is the RFC 7396 MergePatch algorithm.
 */
-#define JSON_MERGE_OK          0     /* Success */
-#define JSON_MERGE_BADTARGET   1     /* Malformed TARGET blob */
-#define JSON_MERGE_BADPATCH    2     /* Malformed PATCH blob */
-#define JSON_MERGE_OOM         3     /* Out-of-memory condition */
-
-/*
-** RFC-7396 MergePatch for two JSONB blobs.
-**
-** pTarget is the target. pPatch is the patch.  The target is updated
-** in place.  The patch is read-only.
-**
-** The original RFC-7396 algorithm is this:
-**
-**   define MergePatch(Target, Patch):
-**     if Patch is an Object:
-**       if Target is not an Object:
-**         Target = {} # Ignore the contents and set it to an empty Object
-**     for each Name/Value pair in Patch:
-**         if Value is null:
-**           if Name exists in Target:
-**             remove the Name/Value pair from Target
-**         else:
-**           Target[Name] = MergePatch(Target[Name], Value)
-**       return Target
-**     else:
-**       return Patch
-**
-** Here is an equivalent algorithm restructured to show the actual
-** implementation:
-**
-** 01   define MergePatch(Target, Patch):
-** 02      if Patch is not an Object:
-** 03         return Patch
-** 04      else: // if Patch is an Object
-** 05         if Target is not an Object:
-** 06            Target = {}
-** 07      for each Name/Value pair in Patch:
-** 08         if Name exists in Target:
-** 09            if Value is null:
-** 10               remove the Name/Value pair from Target
-** 11            else
-** 12               Target[name] = MergePatch(Target[Name], Value)
-** 13         else if Value is not NULL:
-** 14            if Value is not an Object:
-** 15               Target[name] = Value
-** 16            else:
-** 17               Target[name] = MergePatch('{}',value)
-** 18      return Target
-**  |
-**  ^---- Line numbers referenced in comments in the implementation
-*/
-static int jsonMergePatch(
-  JsonParse *pTarget,      /* The JSON parser that contains the TARGET */
-  u32 iTarget,             /* Index of TARGET in pTarget->aBlob[] */
-  const JsonParse *pPatch, /* The PATCH */
-  u32 iPatch               /* Index of PATCH in pPatch->aBlob[] */
+static JsonNode *jsonMergePatch(
+  JsonParse *pParse,   /* The JSON parser that contains the TARGET */
+  u32 iTarget,         /* Node of the TARGET in pParse */
+  JsonNode *pPatch     /* The PATCH */
 ){
-  u8 x;             /* Type of a single node */
-  u32 n, sz=0;      /* Return values from jsonbPayloadSize() */
-  u32 iTCursor;     /* Cursor position while scanning the target object */
-  u32 iTStart;      /* First label in the target object */
-  u32 iTEndBE;      /* Original first byte past end of target, before edit */
-  u32 iTEnd;        /* Current first byte past end of target */
-  u8 eTLabel;       /* Node type of the target label */
-  u32 iTLabel = 0;  /* Index of the label */
-  u32 nTLabel = 0;  /* Header size in bytes for the target label */
-  u32 szTLabel = 0; /* Size of the target label payload */
-  u32 iTValue = 0;  /* Index of the target value */
-  u32 nTValue = 0;  /* Header size of the target value */
-  u32 szTValue = 0; /* Payload size for the target value */
-
-  u32 iPCursor;     /* Cursor position while scanning the patch */
-  u32 iPEnd;        /* First byte past the end of the patch */
-  u8 ePLabel;       /* Node type of the patch label */
-  u32 iPLabel;      /* Start of patch label */
-  u32 nPLabel;      /* Size of header on the patch label */
-  u32 szPLabel;     /* Payload size of the patch label */
-  u32 iPValue;      /* Start of patch value */
-  u32 nPValue;      /* Header size for the patch value */
-  u32 szPValue;     /* Payload size of the patch value */
-
-  assert( iTarget>=0 && iTarget<pTarget->nBlob );
-  assert( iPatch>=0 && iPatch<pPatch->nBlob );
-  x = pPatch->aBlob[iPatch] & 0x0f;
-  if( x!=JSONB_OBJECT ){  /* Algorithm line 02 */
-    u32 szPatch;        /* Total size of the patch, header+payload */
-    u32 szTarget;       /* Total size of the target, header+payload */
-    n = jsonbPayloadSize(pPatch, iPatch, &sz);
-    szPatch = n+sz;
-    sz = 0;
-    n = jsonbPayloadSize(pTarget, iTarget, &sz);
-    szTarget = n+sz;
-    jsonBlobEdit(pTarget, iTarget, szTarget, pPatch->aBlob+iPatch, szPatch);
-    return pTarget->oom ? JSON_MERGE_OOM : JSON_MERGE_OK;  /* Line 03 */
+  u32 i, j;
+  u32 iRoot;
+  JsonNode *pTarget;
+  if( pPatch->eType!=JSON_OBJECT ){
+    return pPatch;
   }
-  x = pTarget->aBlob[iTarget] & 0x0f;
-  if( x!=JSONB_OBJECT ){  /* Algorithm line 05 */
-    n = jsonbPayloadSize(pTarget, iTarget, &sz);
-    jsonBlobEdit(pTarget, iTarget+n, sz, 0, 0);
-    x = pTarget->aBlob[iTarget];
-    pTarget->aBlob[iTarget] = (x & 0xf0) | JSONB_OBJECT;
+  assert( iTarget<pParse->nNode );
+  pTarget = &pParse->aNode[iTarget];
+  assert( (pPatch->jnFlags & JNODE_APPEND)==0 );
+  if( pTarget->eType!=JSON_OBJECT ){
+    jsonRemoveAllNulls(pPatch);
+    return pPatch;
   }
-  n = jsonbPayloadSize(pPatch, iPatch, &sz);
-  if( NEVER(n==0) ) return JSON_MERGE_BADPATCH;
-  iPCursor = iPatch+n;
-  iPEnd = iPCursor+sz;
-  n = jsonbPayloadSize(pTarget, iTarget, &sz);
-  if( NEVER(n==0) ) return JSON_MERGE_BADTARGET;
-  iTStart = iTarget+n;
-  iTEndBE = iTStart+sz;
-
-  while( iPCursor<iPEnd ){  /* Algorithm line 07 */
-    iPLabel = iPCursor;
-    ePLabel = pPatch->aBlob[iPCursor] & 0x0f;
-    if( ePLabel<JSONB_TEXT || ePLabel>JSONB_TEXTRAW ){
-      return JSON_MERGE_BADPATCH;
-    }
-    nPLabel = jsonbPayloadSize(pPatch, iPCursor, &szPLabel);
-    if( nPLabel==0 ) return JSON_MERGE_BADPATCH;
-    iPValue = iPCursor + nPLabel + szPLabel;
-    if( iPValue>=iPEnd ) return JSON_MERGE_BADPATCH;
-    nPValue = jsonbPayloadSize(pPatch, iPValue, &szPValue);
-    if( nPValue==0 ) return JSON_MERGE_BADPATCH;
-    iPCursor = iPValue + nPValue + szPValue;
-    if( iPCursor>iPEnd ) return JSON_MERGE_BADPATCH;
-
-    iTCursor = iTStart;
-    iTEnd = iTEndBE + pTarget->delta;
-    while( iTCursor<iTEnd ){
-      int isEqual;   /* true if the patch and target labels match */
-      iTLabel = iTCursor;
-      eTLabel = pTarget->aBlob[iTCursor] & 0x0f;
-      if( eTLabel<JSONB_TEXT || eTLabel>JSONB_TEXTRAW ){
-        return JSON_MERGE_BADTARGET;
-      }
-      nTLabel = jsonbPayloadSize(pTarget, iTCursor, &szTLabel);
-      if( nTLabel==0 ) return JSON_MERGE_BADTARGET;
-      iTValue = iTLabel + nTLabel + szTLabel;
-      if( iTValue>=iTEnd ) return JSON_MERGE_BADTARGET;
-      nTValue = jsonbPayloadSize(pTarget, iTValue, &szTValue);
-      if( nTValue==0 ) return JSON_MERGE_BADTARGET;
-      if( iTValue + nTValue + szTValue > iTEnd ) return JSON_MERGE_BADTARGET;
-      isEqual = jsonLabelCompare(
-                   (const char*)&pPatch->aBlob[iPLabel+nPLabel],
-                   szPLabel,
-                   (ePLabel==JSONB_TEXT || ePLabel==JSONB_TEXTRAW),
-                   (const char*)&pTarget->aBlob[iTLabel+nTLabel],
-                   szTLabel,
-                   (eTLabel==JSONB_TEXT || eTLabel==JSONB_TEXTRAW));
-      if( isEqual ) break;
-      iTCursor = iTValue + nTValue + szTValue;
-    }
-    x = pPatch->aBlob[iPValue] & 0x0f;
-    if( iTCursor<iTEnd ){
-      /* A match was found.  Algorithm line 08 */
-      if( x==0 ){
-        /* Patch value is NULL.  Algorithm line 09 */
-        jsonBlobEdit(pTarget, iTLabel, nTLabel+szTLabel+nTValue+szTValue, 0,0);
-        /*  vvvvvv----- No OOM on a delete-only edit */
-        if( NEVER(pTarget->oom) ) return JSON_MERGE_OOM;
-      }else{
-        /* Algorithm line 12 */
-        int rc, savedDelta = pTarget->delta;
-        pTarget->delta = 0;
-        rc = jsonMergePatch(pTarget, iTValue, pPatch, iPValue);
-        if( rc ) return rc;
-        pTarget->delta += savedDelta;
-      }
-    }else if( x>0 ){  /* Algorithm line 13 */
-      /* No match and patch value is not NULL */
-      u32 szNew = szPLabel+nPLabel;
-      if( (pPatch->aBlob[iPValue] & 0x0f)!=JSONB_OBJECT ){  /* Line 14 */
-        jsonBlobEdit(pTarget, iTEnd, 0, 0, szPValue+nPValue+szNew);
-        if( pTarget->oom ) return JSON_MERGE_OOM;
-        memcpy(&pTarget->aBlob[iTEnd], &pPatch->aBlob[iPLabel], szNew);
-        memcpy(&pTarget->aBlob[iTEnd+szNew],
-               &pPatch->aBlob[iPValue], szPValue+nPValue);
-      }else{
-        int rc, savedDelta;
-        jsonBlobEdit(pTarget, iTEnd, 0, 0, szNew+1);
-        if( pTarget->oom ) return JSON_MERGE_OOM;
-        memcpy(&pTarget->aBlob[iTEnd], &pPatch->aBlob[iPLabel], szNew);
-        pTarget->aBlob[iTEnd+szNew] = 0x00;
-        savedDelta = pTarget->delta;
-        pTarget->delta = 0;
-        rc = jsonMergePatch(pTarget, iTEnd+szNew,pPatch,iPValue);
-        if( rc ) return rc;
-        pTarget->delta += savedDelta;
+  iRoot = iTarget;
+  for(i=1; i<pPatch->n; i += jsonNodeSize(&pPatch[i+1])+1){
+    u32 nKey;
+    const char *zKey;
+    assert( pPatch[i].eType==JSON_STRING );
+    assert( pPatch[i].jnFlags & JNODE_LABEL );
+    assert( pPatch[i].eU==1 );
+    nKey = pPatch[i].n;
+    zKey = pPatch[i].u.zJContent;
+    for(j=1; j<pTarget->n; j += jsonNodeSize(&pTarget[j+1])+1 ){
+      assert( pTarget[j].eType==JSON_STRING );
+      assert( pTarget[j].jnFlags & JNODE_LABEL );
+      if( jsonSameLabel(&pPatch[i], &pTarget[j]) ){
+        if( pTarget[j+1].jnFlags & (JNODE_REMOVE|JNODE_REPLACE) ) break;
+        if( pPatch[i+1].eType==JSON_NULL ){
+          pTarget[j+1].jnFlags |= JNODE_REMOVE;
+        }else{
+          JsonNode *pNew = jsonMergePatch(pParse, iTarget+j+1, &pPatch[i+1]);
+          if( pNew==0 ) return 0;
+          if( pNew!=&pParse->aNode[iTarget+j+1] ){
+            jsonParseAddSubstNode(pParse, iTarget+j+1);
+            jsonParseAddNodeArray(pParse, pNew, jsonNodeSize(pNew));
+          }
+          pTarget = &pParse->aNode[iTarget];
+        }
+        break;
       }
     }
+    if( j>=pTarget->n && pPatch[i+1].eType!=JSON_NULL ){
+      int iStart;
+      JsonNode *pApnd;
+      u32 nApnd;
+      iStart = jsonParseAddNode(pParse, JSON_OBJECT, 0, 0);
+      jsonParseAddNode(pParse, JSON_STRING, nKey, zKey);
+      pApnd = &pPatch[i+1];
+      if( pApnd->eType==JSON_OBJECT ) jsonRemoveAllNulls(pApnd);
+      nApnd = jsonNodeSize(pApnd);
+      jsonParseAddNodeArray(pParse, pApnd, jsonNodeSize(pApnd));
+      if( pParse->oom ) return 0;
+      pParse->aNode[iStart].n = 1+nApnd;
+      pParse->aNode[iRoot].jnFlags |= JNODE_APPEND;
+      pParse->aNode[iRoot].u.iAppend = iStart;
+      VVA( pParse->aNode[iRoot].eU = 2 );
+      iRoot = iStart;
+      pTarget = &pParse->aNode[iTarget];
+    }
   }
-  if( pTarget->delta ) jsonAfterEditSizeAdjust(pTarget, iTarget);
-  return pTarget->oom ? JSON_MERGE_OOM : JSON_MERGE_OK;
+  return pTarget;
 }
-
 
 /*
 ** Implementation of the json_mergepatch(JSON1,JSON2) function.  Return a JSON
@@ -212952,27 +210801,28 @@ static void jsonPatchFunc(
   int argc,
   sqlite3_value **argv
 ){
-  JsonParse *pTarget;    /* The TARGET */
-  JsonParse *pPatch;     /* The PATCH */
-  int rc;                /* Result code */
+  JsonParse *pX;     /* The JSON that is being patched */
+  JsonParse *pY;     /* The patch */
+  JsonNode *pResult;   /* The result of the merge */
 
   UNUSED_PARAMETER(argc);
-  assert( argc==2 );
-  pTarget = jsonParseFuncArg(ctx, argv[0], JSON_EDITABLE);
-  if( pTarget==0 ) return;
-  pPatch = jsonParseFuncArg(ctx, argv[1], 0);
-  if( pPatch ){
-    rc = jsonMergePatch(pTarget, 0, pPatch, 0);
-    if( rc==JSON_MERGE_OK ){
-      jsonReturnParse(ctx, pTarget);
-    }else if( rc==JSON_MERGE_OOM ){
-      sqlite3_result_error_nomem(ctx);
-    }else{
-      sqlite3_result_error(ctx, "malformed JSON", -1);
-    }
-    jsonParseFree(pPatch);
+  pX = jsonParseCached(ctx, argv[0], ctx, 1);
+  if( pX==0 ) return;
+  assert( pX->hasMod==0 );
+  pX->hasMod = 1;
+  pY = jsonParseCached(ctx, argv[1], ctx, 1);
+  if( pY==0 ) return;
+  pX->useMod = 1;
+  pY->useMod = 1;
+  pResult = jsonMergePatch(pX, 0, pY->aNode);
+  assert( pResult!=0 || pX->oom );
+  if( pResult && pX->oom==0 ){
+    jsonDebugPrintParse(pX);
+    jsonDebugPrintNode(pResult);
+    jsonReturnJson(pX, pResult, ctx, 0, 0);
+  }else{
+    sqlite3_result_error_nomem(ctx);
   }
-  jsonParseFree(pTarget);
 }
 
 
@@ -212996,23 +210846,23 @@ static void jsonObjectFunc(
                                   "of arguments", -1);
     return;
   }
-  jsonStringInit(&jx, ctx);
+  jsonInit(&jx, ctx);
   jsonAppendChar(&jx, '{');
   for(i=0; i<argc; i+=2){
     if( sqlite3_value_type(argv[i])!=SQLITE_TEXT ){
       sqlite3_result_error(ctx, "json_object() labels must be TEXT", -1);
-      jsonStringReset(&jx);
+      jsonReset(&jx);
       return;
     }
     jsonAppendSeparator(&jx);
     z = (const char*)sqlite3_value_text(argv[i]);
-    n = sqlite3_value_bytes(argv[i]);
+    n = (u32)sqlite3_value_bytes(argv[i]);
     jsonAppendString(&jx, z, n);
     jsonAppendChar(&jx, ':');
-    jsonAppendSqlValue(&jx, argv[i+1]);
+    jsonAppendValue(&jx, argv[i+1]);
   }
   jsonAppendChar(&jx, '}');
-  jsonReturnString(&jx, 0, 0);
+  jsonResult(&jx);
   sqlite3_result_subtype(ctx, JSON_SUBTYPE);
 }
 
@@ -213028,50 +210878,120 @@ static void jsonRemoveFunc(
   int argc,
   sqlite3_value **argv
 ){
-  JsonParse *p;          /* The parse */
-  const char *zPath = 0; /* Path of element to be removed */
-  int i;                 /* Loop counter */
-  u32 rc;                /* Subroutine return code */
+  JsonParse *pParse;          /* The parse */
+  JsonNode *pNode;
+  const char *zPath;
+  u32 i;
 
   if( argc<1 ) return;
-  p = jsonParseFuncArg(ctx, argv[0], argc>1 ? JSON_EDITABLE : 0);
-  if( p==0 ) return;
-  for(i=1; i<argc; i++){
+  pParse = jsonParseCached(ctx, argv[0], ctx, argc>1);
+  if( pParse==0 ) return;
+  for(i=1; i<(u32)argc; i++){
     zPath = (const char*)sqlite3_value_text(argv[i]);
-    if( zPath==0 ){
-      goto json_remove_done;
-    }
-    if( zPath[0]!='$' ){
-      goto json_remove_patherror;
-    }
-    if( zPath[1]==0 ){
-      /* json_remove(j,'$') returns NULL */
-      goto json_remove_done;
-    }
-    p->eEdit = JEDIT_DEL;
-    p->delta = 0;
-    rc = jsonLookupStep(p, 0, zPath+1, 0);
-    if( JSON_LOOKUP_ISERROR(rc) ){
-      if( rc==JSON_LOOKUP_NOTFOUND ){
-        continue;  /* No-op */
-      }else if( rc==JSON_LOOKUP_PATHERROR ){
-        jsonBadPathError(ctx, zPath);
-      }else{
-        sqlite3_result_error(ctx, "malformed JSON", -1);
-      }
-      goto json_remove_done;
+    if( zPath==0 ) goto remove_done;
+    pNode = jsonLookup(pParse, zPath, 0, ctx);
+    if( pParse->nErr ) goto remove_done;
+    if( pNode ){
+      pNode->jnFlags |= JNODE_REMOVE;
+      pParse->hasMod = 1;
+      pParse->useMod = 1;
     }
   }
-  jsonReturnParse(ctx, p);
-  jsonParseFree(p);
-  return;
+  if( (pParse->aNode[0].jnFlags & JNODE_REMOVE)==0 ){
+    jsonReturnJson(pParse, pParse->aNode, ctx, 1, 0);
+  }
+remove_done:
+  jsonDebugPrintParse(p);
+}
 
-json_remove_patherror:
-  jsonBadPathError(ctx, zPath);
+/*
+** Substitute the value at iNode with the pValue parameter.
+*/
+static void jsonReplaceNode(
+  sqlite3_context *pCtx,
+  JsonParse *p,
+  int iNode,
+  sqlite3_value *pValue
+){
+  int idx = jsonParseAddSubstNode(p, iNode);
+  if( idx<=0 ){
+    assert( p->oom );
+    return;
+  }
+  switch( sqlite3_value_type(pValue) ){
+    case SQLITE_NULL: {
+      jsonParseAddNode(p, JSON_NULL, 0, 0);
+      break;
+    }
+    case SQLITE_FLOAT: {
+      char *z = sqlite3_mprintf("%!0.15g", sqlite3_value_double(pValue));
+      int n;
+      if( z==0 ){
+        p->oom = 1;
+        break;
+      }
+      n = sqlite3Strlen30(z);
+      jsonParseAddNode(p, JSON_REAL, n, z);
+      jsonParseAddCleanup(p, sqlite3_free, z);
+      break;
+    }
+    case SQLITE_INTEGER: {
+      char *z = sqlite3_mprintf("%lld", sqlite3_value_int64(pValue));
+      int n;
+      if( z==0 ){
+        p->oom = 1;
+        break;
+      }
+      n = sqlite3Strlen30(z);
+      jsonParseAddNode(p, JSON_INT, n, z);
+      jsonParseAddCleanup(p, sqlite3_free, z);
 
-json_remove_done:
-  jsonParseFree(p);
-  return;
+      break;
+    }
+    case SQLITE_TEXT: {
+      const char *z = (const char*)sqlite3_value_text(pValue);
+      u32 n = (u32)sqlite3_value_bytes(pValue);
+      if( z==0 ){
+         p->oom = 1;
+         break;
+      }
+      if( sqlite3_value_subtype(pValue)!=JSON_SUBTYPE ){
+        char *zCopy = sqlite3_malloc64( n+1 );
+        int k;
+        if( zCopy ){
+          memcpy(zCopy, z, n);
+          zCopy[n] = 0;
+          jsonParseAddCleanup(p, sqlite3_free, zCopy);
+        }else{
+          p->oom = 1;
+          sqlite3_result_error_nomem(pCtx);
+        }
+        k = jsonParseAddNode(p, JSON_STRING, n, zCopy);
+        assert( k>0 || p->oom );
+        if( p->oom==0 ) p->aNode[k].jnFlags |= JNODE_RAW;
+      }else{
+        JsonParse *pPatch = jsonParseCached(pCtx, pValue, pCtx, 1);
+        if( pPatch==0 ){
+          p->oom = 1;
+          break;
+        }
+        jsonParseAddNodeArray(p, pPatch->aNode, pPatch->nNode);
+        /* The nodes copied out of pPatch and into p likely contain
+        ** u.zJContent pointers into pPatch->zJson.  So preserve the
+        ** content of pPatch until p is destroyed. */
+        assert( pPatch->nJPRef>=1 );
+        pPatch->nJPRef++;
+        jsonParseAddCleanup(p, (void(*)(void*))jsonParseFree, pPatch);
+      }
+      break;
+    }
+    default: {
+      jsonParseAddNode(p, JSON_NULL, 0, 0);
+      sqlite3_result_error(pCtx, "JSON cannot hold BLOB values", -1);
+      p->nErr++;
+      break;
+    }
+  }
 }
 
 /*
@@ -213085,12 +211005,32 @@ static void jsonReplaceFunc(
   int argc,
   sqlite3_value **argv
 ){
+  JsonParse *pParse;          /* The parse */
+  JsonNode *pNode;
+  const char *zPath;
+  u32 i;
+
   if( argc<1 ) return;
   if( (argc&1)==0 ) {
     jsonWrongNumArgs(ctx, "replace");
     return;
   }
-  jsonInsertIntoBlob(ctx, argc, argv, JEDIT_REPL);
+  pParse = jsonParseCached(ctx, argv[0], ctx, argc>1);
+  if( pParse==0 ) return;
+  pParse->nJPRef++;
+  for(i=1; i<(u32)argc; i+=2){
+    zPath = (const char*)sqlite3_value_text(argv[i]);
+    pParse->useMod = 1;
+    pNode = jsonLookup(pParse, zPath, 0, ctx);
+    if( pParse->nErr ) goto replace_err;
+    if( pNode ){
+      jsonReplaceNode(ctx, pParse, (u32)(pNode - pParse->aNode), argv[i+1]);
+    }
+  }
+  jsonReturnJson(pParse, pParse->aNode, ctx, 1, 0);
+replace_err:
+  jsonDebugPrintParse(pParse);
+  jsonParseFree(pParse);
 }
 
 
@@ -213111,16 +211051,39 @@ static void jsonSetFunc(
   int argc,
   sqlite3_value **argv
 ){
-
-  int flags = SQLITE_PTR_TO_INT(sqlite3_user_data(ctx));
-  int bIsSet = (flags&JSON_ISSET)!=0;
+  JsonParse *pParse;       /* The parse */
+  JsonNode *pNode;
+  const char *zPath;
+  u32 i;
+  int bApnd;
+  int bIsSet = sqlite3_user_data(ctx)!=0;
 
   if( argc<1 ) return;
   if( (argc&1)==0 ) {
     jsonWrongNumArgs(ctx, bIsSet ? "set" : "insert");
     return;
   }
-  jsonInsertIntoBlob(ctx, argc, argv, bIsSet ? JEDIT_SET : JEDIT_INS);
+  pParse = jsonParseCached(ctx, argv[0], ctx, argc>1);
+  if( pParse==0 ) return;
+  pParse->nJPRef++;
+  for(i=1; i<(u32)argc; i+=2){
+    zPath = (const char*)sqlite3_value_text(argv[i]);
+    bApnd = 0;
+    pParse->useMod = 1;
+    pNode = jsonLookup(pParse, zPath, &bApnd, ctx);
+    if( pParse->oom ){
+      sqlite3_result_error_nomem(ctx);
+      goto jsonSetDone;
+    }else if( pParse->nErr ){
+      goto jsonSetDone;
+    }else if( pNode && (bApnd || bIsSet) ){
+      jsonReplaceNode(ctx, pParse, (u32)(pNode - pParse->aNode), argv[i+1]);
+    }
+  }
+  jsonDebugPrintParse(pParse);
+  jsonReturnJson(pParse, pParse->aNode, ctx, 1, 0);
+jsonSetDone:
+  jsonParseFree(pParse);
 }
 
 /*
@@ -213136,93 +211099,27 @@ static void jsonTypeFunc(
   sqlite3_value **argv
 ){
   JsonParse *p;          /* The parse */
-  const char *zPath = 0;
-  u32 i;
+  const char *zPath;
+  JsonNode *pNode;
 
-  p = jsonParseFuncArg(ctx, argv[0], 0);
+  p = jsonParseCached(ctx, argv[0], ctx, 0);
   if( p==0 ) return;
   if( argc==2 ){
     zPath = (const char*)sqlite3_value_text(argv[1]);
-    if( zPath==0 ) goto json_type_done;
-    if( zPath[0]!='$' ){
-      jsonBadPathError(ctx, zPath);
-      goto json_type_done;
-    }
-    i = jsonLookupStep(p, 0, zPath+1, 0);
-    if( JSON_LOOKUP_ISERROR(i) ){
-      if( i==JSON_LOOKUP_NOTFOUND ){
-        /* no-op */
-      }else if( i==JSON_LOOKUP_PATHERROR ){
-        jsonBadPathError(ctx, zPath);
-      }else{
-        sqlite3_result_error(ctx, "malformed JSON", -1);
-      }
-      goto json_type_done;
-    }
+    pNode = jsonLookup(p, zPath, 0, ctx);
   }else{
-    i = 0;
+    pNode = p->aNode;
   }
-  sqlite3_result_text(ctx, jsonbType[p->aBlob[i]&0x0f], -1, SQLITE_STATIC);
-json_type_done:
-  jsonParseFree(p);
+  if( pNode ){
+    sqlite3_result_text(ctx, jsonType[pNode->eType], -1, SQLITE_STATIC);
+  }
 }
 
 /*
 ** json_valid(JSON)
-** json_valid(JSON, FLAGS)
 **
-** Check the JSON argument to see if it is well-formed.  The FLAGS argument
-** encodes the various constraints on what is meant by "well-formed":
-**
-**     0x01      Canonical RFC-8259 JSON text
-**     0x02      JSON text with optional JSON-5 extensions
-**     0x04      Superficially appears to be JSONB
-**     0x08      Strictly well-formed JSONB
-**
-** If the FLAGS argument is omitted, it defaults to 1.  Useful values for
-** FLAGS include:
-**
-**    1          Strict canonical JSON text
-**    2          JSON text perhaps with JSON-5 extensions
-**    4          Superficially appears to be JSONB
-**    5          Canonical JSON text or superficial JSONB
-**    6          JSON-5 text or superficial JSONB
-**    8          Strict JSONB
-**    9          Canonical JSON text or strict JSONB
-**    10         JSON-5 text or strict JSONB
-**
-** Other flag combinations are redundant.  For example, every canonical
-** JSON text is also well-formed JSON-5 text, so FLAG values 2 and 3
-** are the same.  Similarly, any input that passes a strict JSONB validation
-** will also pass the superficial validation so 12 through 15 are the same
-** as 8 through 11 respectively.
-**
-** This routine runs in linear time to validate text and when doing strict
-** JSONB validation.  Superficial JSONB validation is constant time,
-** assuming the BLOB is already in memory.  The performance advantage
-** of superficial JSONB validation is why that option is provided.
-** Application developers can choose to do fast superficial validation or
-** slower strict validation, according to their specific needs.
-**
-** Only the lower four bits of the FLAGS argument are currently used.
-** Higher bits are reserved for future expansion.   To facilitate
-** compatibility, the current implementation raises an error if any bit
-** in FLAGS is set other than the lower four bits.
-**
-** The original circa 2015 implementation of the JSON routines in
-** SQLite only supported canonical RFC-8259 JSON text and the json_valid()
-** function only accepted one argument.  That is why the default value
-** for the FLAGS argument is 1, since FLAGS=1 causes this routine to only
-** recognize canonical RFC-8259 JSON text as valid.  The extra FLAGS
-** argument was added when the JSON routines were extended to support
-** JSON5-like extensions and binary JSONB stored in BLOBs.
-**
-** Return Values:
-**
-**   *   Raise an error if FLAGS is outside the range of 1 to 15.
-**   *   Return NULL if the input is NULL
-**   *   Return 1 if the input is well-formed.
-**   *   Return 0 if the input is not well-formed.
+** Return 1 if JSON is a well-formed canonical JSON string according
+** to RFC-7159. Return 0 otherwise.
 */
 static void jsonValidFunc(
   sqlite3_context *ctx,
@@ -213230,127 +211127,78 @@ static void jsonValidFunc(
   sqlite3_value **argv
 ){
   JsonParse *p;          /* The parse */
-  u8 flags = 1;
-  u8 res = 0;
-  if( argc==2 ){
-    i64 f = sqlite3_value_int64(argv[1]);
-    if( f<1 || f>15 ){
-      sqlite3_result_error(ctx, "FLAGS parameter to json_valid() must be"
-                                " between 1 and 15", -1);
-      return;
-    }
-    flags = f & 0x0f;
-  }
-  switch( sqlite3_value_type(argv[0]) ){
-    case SQLITE_NULL: {
+  UNUSED_PARAMETER(argc);
+  if( sqlite3_value_type(argv[0])==SQLITE_NULL ){
 #ifdef SQLITE_LEGACY_JSON_VALID
-      /* Incorrect legacy behavior was to return FALSE for a NULL input */
-      sqlite3_result_int(ctx, 0);
+    /* Incorrect legacy behavior was to return FALSE for a NULL input */
+    sqlite3_result_int(ctx, 0);
 #endif
-      return;
-    }
-    case SQLITE_BLOB: {
-      if( jsonFuncArgMightBeBinary(argv[0]) ){
-        if( flags & 0x04 ){
-          /* Superficial checking only - accomplished by the
-          ** jsonFuncArgMightBeBinary() call above. */
-          res = 1;
-        }else if( flags & 0x08 ){
-          /* Strict checking.  Check by translating BLOB->TEXT->BLOB.  If
-          ** no errors occur, call that a "strict check". */
-          JsonParse px;
-          u32 iErr;
-          memset(&px, 0, sizeof(px));
-          px.aBlob = (u8*)sqlite3_value_blob(argv[0]);
-          px.nBlob = sqlite3_value_bytes(argv[0]);
-          iErr = jsonbValidityCheck(&px, 0, px.nBlob, 1);
-          res = iErr==0;
-        }
-        break;
-      }
-      /* Fall through into interpreting the input as text.  See note
-      ** above at tag-20240123-a. */
-      /* no break */ deliberate_fall_through
-    }
-    default: {
-      JsonParse px;
-      if( (flags & 0x3)==0 ) break;
-      memset(&px, 0, sizeof(px));
-
-      p = jsonParseFuncArg(ctx, argv[0], JSON_KEEPERROR);
-      if( p ){
-        if( p->oom ){
-          sqlite3_result_error_nomem(ctx);
-        }else if( p->nErr ){
-          /* no-op */
-        }else if( (flags & 0x02)!=0 || p->hasNonstd==0 ){
-          res = 1;
-        }
-        jsonParseFree(p);
-      }else{
-        sqlite3_result_error_nomem(ctx);
-      }
-      break;
-    }
+    return;
   }
-  sqlite3_result_int(ctx, res);
+  p = jsonParseCached(ctx, argv[0], 0, 0);
+  if( p==0 || p->oom ){
+    sqlite3_result_error_nomem(ctx);
+    sqlite3_free(p);
+  }else{
+    sqlite3_result_int(ctx, p->nErr==0 && (p->hasNonstd==0 || p->useMod));
+    if( p->nErr ) jsonParseFree(p);
+  }
 }
 
 /*
 ** json_error_position(JSON)
 **
-** If the argument is NULL, return NULL
+** If the argument is not an interpretable JSON string, then return the 1-based
+** character position at which the parser first recognized that the input
+** was in error.  The left-most character is 1.  If the string is valid
+** JSON, then return 0.
 **
-** If the argument is BLOB, do a full validity check and return non-zero
-** if the check fails.  The return value is the approximate 1-based offset
-** to the byte of the element that contains the first error.
+** Note that json_valid() is only true for strictly conforming canonical JSON.
+** But this routine returns zero if the input contains extension.  Thus:
 **
-** Otherwise interpret the argument is TEXT (even if it is numeric) and
-** return the 1-based character position for where the parser first recognized
-** that the input was not valid JSON, or return 0 if the input text looks
-** ok.  JSON-5 extensions are accepted.
+** (1) If the input X is strictly conforming canonical JSON:
+**
+**         json_valid(X) returns true
+**         json_error_position(X) returns 0
+**
+** (2) If the input X is JSON but it includes extension (such as JSON5) that
+**     are not part of RFC-8259:
+**
+**         json_valid(X) returns false
+**         json_error_position(X) return 0
+**
+** (3) If the input X cannot be interpreted as JSON even taking extensions
+**     into account:
+**
+**         json_valid(X) return false
+**         json_error_position(X) returns 1 or more
 */
 static void jsonErrorFunc(
   sqlite3_context *ctx,
   int argc,
   sqlite3_value **argv
 ){
-  i64 iErrPos = 0;       /* Error position to be returned */
-  JsonParse s;
-
-  assert( argc==1 );
+  JsonParse *p;          /* The parse */
   UNUSED_PARAMETER(argc);
-  memset(&s, 0, sizeof(s));
-  s.db = sqlite3_context_db_handle(ctx);
-  if( jsonFuncArgMightBeBinary(argv[0]) ){
-    s.aBlob = (u8*)sqlite3_value_blob(argv[0]);
-    s.nBlob = sqlite3_value_bytes(argv[0]);
-    iErrPos = (i64)jsonbValidityCheck(&s, 0, s.nBlob, 1);
-  }else{
-    s.zJson = (char*)sqlite3_value_text(argv[0]);
-    if( s.zJson==0 ) return;  /* NULL input or OOM */
-    s.nJson = sqlite3_value_bytes(argv[0]);
-    if( jsonConvertTextToBlob(&s,0) ){
-      if( s.oom ){
-        iErrPos = -1;
-      }else{
-        /* Convert byte-offset s.iErr into a character offset */
-        u32 k;
-        assert( s.zJson!=0 );  /* Because s.oom is false */
-        for(k=0; k<s.iErr && ALWAYS(s.zJson[k]); k++){
-          if( (s.zJson[k] & 0xc0)!=0x80 ) iErrPos++;
-        }
-        iErrPos++;
-      }
-    }
-  }
-  jsonParseReset(&s);
-  if( iErrPos<0 ){
+  if( sqlite3_value_type(argv[0])==SQLITE_NULL ) return;
+  p = jsonParseCached(ctx, argv[0], 0, 0);
+  if( p==0 || p->oom ){
     sqlite3_result_error_nomem(ctx);
+    sqlite3_free(p);
+  }else if( p->nErr==0 ){
+    sqlite3_result_int(ctx, 0);
   }else{
-    sqlite3_result_int64(ctx, iErrPos);
+    int n = 1;
+    u32 i;
+    const char *z = (const char*)sqlite3_value_text(argv[0]);
+    for(i=0; i<p->iErr && ALWAYS(z[i]); i++){
+      if( (z[i]&0xc0)!=0x80 ) n++;
+    }
+    sqlite3_result_int(ctx, n);
+    jsonParseFree(p);
   }
 }
+
 
 /****************************************************************************
 ** Aggregate SQL function implementations
@@ -213370,34 +211218,24 @@ static void jsonArrayStep(
   pStr = (JsonString*)sqlite3_aggregate_context(ctx, sizeof(*pStr));
   if( pStr ){
     if( pStr->zBuf==0 ){
-      jsonStringInit(pStr, ctx);
+      jsonInit(pStr, ctx);
       jsonAppendChar(pStr, '[');
     }else if( pStr->nUsed>1 ){
       jsonAppendChar(pStr, ',');
     }
     pStr->pCtx = ctx;
-    jsonAppendSqlValue(pStr, argv[0]);
+    jsonAppendValue(pStr, argv[0]);
   }
 }
 static void jsonArrayCompute(sqlite3_context *ctx, int isFinal){
   JsonString *pStr;
   pStr = (JsonString*)sqlite3_aggregate_context(ctx, 0);
   if( pStr ){
-    int flags;
     pStr->pCtx = ctx;
     jsonAppendChar(pStr, ']');
-    flags = SQLITE_PTR_TO_INT(sqlite3_user_data(ctx));
-    if( pStr->eErr ){
-      jsonReturnString(pStr, 0, 0);
-      return;
-    }else if( flags & JSON_BLOB ){
-      jsonReturnStringAsBlob(pStr);
-      if( isFinal ){
-        if( !pStr->bStatic ) sqlite3RCStrUnref(pStr->zBuf);
-      }else{
-        jsonStringTrimOneChar(pStr);
-      }
-      return;
+    if( pStr->bErr ){
+      if( pStr->bErr==1 ) sqlite3_result_error_nomem(ctx);
+      assert( pStr->bStatic );
     }else if( isFinal ){
       sqlite3_result_text(ctx, pStr->zBuf, (int)pStr->nUsed,
                           pStr->bStatic ? SQLITE_TRANSIENT :
@@ -213405,7 +211243,7 @@ static void jsonArrayCompute(sqlite3_context *ctx, int isFinal){
       pStr->bStatic = 1;
     }else{
       sqlite3_result_text(ctx, pStr->zBuf, (int)pStr->nUsed, SQLITE_TRANSIENT);
-      jsonStringTrimOneChar(pStr);
+      pStr->nUsed--;
     }
   }else{
     sqlite3_result_text(ctx, "[]", 2, SQLITE_STATIC);
@@ -213486,38 +211324,27 @@ static void jsonObjectStep(
   pStr = (JsonString*)sqlite3_aggregate_context(ctx, sizeof(*pStr));
   if( pStr ){
     if( pStr->zBuf==0 ){
-      jsonStringInit(pStr, ctx);
+      jsonInit(pStr, ctx);
       jsonAppendChar(pStr, '{');
     }else if( pStr->nUsed>1 ){
       jsonAppendChar(pStr, ',');
     }
     pStr->pCtx = ctx;
     z = (const char*)sqlite3_value_text(argv[0]);
-    n = sqlite3Strlen30(z);
+    n = (u32)sqlite3_value_bytes(argv[0]);
     jsonAppendString(pStr, z, n);
     jsonAppendChar(pStr, ':');
-    jsonAppendSqlValue(pStr, argv[1]);
+    jsonAppendValue(pStr, argv[1]);
   }
 }
 static void jsonObjectCompute(sqlite3_context *ctx, int isFinal){
   JsonString *pStr;
   pStr = (JsonString*)sqlite3_aggregate_context(ctx, 0);
   if( pStr ){
-    int flags;
     jsonAppendChar(pStr, '}');
-    pStr->pCtx = ctx;
-    flags = SQLITE_PTR_TO_INT(sqlite3_user_data(ctx));
-    if( pStr->eErr ){
-      jsonReturnString(pStr, 0, 0);
-      return;
-    }else if( flags & JSON_BLOB ){
-      jsonReturnStringAsBlob(pStr);
-      if( isFinal ){
-        if( !pStr->bStatic ) sqlite3RCStrUnref(pStr->zBuf);
-      }else{
-        jsonStringTrimOneChar(pStr);
-      }
-      return;
+    if( pStr->bErr ){
+      if( pStr->bErr==1 ) sqlite3_result_error_nomem(ctx);
+      assert( pStr->bStatic );
     }else if( isFinal ){
       sqlite3_result_text(ctx, pStr->zBuf, (int)pStr->nUsed,
                           pStr->bStatic ? SQLITE_TRANSIENT :
@@ -213525,7 +211352,7 @@ static void jsonObjectCompute(sqlite3_context *ctx, int isFinal){
       pStr->bStatic = 1;
     }else{
       sqlite3_result_text(ctx, pStr->zBuf, (int)pStr->nUsed, SQLITE_TRANSIENT);
-      jsonStringTrimOneChar(pStr);
+      pStr->nUsed--;
     }
   }else{
     sqlite3_result_text(ctx, "{}", 2, SQLITE_STATIC);
@@ -213545,37 +211372,19 @@ static void jsonObjectFinal(sqlite3_context *ctx){
 /****************************************************************************
 ** The json_each virtual table
 ****************************************************************************/
-typedef struct JsonParent JsonParent;
-struct JsonParent {
-  u32 iHead;                 /* Start of object or array */
-  u32 iValue;                /* Start of the value */
-  u32 iEnd;                  /* First byte past the end */
-  u32 nPath;                 /* Length of path */
-  i64 iKey;                  /* Key for JSONB_ARRAY */
-};
-
 typedef struct JsonEachCursor JsonEachCursor;
 struct JsonEachCursor {
   sqlite3_vtab_cursor base;  /* Base class - must be first */
   u32 iRowid;                /* The rowid */
-  u32 i;                     /* Index in sParse.aBlob[] of current row */
+  u32 iBegin;                /* The first node of the scan */
+  u32 i;                     /* Index in sParse.aNode[] of current row */
   u32 iEnd;                  /* EOF when i equals or exceeds this value */
-  u32 nRoot;                 /* Size of the root path in bytes */
-  u8 eType;                  /* Type of the container for element i */
+  u8 eType;                  /* Type of top-level element */
   u8 bRecursive;             /* True for json_tree().  False for json_each() */
-  u32 nParent;               /* Current nesting depth */
-  u32 nParentAlloc;          /* Space allocated for aParent[] */
-  JsonParent *aParent;       /* Parent elements of i */
-  sqlite3 *db;               /* Database connection */
-  JsonString path;           /* Current path */
+  char *zJson;               /* Input JSON */
+  char *zRoot;               /* Path by which to filter zJson */
   JsonParse sParse;          /* Parse of the input JSON */
 };
-typedef struct JsonEachConnection JsonEachConnection;
-struct JsonEachConnection {
-  sqlite3_vtab base;         /* Base class - must be first */
-  sqlite3 *db;               /* Database connection */
-};
-
 
 /* Constructor for the json_each virtual table */
 static int jsonEachConnect(
@@ -213585,7 +211394,7 @@ static int jsonEachConnect(
   sqlite3_vtab **ppVtab,
   char **pzErr
 ){
-  JsonEachConnection *pNew;
+  sqlite3_vtab *pNew;
   int rc;
 
 /* Column numbers */
@@ -213611,32 +211420,28 @@ static int jsonEachConnect(
      "CREATE TABLE x(key,value,type,atom,id,parent,fullkey,path,"
                     "json HIDDEN,root HIDDEN)");
   if( rc==SQLITE_OK ){
-    pNew = (JsonEachConnection*)sqlite3DbMallocZero(db, sizeof(*pNew));
-    *ppVtab = (sqlite3_vtab*)pNew;
+    pNew = *ppVtab = sqlite3_malloc( sizeof(*pNew) );
     if( pNew==0 ) return SQLITE_NOMEM;
+    memset(pNew, 0, sizeof(*pNew));
     sqlite3_vtab_config(db, SQLITE_VTAB_INNOCUOUS);
-    pNew->db = db;
   }
   return rc;
 }
 
 /* destructor for json_each virtual table */
 static int jsonEachDisconnect(sqlite3_vtab *pVtab){
-  JsonEachConnection *p = (JsonEachConnection*)pVtab;
-  sqlite3DbFree(p->db, pVtab);
+  sqlite3_free(pVtab);
   return SQLITE_OK;
 }
 
 /* constructor for a JsonEachCursor object for json_each(). */
 static int jsonEachOpenEach(sqlite3_vtab *p, sqlite3_vtab_cursor **ppCursor){
-  JsonEachConnection *pVtab = (JsonEachConnection*)p;
   JsonEachCursor *pCur;
 
   UNUSED_PARAMETER(p);
-  pCur = sqlite3DbMallocZero(pVtab->db, sizeof(*pCur));
+  pCur = sqlite3_malloc( sizeof(*pCur) );
   if( pCur==0 ) return SQLITE_NOMEM;
-  pCur->db = pVtab->db;
-  jsonStringZero(&pCur->path);
+  memset(pCur, 0, sizeof(*pCur));
   *ppCursor = &pCur->base;
   return SQLITE_OK;
 }
@@ -213654,24 +211459,21 @@ static int jsonEachOpenTree(sqlite3_vtab *p, sqlite3_vtab_cursor **ppCursor){
 /* Reset a JsonEachCursor back to its original state.  Free any memory
 ** held. */
 static void jsonEachCursorReset(JsonEachCursor *p){
+  sqlite3_free(p->zRoot);
   jsonParseReset(&p->sParse);
-  jsonStringReset(&p->path);
-  sqlite3DbFree(p->db, p->aParent);
   p->iRowid = 0;
   p->i = 0;
-  p->aParent = 0;
-  p->nParent = 0;
-  p->nParentAlloc = 0;
   p->iEnd = 0;
   p->eType = 0;
+  p->zJson = 0;
+  p->zRoot = 0;
 }
 
 /* Destructor for a jsonEachCursor object */
 static int jsonEachClose(sqlite3_vtab_cursor *cur){
   JsonEachCursor *p = (JsonEachCursor*)cur;
   jsonEachCursorReset(p);
-
-  sqlite3DbFree(p->db, cur);
+  sqlite3_free(cur);
   return SQLITE_OK;
 }
 
@@ -213682,233 +211484,200 @@ static int jsonEachEof(sqlite3_vtab_cursor *cur){
   return p->i >= p->iEnd;
 }
 
-/*
-** If the cursor is currently pointing at the label of a object entry,
-** then return the index of the value.  For all other cases, return the
-** current pointer position, which is the value.
-*/
-static int jsonSkipLabel(JsonEachCursor *p){
-  if( p->eType==JSONB_OBJECT ){
-    u32 sz = 0;
-    u32 n = jsonbPayloadSize(&p->sParse, p->i, &sz);
-    return p->i + n + sz;
-  }else{
-    return p->i;
-  }
-}
-
-/*
-** Append the path name for the current element.
-*/
-static void jsonAppendPathName(JsonEachCursor *p){
-  assert( p->nParent>0 );
-  assert( p->eType==JSONB_ARRAY || p->eType==JSONB_OBJECT );
-  if( p->eType==JSONB_ARRAY ){
-    jsonPrintf(30, &p->path, "[%lld]", p->aParent[p->nParent-1].iKey);
-  }else{
-    u32 n, sz = 0, k, i;
-    const char *z;
-    int needQuote = 0;
-    n = jsonbPayloadSize(&p->sParse, p->i, &sz);
-    k = p->i + n;
-    z = (const char*)&p->sParse.aBlob[k];
-    if( sz==0 || !sqlite3Isalpha(z[0]) ){
-      needQuote = 1;
-    }else{
-      for(i=0; i<sz; i++){
-        if( !sqlite3Isalnum(z[i]) ){
-          needQuote = 1;
-          break;
-        }
-      }
-    }
-    if( needQuote ){
-      jsonPrintf(sz+4,&p->path,".\"%.*s\"", sz, z);
-    }else{
-      jsonPrintf(sz+2,&p->path,".%.*s", sz, z);
-    }
-  }
-}
-
 /* Advance the cursor to the next element for json_tree() */
 static int jsonEachNext(sqlite3_vtab_cursor *cur){
   JsonEachCursor *p = (JsonEachCursor*)cur;
-  int rc = SQLITE_OK;
   if( p->bRecursive ){
-    u8 x;
-    u8 levelChange = 0;
-    u32 n, sz = 0;
-    u32 i = jsonSkipLabel(p);
-    x = p->sParse.aBlob[i] & 0x0f;
-    n = jsonbPayloadSize(&p->sParse, i, &sz);
-    if( x==JSONB_OBJECT || x==JSONB_ARRAY ){
-      JsonParent *pParent;
-      if( p->nParent>=p->nParentAlloc ){
-        JsonParent *pNew;
-        u64 nNew;
-        nNew = p->nParentAlloc*2 + 3;
-        pNew = sqlite3DbRealloc(p->db, p->aParent, sizeof(JsonParent)*nNew);
-        if( pNew==0 ) return SQLITE_NOMEM;
-        p->nParentAlloc = (u32)nNew;
-        p->aParent = pNew;
-      }
-      levelChange = 1;
-      pParent = &p->aParent[p->nParent];
-      pParent->iHead = p->i;
-      pParent->iValue = i;
-      pParent->iEnd = i + n + sz;
-      pParent->iKey = -1;
-      pParent->nPath = (u32)p->path.nUsed;
-      if( p->eType && p->nParent ){
-        jsonAppendPathName(p);
-        if( p->path.eErr ) rc = SQLITE_NOMEM;
-      }
-      p->nParent++;
-      p->i = i + n;
-    }else{
-      p->i = i + n + sz;
-    }
-    while( p->nParent>0 && p->i >= p->aParent[p->nParent-1].iEnd ){
-      p->nParent--;
-      p->path.nUsed = p->aParent[p->nParent].nPath;
-      levelChange = 1;
-    }
-    if( levelChange ){
-      if( p->nParent>0 ){
-        JsonParent *pParent = &p->aParent[p->nParent-1];
-        u32 iVal = pParent->iValue;
-        p->eType = p->sParse.aBlob[iVal] & 0x0f;
-      }else{
-        p->eType = 0;
+    if( p->sParse.aNode[p->i].jnFlags & JNODE_LABEL ) p->i++;
+    p->i++;
+    p->iRowid++;
+    if( p->i<p->iEnd ){
+      u32 iUp = p->sParse.aUp[p->i];
+      JsonNode *pUp = &p->sParse.aNode[iUp];
+      p->eType = pUp->eType;
+      if( pUp->eType==JSON_ARRAY ){
+        assert( pUp->eU==0 || pUp->eU==3 );
+        testcase( pUp->eU==3 );
+        VVA( pUp->eU = 3 );
+        if( iUp==p->i-1 ){
+          pUp->u.iKey = 0;
+        }else{
+          pUp->u.iKey++;
+        }
       }
     }
   }else{
-    u32 n, sz = 0;
-    u32 i = jsonSkipLabel(p);
-    n = jsonbPayloadSize(&p->sParse, i, &sz);
-    p->i = i + n + sz;
-  }
-  if( p->eType==JSONB_ARRAY && p->nParent ){
-    p->aParent[p->nParent-1].iKey++;
-  }
-  p->iRowid++;
-  return rc;
-}
-
-/* Length of the path for rowid==0 in bRecursive mode.
-*/
-static int jsonEachPathLength(JsonEachCursor *p){
-  u32 n = p->path.nUsed;
-  char *z = p->path.zBuf;
-  if( p->iRowid==0 && p->bRecursive && n>=2 ){
-    while( n>1 ){
-      n--;
-      if( z[n]=='[' || z[n]=='.' ){
-        u32 x, sz = 0;
-        char cSaved = z[n];
-        z[n] = 0;
-        assert( p->sParse.eEdit==0 );
-        x = jsonLookupStep(&p->sParse, 0, z+1, 0);
-        z[n] = cSaved;
-        if( JSON_LOOKUP_ISERROR(x) ) continue;
-        if( x + jsonbPayloadSize(&p->sParse, x, &sz) == p->i ) break;
+    switch( p->eType ){
+      case JSON_ARRAY: {
+        p->i += jsonNodeSize(&p->sParse.aNode[p->i]);
+        p->iRowid++;
+        break;
+      }
+      case JSON_OBJECT: {
+        p->i += 1 + jsonNodeSize(&p->sParse.aNode[p->i+1]);
+        p->iRowid++;
+        break;
+      }
+      default: {
+        p->i = p->iEnd;
+        break;
       }
     }
   }
-  return n;
+  return SQLITE_OK;
+}
+
+/* Append an object label to the JSON Path being constructed
+** in pStr.
+*/
+static void jsonAppendObjectPathElement(
+  JsonString *pStr,
+  JsonNode *pNode
+){
+  int jj, nn;
+  const char *z;
+  assert( pNode->eType==JSON_STRING );
+  assert( pNode->jnFlags & JNODE_LABEL );
+  assert( pNode->eU==1 );
+  z = pNode->u.zJContent;
+  nn = pNode->n;
+  if( (pNode->jnFlags & JNODE_RAW)==0 ){
+    assert( nn>=2 );
+    assert( z[0]=='"' || z[0]=='\'' );
+    assert( z[nn-1]=='"' || z[0]=='\'' );
+    if( nn>2 && sqlite3Isalpha(z[1]) ){
+      for(jj=2; jj<nn-1 && sqlite3Isalnum(z[jj]); jj++){}
+      if( jj==nn-1 ){
+        z++;
+        nn -= 2;
+      }
+    }
+  }
+  jsonPrintf(nn+2, pStr, ".%.*s", nn, z);
+}
+
+/* Append the name of the path for element i to pStr
+*/
+static void jsonEachComputePath(
+  JsonEachCursor *p,       /* The cursor */
+  JsonString *pStr,        /* Write the path here */
+  u32 i                    /* Path to this element */
+){
+  JsonNode *pNode, *pUp;
+  u32 iUp;
+  if( i==0 ){
+    jsonAppendChar(pStr, '$');
+    return;
+  }
+  iUp = p->sParse.aUp[i];
+  jsonEachComputePath(p, pStr, iUp);
+  pNode = &p->sParse.aNode[i];
+  pUp = &p->sParse.aNode[iUp];
+  if( pUp->eType==JSON_ARRAY ){
+    assert( pUp->eU==3 || (pUp->eU==0 && pUp->u.iKey==0) );
+    testcase( pUp->eU==0 );
+    jsonPrintf(30, pStr, "[%d]", pUp->u.iKey);
+  }else{
+    assert( pUp->eType==JSON_OBJECT );
+    if( (pNode->jnFlags & JNODE_LABEL)==0 ) pNode--;
+    jsonAppendObjectPathElement(pStr, pNode);
+  }
 }
 
 /* Return the value of a column */
 static int jsonEachColumn(
   sqlite3_vtab_cursor *cur,   /* The cursor */
   sqlite3_context *ctx,       /* First argument to sqlite3_result_...() */
-  int iColumn                 /* Which column to return */
+  int i                       /* Which column to return */
 ){
   JsonEachCursor *p = (JsonEachCursor*)cur;
-  switch( iColumn ){
+  JsonNode *pThis = &p->sParse.aNode[p->i];
+  switch( i ){
     case JEACH_KEY: {
-      if( p->nParent==0 ){
-        u32 n, j;
-        if( p->nRoot==1 ) break;
-        j = jsonEachPathLength(p);
-        n = p->nRoot - j;
-        if( n==0 ){
-          break;
-        }else if( p->path.zBuf[j]=='[' ){
-          i64 x;
-          sqlite3Atoi64(&p->path.zBuf[j+1], &x, n-1, SQLITE_UTF8);
-          sqlite3_result_int64(ctx, x);
-        }else if( p->path.zBuf[j+1]=='"' ){
-          sqlite3_result_text(ctx, &p->path.zBuf[j+2], n-3, SQLITE_TRANSIENT);
+      if( p->i==0 ) break;
+      if( p->eType==JSON_OBJECT ){
+        jsonReturn(&p->sParse, pThis, ctx, 0);
+      }else if( p->eType==JSON_ARRAY ){
+        u32 iKey;
+        if( p->bRecursive ){
+          if( p->iRowid==0 ) break;
+          assert( p->sParse.aNode[p->sParse.aUp[p->i]].eU==3 );
+          iKey = p->sParse.aNode[p->sParse.aUp[p->i]].u.iKey;
         }else{
-          sqlite3_result_text(ctx, &p->path.zBuf[j+1], n-1, SQLITE_TRANSIENT);
+          iKey = p->iRowid;
         }
-        break;
-      }
-      if( p->eType==JSONB_OBJECT ){
-        jsonReturnFromBlob(&p->sParse, p->i, ctx, 1);
-      }else{
-        assert( p->eType==JSONB_ARRAY );
-        sqlite3_result_int64(ctx, p->aParent[p->nParent-1].iKey);
+        sqlite3_result_int64(ctx, (sqlite3_int64)iKey);
       }
       break;
     }
     case JEACH_VALUE: {
-      u32 i = jsonSkipLabel(p);
-      jsonReturnFromBlob(&p->sParse, i, ctx, 1);
-      if( (p->sParse.aBlob[i] & 0x0f)>=JSONB_ARRAY ){
-        sqlite3_result_subtype(ctx, JSON_SUBTYPE);
-      }
+      if( pThis->jnFlags & JNODE_LABEL ) pThis++;
+      jsonReturn(&p->sParse, pThis, ctx, 0);
       break;
     }
     case JEACH_TYPE: {
-      u32 i = jsonSkipLabel(p);
-      u8 eType = p->sParse.aBlob[i] & 0x0f;
-      sqlite3_result_text(ctx, jsonbType[eType], -1, SQLITE_STATIC);
+      if( pThis->jnFlags & JNODE_LABEL ) pThis++;
+      sqlite3_result_text(ctx, jsonType[pThis->eType], -1, SQLITE_STATIC);
       break;
     }
     case JEACH_ATOM: {
-      u32 i = jsonSkipLabel(p);
-      if( (p->sParse.aBlob[i] & 0x0f)<JSONB_ARRAY ){
-        jsonReturnFromBlob(&p->sParse, i, ctx, 1);
-      }
+      if( pThis->jnFlags & JNODE_LABEL ) pThis++;
+      if( pThis->eType>=JSON_ARRAY ) break;
+      jsonReturn(&p->sParse, pThis, ctx, 0);
       break;
     }
     case JEACH_ID: {
-      sqlite3_result_int64(ctx, (sqlite3_int64)p->i);
+      sqlite3_result_int64(ctx,
+         (sqlite3_int64)p->i + ((pThis->jnFlags & JNODE_LABEL)!=0));
       break;
     }
     case JEACH_PARENT: {
-      if( p->nParent>0 && p->bRecursive ){
-        sqlite3_result_int64(ctx, p->aParent[p->nParent-1].iHead);
+      if( p->i>p->iBegin && p->bRecursive ){
+        sqlite3_result_int64(ctx, (sqlite3_int64)p->sParse.aUp[p->i]);
       }
       break;
     }
     case JEACH_FULLKEY: {
-      u64 nBase = p->path.nUsed;
-      if( p->nParent ) jsonAppendPathName(p);
-      sqlite3_result_text64(ctx, p->path.zBuf, p->path.nUsed,
-                            SQLITE_TRANSIENT, SQLITE_UTF8);
-      p->path.nUsed = nBase;
+      JsonString x;
+      jsonInit(&x, ctx);
+      if( p->bRecursive ){
+        jsonEachComputePath(p, &x, p->i);
+      }else{
+        if( p->zRoot ){
+          jsonAppendRaw(&x, p->zRoot, (int)strlen(p->zRoot));
+        }else{
+          jsonAppendChar(&x, '$');
+        }
+        if( p->eType==JSON_ARRAY ){
+          jsonPrintf(30, &x, "[%d]", p->iRowid);
+        }else if( p->eType==JSON_OBJECT ){
+          jsonAppendObjectPathElement(&x, pThis);
+        }
+      }
+      jsonResult(&x);
       break;
     }
     case JEACH_PATH: {
-      u32 n = jsonEachPathLength(p);
-      sqlite3_result_text64(ctx, p->path.zBuf, n,
-                            SQLITE_TRANSIENT, SQLITE_UTF8);
-      break;
+      if( p->bRecursive ){
+        JsonString x;
+        jsonInit(&x, ctx);
+        jsonEachComputePath(p, &x, p->sParse.aUp[p->i]);
+        jsonResult(&x);
+        break;
+      }
+      /* For json_each() path and root are the same so fall through
+      ** into the root case */
+      /* no break */ deliberate_fall_through
     }
     default: {
-      sqlite3_result_text(ctx, p->path.zBuf, p->nRoot, SQLITE_STATIC);
+      const char *zRoot = p->zRoot;
+      if( zRoot==0 ) zRoot = "$";
+      sqlite3_result_text(ctx, zRoot, -1, SQLITE_STATIC);
       break;
     }
     case JEACH_JSON: {
-      if( p->sParse.zJson==0 ){
-        sqlite3_result_blob(ctx, p->sParse.aBlob, p->sParse.nBlob,
-                            SQLITE_TRANSIENT);
-      }else{
-        sqlite3_result_text(ctx, p->sParse.zJson, -1, SQLITE_TRANSIENT);
-      }
+      assert( i==JEACH_JSON );
+      sqlite3_result_text(ctx, p->sParse.zJson, -1, SQLITE_STATIC);
       break;
     }
   }
@@ -213999,97 +211768,86 @@ static int jsonEachFilter(
   int argc, sqlite3_value **argv
 ){
   JsonEachCursor *p = (JsonEachCursor*)cur;
+  const char *z;
   const char *zRoot = 0;
-  u32 i, n, sz;
+  sqlite3_int64 n;
 
   UNUSED_PARAMETER(idxStr);
   UNUSED_PARAMETER(argc);
   jsonEachCursorReset(p);
   if( idxNum==0 ) return SQLITE_OK;
+  z = (const char*)sqlite3_value_text(argv[0]);
+  if( z==0 ) return SQLITE_OK;
   memset(&p->sParse, 0, sizeof(p->sParse));
   p->sParse.nJPRef = 1;
-  p->sParse.db = p->db;
-  if( jsonFuncArgMightBeBinary(argv[0]) ){
-    p->sParse.nBlob = sqlite3_value_bytes(argv[0]);
-    p->sParse.aBlob = (u8*)sqlite3_value_blob(argv[0]);
+  if( sqlite3ValueIsOfClass(argv[0], sqlite3RCStrUnref) ){
+    p->sParse.zJson = sqlite3RCStrRef((char*)z);
   }else{
-    p->sParse.zJson = (char*)sqlite3_value_text(argv[0]);
-    p->sParse.nJson = sqlite3_value_bytes(argv[0]);
-    if( p->sParse.zJson==0 ){
-      p->i = p->iEnd = 0;
-      return SQLITE_OK;
-    }
-    if( jsonConvertTextToBlob(&p->sParse, 0) ){
-      if( p->sParse.oom ){
-        return SQLITE_NOMEM;
-      }
-      goto json_each_malformed_input;
-    }
+    n = sqlite3_value_bytes(argv[0]);
+    p->sParse.zJson = sqlite3RCStrNew( n+1 );
+    if( p->sParse.zJson==0 ) return SQLITE_NOMEM;
+    memcpy(p->sParse.zJson, z, (size_t)n+1);
   }
-  if( idxNum==3 ){
-    zRoot = (const char*)sqlite3_value_text(argv[1]);
-    if( zRoot==0 ) return SQLITE_OK;
-    if( zRoot[0]!='$' ){
+  p->sParse.bJsonIsRCStr = 1;
+  p->zJson = p->sParse.zJson;
+  if( jsonParse(&p->sParse, 0) ){
+    int rc = SQLITE_NOMEM;
+    if( p->sParse.oom==0 ){
       sqlite3_free(cur->pVtab->zErrMsg);
-      cur->pVtab->zErrMsg = jsonBadPathError(0, zRoot);
-      jsonEachCursorReset(p);
-      return cur->pVtab->zErrMsg ? SQLITE_ERROR : SQLITE_NOMEM;
+      cur->pVtab->zErrMsg = sqlite3_mprintf("malformed JSON");
+      if( cur->pVtab->zErrMsg ) rc = SQLITE_ERROR;
     }
-    p->nRoot = sqlite3Strlen30(zRoot);
-    if( zRoot[1]==0 ){
-      i = p->i = 0;
-      p->eType = 0;
-    }else{
-      i = jsonLookupStep(&p->sParse, 0, zRoot+1, 0);
-      if( JSON_LOOKUP_ISERROR(i) ){
-        if( i==JSON_LOOKUP_NOTFOUND ){
-          p->i = 0;
-          p->eType = 0;
-          p->iEnd = 0;
-          return SQLITE_OK;
-        }
+    jsonEachCursorReset(p);
+    return rc;
+  }else if( p->bRecursive && jsonParseFindParents(&p->sParse) ){
+    jsonEachCursorReset(p);
+    return SQLITE_NOMEM;
+  }else{
+    JsonNode *pNode = 0;
+    if( idxNum==3 ){
+      const char *zErr = 0;
+      zRoot = (const char*)sqlite3_value_text(argv[1]);
+      if( zRoot==0 ) return SQLITE_OK;
+      n = sqlite3_value_bytes(argv[1]);
+      p->zRoot = sqlite3_malloc64( n+1 );
+      if( p->zRoot==0 ) return SQLITE_NOMEM;
+      memcpy(p->zRoot, zRoot, (size_t)n+1);
+      if( zRoot[0]!='$' ){
+        zErr = zRoot;
+      }else{
+        pNode = jsonLookupStep(&p->sParse, 0, p->zRoot+1, 0, &zErr);
+      }
+      if( zErr ){
         sqlite3_free(cur->pVtab->zErrMsg);
-        cur->pVtab->zErrMsg = jsonBadPathError(0, zRoot);
+        cur->pVtab->zErrMsg = jsonPathSyntaxError(zErr);
         jsonEachCursorReset(p);
         return cur->pVtab->zErrMsg ? SQLITE_ERROR : SQLITE_NOMEM;
+      }else if( pNode==0 ){
+        return SQLITE_OK;
       }
-      if( p->sParse.iLabel ){
-        p->i = p->sParse.iLabel;
-        p->eType = JSONB_OBJECT;
-      }else{
-        p->i = i;
-        p->eType = JSONB_ARRAY;
-      }
+    }else{
+      pNode = p->sParse.aNode;
     }
-    jsonAppendRaw(&p->path, zRoot, p->nRoot);
-  }else{
-    i = p->i = 0;
-    p->eType = 0;
-    p->nRoot = 1;
-    jsonAppendRaw(&p->path, "$", 1);
-  }
-  p->nParent = 0;
-  n = jsonbPayloadSize(&p->sParse, i, &sz);
-  p->iEnd = i+n+sz;
-  if( (p->sParse.aBlob[i] & 0x0f)>=JSONB_ARRAY && !p->bRecursive ){
-    p->i = i + n;
-    p->eType = p->sParse.aBlob[i] & 0x0f;
-    p->aParent = sqlite3DbMallocZero(p->db, sizeof(JsonParent));
-    if( p->aParent==0 ) return SQLITE_NOMEM;
-    p->nParent = 1;
-    p->nParentAlloc = 1;
-    p->aParent[0].iKey = 0;
-    p->aParent[0].iEnd = p->iEnd;
-    p->aParent[0].iHead = p->i;
-    p->aParent[0].iValue = i;
+    p->iBegin = p->i = (int)(pNode - p->sParse.aNode);
+    p->eType = pNode->eType;
+    if( p->eType>=JSON_ARRAY ){
+      assert( pNode->eU==0 );
+      VVA( pNode->eU = 3 );
+      pNode->u.iKey = 0;
+      p->iEnd = p->i + pNode->n + 1;
+      if( p->bRecursive ){
+        p->eType = p->sParse.aNode[p->sParse.aUp[p->i]].eType;
+        if( p->i>0 && (p->sParse.aNode[p->i-1].jnFlags & JNODE_LABEL)!=0 ){
+          p->i--;
+        }
+      }else{
+        p->i++;
+      }
+    }else{
+      p->iEnd = p->i+1;
+    }
   }
   return SQLITE_OK;
-
-json_each_malformed_input:
-  sqlite3_free(cur->pVtab->zErrMsg);
-  cur->pVtab->zErrMsg = sqlite3_mprintf("malformed JSON");
-  jsonEachCursorReset(p);
-  return cur->pVtab->zErrMsg ? SQLITE_ERROR : SQLITE_NOMEM;
 }
 
 /* The methods of the json_each virtual table */
@@ -214158,54 +211916,40 @@ static sqlite3_module jsonTreeModule = {
 SQLITE_PRIVATE void sqlite3RegisterJsonFunctions(void){
 #ifndef SQLITE_OMIT_JSON
   static FuncDef aJsonFunc[] = {
-    /*   sqlite3_result_subtype() ----,  ,--- sqlite3_value_subtype()       */
-    /*                                |  |                                  */
-    /*             Uses cache ------, |  | ,---- Returns JSONB              */
-    /*                              | |  | |                                */
-    /*     Number of arguments ---, | |  | | ,--- Flags                     */
-    /*                            | | |  | | |                              */
-    JFUNCTION(json,               1,1,1, 0,0,0,          jsonRemoveFunc),
-    JFUNCTION(jsonb,              1,1,0, 0,1,0,          jsonRemoveFunc),
-    JFUNCTION(json_array,        -1,0,1, 1,0,0,          jsonArrayFunc),
-    JFUNCTION(jsonb_array,       -1,0,1, 1,1,0,          jsonArrayFunc),
-    JFUNCTION(json_array_length,  1,1,0, 0,0,0,          jsonArrayLengthFunc),
-    JFUNCTION(json_array_length,  2,1,0, 0,0,0,          jsonArrayLengthFunc),
-    JFUNCTION(json_error_position,1,1,0, 0,0,0,          jsonErrorFunc),
-    JFUNCTION(json_extract,      -1,1,1, 0,0,0,          jsonExtractFunc),
-    JFUNCTION(jsonb_extract,     -1,1,0, 0,1,0,          jsonExtractFunc),
-    JFUNCTION(->,                 2,1,1, 0,0,JSON_JSON,  jsonExtractFunc),
-    JFUNCTION(->>,                2,1,0, 0,0,JSON_SQL,   jsonExtractFunc),
-    JFUNCTION(json_insert,       -1,1,1, 1,0,0,          jsonSetFunc),
-    JFUNCTION(jsonb_insert,      -1,1,0, 1,1,0,          jsonSetFunc),
-    JFUNCTION(json_object,       -1,0,1, 1,0,0,          jsonObjectFunc),
-    JFUNCTION(jsonb_object,      -1,0,1, 1,1,0,          jsonObjectFunc),
-    JFUNCTION(json_patch,         2,1,1, 0,0,0,          jsonPatchFunc),
-    JFUNCTION(jsonb_patch,        2,1,0, 0,1,0,          jsonPatchFunc),
-    JFUNCTION(json_quote,         1,0,1, 1,0,0,          jsonQuoteFunc),
-    JFUNCTION(json_remove,       -1,1,1, 0,0,0,          jsonRemoveFunc),
-    JFUNCTION(jsonb_remove,      -1,1,0, 0,1,0,          jsonRemoveFunc),
-    JFUNCTION(json_replace,      -1,1,1, 1,0,0,          jsonReplaceFunc),
-    JFUNCTION(jsonb_replace,     -1,1,0, 1,1,0,          jsonReplaceFunc),
-    JFUNCTION(json_set,          -1,1,1, 1,0,JSON_ISSET, jsonSetFunc),
-    JFUNCTION(jsonb_set,         -1,1,0, 1,1,JSON_ISSET, jsonSetFunc),
-    JFUNCTION(json_type,          1,1,0, 0,0,0,          jsonTypeFunc),
-    JFUNCTION(json_type,          2,1,0, 0,0,0,          jsonTypeFunc),
-    JFUNCTION(json_valid,         1,1,0, 0,0,0,          jsonValidFunc),
-    JFUNCTION(json_valid,         2,1,0, 0,0,0,          jsonValidFunc),
-#if SQLITE_DEBUG
-    JFUNCTION(json_parse,         1,1,0, 0,0,0,          jsonParseFunc),
+    /*                     calls sqlite3_result_subtype()                    */
+    /*                                  |                                    */
+    /*              Uses cache ______   |   __ calls sqlite3_value_subtype() */
+    /*                               |  |  |                                 */
+    /*          Num args _________   |  |  |   ___ Flags                     */
+    /*                            |  |  |  |  |                              */
+    /*                            |  |  |  |  |                              */
+    JFUNCTION(json,               1, 1, 1, 0, 0,          jsonRemoveFunc),
+    JFUNCTION(json_array,        -1, 0, 1, 1, 0,          jsonArrayFunc),
+    JFUNCTION(json_array_length,  1, 1, 0, 0, 0,          jsonArrayLengthFunc),
+    JFUNCTION(json_array_length,  2, 1, 0, 0, 0,          jsonArrayLengthFunc),
+    JFUNCTION(json_error_position,1, 1, 0, 0, 0,          jsonErrorFunc),
+    JFUNCTION(json_extract,      -1, 1, 1, 0, 0,          jsonExtractFunc),
+    JFUNCTION(->,                 2, 1, 1, 0, JSON_JSON,  jsonExtractFunc),
+    JFUNCTION(->>,                2, 1, 0, 0, JSON_SQL,   jsonExtractFunc),
+    JFUNCTION(json_insert,       -1, 1, 1, 1, 0,          jsonSetFunc),
+    JFUNCTION(json_object,       -1, 0, 1, 1, 0,          jsonObjectFunc),
+    JFUNCTION(json_patch,         2, 1, 1, 0, 0,          jsonPatchFunc),
+    JFUNCTION(json_quote,         1, 0, 1, 1, 0,          jsonQuoteFunc),
+    JFUNCTION(json_remove,       -1, 1, 1, 0, 0,          jsonRemoveFunc),
+    JFUNCTION(json_replace,      -1, 1, 1, 1, 0,          jsonReplaceFunc),
+    JFUNCTION(json_set,          -1, 1, 1, 1, JSON_ISSET, jsonSetFunc),
+    JFUNCTION(json_type,          1, 1, 0, 0, 0,          jsonTypeFunc),
+    JFUNCTION(json_type,          2, 1, 0, 0, 0,          jsonTypeFunc),
+    JFUNCTION(json_valid,         1, 1, 0, 0, 0,          jsonValidFunc),
+#ifdef SQLITE_DEBUG
+    JFUNCTION(json_parse,         1, 1, 1, 0, 0,          jsonParseFunc),
+    JFUNCTION(json_test1,         1, 1, 0, 1, 0,          jsonTest1Func),
 #endif
     WAGGREGATE(json_group_array,  1, 0, 0,
        jsonArrayStep, jsonArrayFinal, jsonArrayValue, jsonGroupInverse,
        SQLITE_SUBTYPE|SQLITE_RESULT_SUBTYPE|SQLITE_UTF8|
        SQLITE_DETERMINISTIC),
-    WAGGREGATE(jsonb_group_array, 1, JSON_BLOB, 0,
-       jsonArrayStep, jsonArrayFinal, jsonArrayValue, jsonGroupInverse,
-       SQLITE_SUBTYPE|SQLITE_RESULT_SUBTYPE|SQLITE_UTF8|SQLITE_DETERMINISTIC),
     WAGGREGATE(json_group_object, 2, 0, 0,
-       jsonObjectStep, jsonObjectFinal, jsonObjectValue, jsonGroupInverse,
-       SQLITE_SUBTYPE|SQLITE_RESULT_SUBTYPE|SQLITE_UTF8|SQLITE_DETERMINISTIC),
-    WAGGREGATE(jsonb_group_object,2, JSON_BLOB, 0,
        jsonObjectStep, jsonObjectFinal, jsonObjectValue, jsonGroupInverse,
        SQLITE_SUBTYPE|SQLITE_RESULT_SUBTYPE|SQLITE_UTF8|
        SQLITE_DETERMINISTIC)
@@ -214933,9 +212677,11 @@ static RtreeNode *nodeNew(Rtree *pRtree, RtreeNode *pParent){
 ** Clear the Rtree.pNodeBlob object
 */
 static void nodeBlobReset(Rtree *pRtree){
-  sqlite3_blob *pBlob = pRtree->pNodeBlob;
-  pRtree->pNodeBlob = 0;
-  sqlite3_blob_close(pBlob);
+  if( pRtree->pNodeBlob && pRtree->inWrTrans==0 && pRtree->nCursor==0 ){
+    sqlite3_blob *pBlob = pRtree->pNodeBlob;
+    pRtree->pNodeBlob = 0;
+    sqlite3_blob_close(pBlob);
+  }
 }
 
 /*
@@ -214954,7 +212700,7 @@ static int nodeAcquire(
   ** increase its reference count and return it.
   */
   if( (pNode = nodeHashLookup(pRtree, iNode))!=0 ){
-    if( pParent && ALWAYS(pParent!=pNode->pParent) ){
+    if( pParent && pParent!=pNode->pParent ){
       RTREE_IS_CORRUPT(pRtree);
       return SQLITE_CORRUPT_VTAB;
     }
@@ -214979,6 +212725,7 @@ static int nodeAcquire(
                            &pRtree->pNodeBlob);
   }
   if( rc ){
+    nodeBlobReset(pRtree);
     *ppNode = 0;
     /* If unable to open an sqlite3_blob on the desired row, that can only
     ** be because the shadow tables hold erroneous data. */
@@ -215038,7 +212785,6 @@ static int nodeAcquire(
     }
     *ppNode = pNode;
   }else{
-    nodeBlobReset(pRtree);
     if( pNode ){
       pRtree->nNodeRef--;
       sqlite3_free(pNode);
@@ -215183,7 +212929,6 @@ static void nodeGetCoord(
   int iCoord,                  /* Which coordinate to extract */
   RtreeCoord *pCoord           /* OUT: Space to write result to */
 ){
-  assert( iCell<NCELL(pNode) );
   readCoord(&pNode->zData[12 + pRtree->nBytesPerCell*iCell + 4*iCoord], pCoord);
 }
 
@@ -215373,9 +213118,7 @@ static int rtreeClose(sqlite3_vtab_cursor *cur){
   sqlite3_finalize(pCsr->pReadAux);
   sqlite3_free(pCsr);
   pRtree->nCursor--;
-  if( pRtree->nCursor==0 && pRtree->inWrTrans==0 ){
-    nodeBlobReset(pRtree);
-  }
+  nodeBlobReset(pRtree);
   return SQLITE_OK;
 }
 
@@ -215960,11 +213703,7 @@ static int rtreeRowid(sqlite3_vtab_cursor *pVtabCursor, sqlite_int64 *pRowid){
   int rc = SQLITE_OK;
   RtreeNode *pNode = rtreeNodeOfFirstSearchPoint(pCsr, &rc);
   if( rc==SQLITE_OK && ALWAYS(p) ){
-    if( p->iCell>=NCELL(pNode) ){
-      rc = SQLITE_ABORT;
-    }else{
-      *pRowid = nodeGetRowid(RTREE_OF_CURSOR(pCsr), pNode, p->iCell);
-    }
+    *pRowid = nodeGetRowid(RTREE_OF_CURSOR(pCsr), pNode, p->iCell);
   }
   return rc;
 }
@@ -215982,7 +213721,6 @@ static int rtreeColumn(sqlite3_vtab_cursor *cur, sqlite3_context *ctx, int i){
 
   if( rc ) return rc;
   if( NEVER(p==0) ) return SQLITE_OK;
-  if( p->iCell>=NCELL(pNode) ) return SQLITE_ABORT;
   if( i==0 ){
     sqlite3_result_int64(ctx, nodeGetRowid(pRtree, pNode, p->iCell));
   }else if( i<=pRtree->nDim2 ){
@@ -217464,7 +215202,8 @@ constraint:
 */
 static int rtreeBeginTransaction(sqlite3_vtab *pVtab){
   Rtree *pRtree = (Rtree *)pVtab;
-  pRtree->inWrTrans = 1;
+  assert( pRtree->inWrTrans==0 );
+  pRtree->inWrTrans++;
   return SQLITE_OK;
 }
 
@@ -217477,9 +215216,6 @@ static int rtreeEndTransaction(sqlite3_vtab *pVtab){
   pRtree->inWrTrans = 0;
   nodeBlobReset(pRtree);
   return SQLITE_OK;
-}
-static int rtreeRollback(sqlite3_vtab *pVtab){
-  return rtreeEndTransaction(pVtab);
 }
 
 /*
@@ -217599,7 +215335,7 @@ static sqlite3_module rtreeModule = {
   rtreeBeginTransaction,      /* xBegin - begin transaction */
   rtreeEndTransaction,        /* xSync - sync transaction */
   rtreeEndTransaction,        /* xCommit - commit transaction */
-  rtreeRollback,              /* xRollback - rollback transaction */
+  rtreeEndTransaction,        /* xRollback - rollback transaction */
   0,                          /* xFindFunction - function overloading */
   rtreeRename,                /* xRename - rename the table */
   rtreeSavepoint,             /* xSavepoint */
@@ -217699,7 +215435,7 @@ static int rtreeSqlInit(
     }
     sqlite3_free(zSql);
   }
-  if( pRtree->nAux && rc!=SQLITE_NOMEM ){
+  if( pRtree->nAux ){
     pRtree->zReadAuxSql = sqlite3_mprintf(
        "SELECT * FROM \"%w\".\"%w_rowid\" WHERE rowid=?1",
        zDb, zPrefix);
@@ -218388,13 +216124,15 @@ static int rtreeCheckTable(
   check.zTab = zTab;
 
   /* Find the number of auxiliary columns */
-  pStmt = rtreeCheckPrepare(&check, "SELECT * FROM %Q.'%q_rowid'", zDb, zTab);
-  if( pStmt ){
-    nAux = sqlite3_column_count(pStmt) - 2;
-    sqlite3_finalize(pStmt);
-  }else
-  if( check.rc!=SQLITE_NOMEM ){
-    check.rc = SQLITE_OK;
+  if( check.rc==SQLITE_OK ){
+    pStmt = rtreeCheckPrepare(&check, "SELECT * FROM %Q.'%q_rowid'", zDb, zTab);
+    if( pStmt ){
+      nAux = sqlite3_column_count(pStmt) - 2;
+      sqlite3_finalize(pStmt);
+    }else
+    if( check.rc!=SQLITE_NOMEM ){
+      check.rc = SQLITE_OK;
+    }
   }
 
   /* Find number of dimensions in the rtree table. */
@@ -218449,7 +216187,6 @@ static int rtreeIntegrity(
   if( rc==SQLITE_OK && *pzErr ){
     *pzErr = sqlite3_mprintf("In RTree %s.%s:\n%z",
                  pRtree->zDb, pRtree->zName, *pzErr);
-    if( (*pzErr)==0 ) rc = SQLITE_NOMEM;
   }
   return rc;
 }
@@ -231120,7 +228857,9 @@ SQLITE_API void sqlite3session_delete(sqlite3_session *pSession){
   ** associated hash-tables. */
   sessionDeleteTable(pSession, pSession->pTable);
 
-  /* Free the session object. */
+  /* Assert that all allocations have been freed and then free the
+  ** session object itself. */
+  // assert( pSession->nMalloc==0 );
   sqlite3_free(pSession);
 }
 
@@ -235333,11 +233072,8 @@ struct Fts5PhraseIter {
 **   created with the "columnsize=0" option.
 **
 ** xColumnText:
-**   If parameter iCol is less than zero, or greater than or equal to the
-**   number of columns in the table, SQLITE_RANGE is returned.
-**
-**   Otherwise, this function attempts to retrieve the text of column iCol of
-**   the current document. If successful, (*pz) is set to point to a buffer
+**   This function attempts to retrieve the text of column iCol of the
+**   current document. If successful, (*pz) is set to point to a buffer
 **   containing the text in utf-8 encoding, (*pn) is set to the size in bytes
 **   (not characters) of the buffer and SQLITE_OK is returned. Otherwise,
 **   if an error occurs, an SQLite error code is returned and the final values
@@ -235347,10 +233083,8 @@ struct Fts5PhraseIter {
 **   Returns the number of phrases in the current query expression.
 **
 ** xPhraseSize:
-**   If parameter iCol is less than zero, or greater than or equal to the
-**   number of phrases in the current query, as returned by xPhraseCount,
-**   0 is returned. Otherwise, this function returns the number of tokens in
-**   phrase iPhrase of the query. Phrases are numbered starting from zero.
+**   Returns the number of tokens in phrase iPhrase of the query. Phrases
+**   are numbered starting from zero.
 **
 ** xInstCount:
 **   Set *pnInst to the total number of occurrences of all phrases within
@@ -235366,13 +233100,12 @@ struct Fts5PhraseIter {
 **   Query for the details of phrase match iIdx within the current row.
 **   Phrase matches are numbered starting from zero, so the iIdx argument
 **   should be greater than or equal to zero and smaller than the value
-**   output by xInstCount(). If iIdx is less than zero or greater than
-**   or equal to the value returned by xInstCount(), SQLITE_RANGE is returned.
+**   output by xInstCount().
 **
-**   Otherwise, output parameter *piPhrase is set to the phrase number, *piCol
+**   Usually, output parameter *piPhrase is set to the phrase number, *piCol
 **   to the column in which it occurs and *piOff the token offset of the
-**   first token of the phrase. SQLITE_OK is returned if successful, or an
-**   error code (i.e. SQLITE_NOMEM) if an error occurs.
+**   first token of the phrase. Returns SQLITE_OK if successful, or an error
+**   code (i.e. SQLITE_NOMEM) if an error occurs.
 **
 **   This API can be quite slow if used with an FTS5 table created with the
 **   "detail=none" or "detail=column" option.
@@ -235397,10 +233130,6 @@ struct Fts5PhraseIter {
 **   function may be used to access the properties of each matched row.
 **   Invoking Api.xUserData() returns a copy of the pointer passed as
 **   the third argument to pUserData.
-**
-**   If parameter iPhrase is less than zero, or greater than or equal to
-**   the number of phrases in the query, as returned by xPhraseCount(),
-**   this function returns SQLITE_RANGE.
 **
 **   If the callback function returns any value other than SQLITE_OK, the
 **   query is abandoned and the xQueryPhrase function returns immediately.
@@ -235516,42 +233245,9 @@ struct Fts5PhraseIter {
 **
 ** xPhraseNextColumn()
 **   See xPhraseFirstColumn above.
-**
-** xQueryToken(pFts5, iPhrase, iToken, ppToken, pnToken)
-**   This is used to access token iToken of phrase iPhrase of the current
-**   query. Before returning, output parameter *ppToken is set to point
-**   to a buffer containing the requested token, and *pnToken to the
-**   size of this buffer in bytes.
-**
-**   If iPhrase or iToken are less than zero, or if iPhrase is greater than
-**   or equal to the number of phrases in the query as reported by
-**   xPhraseCount(), or if iToken is equal to or greater than the number of
-**   tokens in the phrase, SQLITE_RANGE is returned and *ppToken and *pnToken
-     are both zeroed.
-**
-**   The output text is not a copy of the query text that specified the
-**   token. It is the output of the tokenizer module. For tokendata=1
-**   tables, this includes any embedded 0x00 and trailing data.
-**
-** xInstToken(pFts5, iIdx, iToken, ppToken, pnToken)
-**   This is used to access token iToken of phrase hit iIdx within the
-**   current row. If iIdx is less than zero or greater than or equal to the
-**   value returned by xInstCount(), SQLITE_RANGE is returned.  Otherwise,
-**   output variable (*ppToken) is set to point to a buffer containing the
-**   matching document token, and (*pnToken) to the size of that buffer in
-**   bytes. This API is not available if the specified token matches a
-**   prefix query term. In that case both output variables are always set
-**   to 0.
-**
-**   The output text is not a copy of the document text that was tokenized.
-**   It is the output of the tokenizer module. For tokendata=1 tables, this
-**   includes any embedded 0x00 and trailing data.
-**
-**   This API can be quite slow if used with an FTS5 table created with the
-**   "detail=none" or "detail=column" option.
 */
 struct Fts5ExtensionApi {
-  int iVersion;                   /* Currently always set to 3 */
+  int iVersion;                   /* Currently always set to 2 */
 
   void *(*xUserData)(Fts5Context*);
 
@@ -235586,13 +233282,6 @@ struct Fts5ExtensionApi {
 
   int (*xPhraseFirstColumn)(Fts5Context*, int iPhrase, Fts5PhraseIter*, int*);
   void (*xPhraseNextColumn)(Fts5Context*, Fts5PhraseIter*, int *piCol);
-
-  /* Below this point are iVersion>=3 only */
-  int (*xQueryToken)(Fts5Context*,
-      int iPhrase, int iToken,
-      const char **ppToken, int *pnToken
-  );
-  int (*xInstToken)(Fts5Context*, int iIdx, int iToken, const char**, int*);
 };
 
 /*
@@ -236067,7 +233756,6 @@ struct Fts5Config {
   char *zContent;                 /* content table */
   char *zContentRowid;            /* "content_rowid=" option value */
   int bColumnsize;                /* "columnsize=" option value (dflt==1) */
-  int bTokendata;                 /* "tokendata=" option value (dflt==0) */
   int eDetail;                    /* FTS5_DETAIL_XXX value */
   char *zContentExprlist;
   Fts5Tokenizer *pTok;
@@ -236256,19 +233944,17 @@ struct Fts5IndexIter {
 /*
 ** Values used as part of the flags argument passed to IndexQuery().
 */
-#define FTS5INDEX_QUERY_PREFIX      0x0001  /* Prefix query */
-#define FTS5INDEX_QUERY_DESC        0x0002  /* Docs in descending rowid order */
-#define FTS5INDEX_QUERY_TEST_NOIDX  0x0004  /* Do not use prefix index */
-#define FTS5INDEX_QUERY_SCAN        0x0008  /* Scan query (fts5vocab) */
+#define FTS5INDEX_QUERY_PREFIX     0x0001   /* Prefix query */
+#define FTS5INDEX_QUERY_DESC       0x0002   /* Docs in descending rowid order */
+#define FTS5INDEX_QUERY_TEST_NOIDX 0x0004   /* Do not use prefix index */
+#define FTS5INDEX_QUERY_SCAN       0x0008   /* Scan query (fts5vocab) */
 
 /* The following are used internally by the fts5_index.c module. They are
 ** defined here only to make it easier to avoid clashes with the flags
 ** above. */
-#define FTS5INDEX_QUERY_SKIPEMPTY   0x0010
-#define FTS5INDEX_QUERY_NOOUTPUT    0x0020
-#define FTS5INDEX_QUERY_SKIPHASH    0x0040
-#define FTS5INDEX_QUERY_NOTOKENDATA 0x0080
-#define FTS5INDEX_QUERY_SCANONETERM 0x0100
+#define FTS5INDEX_QUERY_SKIPEMPTY  0x0010
+#define FTS5INDEX_QUERY_NOOUTPUT   0x0020
+#define FTS5INDEX_QUERY_SKIPHASH   0x0040
 
 /*
 ** Create/destroy an Fts5Index object.
@@ -236337,10 +234023,6 @@ static void *sqlite3Fts5StructureRef(Fts5Index*);
 static void sqlite3Fts5StructureRelease(void*);
 static int sqlite3Fts5StructureTest(Fts5Index*, void*);
 
-/*
-** Used by xInstToken():
-*/
-static int sqlite3Fts5IterToken(Fts5IndexIter*, i64, int, int, const char**, int*);
 
 /*
 ** Insert or remove data to or from the index. Each time a document is
@@ -236417,13 +234099,6 @@ static int sqlite3Fts5IndexLoadConfig(Fts5Index *p);
 
 static int sqlite3Fts5IndexGetOrigin(Fts5Index *p, i64 *piOrigin);
 static int sqlite3Fts5IndexContentlessDelete(Fts5Index *p, i64 iOrigin, i64 iRowid);
-
-static void sqlite3Fts5IndexIterClearTokendata(Fts5IndexIter*);
-
-/* Used to populate hash tables for xInstToken in detail=none/column mode. */
-static int sqlite3Fts5IndexIterWriteTokendata(
-    Fts5IndexIter*, const char*, int, i64 iRowid, int iCol, int iOff
-);
 
 /*
 ** End of interface to code in fts5_index.c.
@@ -236530,7 +234205,6 @@ static void sqlite3Fts5HashScanNext(Fts5Hash*);
 static int sqlite3Fts5HashScanEof(Fts5Hash*);
 static void sqlite3Fts5HashScanEntry(Fts5Hash *,
   const char **pzTerm,            /* OUT: term (nul-terminated) */
-  int *pnTerm,                    /* OUT: Size of term in bytes */
   const u8 **ppDoclist,           /* OUT: pointer to doclist */
   int *pnDoclist                  /* OUT: size of doclist in bytes */
 );
@@ -236656,10 +234330,6 @@ static void sqlite3Fts5ExprCheckPoslists(Fts5Expr*, i64);
 static int sqlite3Fts5ExprClonePhrase(Fts5Expr*, int, Fts5Expr**);
 
 static int sqlite3Fts5ExprPhraseCollist(Fts5Expr *, int, const u8 **, int *);
-
-static int sqlite3Fts5ExprQueryToken(Fts5Expr*, int, int, const char**, int*);
-static int sqlite3Fts5ExprInstToken(Fts5Expr*, i64, int, int, int, int, const char**, int*);
-static void sqlite3Fts5ExprClearTokens(Fts5Expr*);
 
 /*******************************************
 ** The fts5_expr.c API above this point is used by the other hand-written
@@ -238476,14 +236146,6 @@ static int fts5HighlightCb(
   }
 
   if( iPos==p->iRangeEnd ){
-    if( p->bOpen ){
-      if( p->iter.iStart>=0 && iPos>=p->iter.iStart ){
-        fts5HighlightAppend(&rc, p, &p->zIn[p->iOff], iEndOff - p->iOff);
-        p->iOff = iEndOff;
-      }
-      fts5HighlightAppend(&rc, p, p->zClose, -1);
-      p->bOpen = 0;
-    }
     fts5HighlightAppend(&rc, p, &p->zIn[p->iOff], iEndOff - p->iOff);
     p->iOff = iEndOff;
   }
@@ -238517,10 +236179,8 @@ static void fts5HighlightFunction(
   ctx.zClose = (const char*)sqlite3_value_text(apVal[2]);
   ctx.iRangeEnd = -1;
   rc = pApi->xColumnText(pFts, iCol, &ctx.zIn, &ctx.nIn);
-  if( rc==SQLITE_RANGE ){
-    sqlite3_result_text(pCtx, "", -1, SQLITE_STATIC);
-    rc = SQLITE_OK;
-  }else if( ctx.zIn ){
+
+  if( ctx.zIn ){
     if( rc==SQLITE_OK ){
       rc = fts5CInstIterInit(pApi, pFts, iCol, &ctx.iter);
     }
@@ -239087,7 +236747,6 @@ static void sqlite3Fts5BufferAppendBlob(
 ){
   if( nData ){
     if( fts5BufferGrow(pRc, pBuf, nData) ) return;
-    assert( pBuf->p!=0 );
     memcpy(&pBuf->p[pBuf->n], pData, nData);
     pBuf->n += nData;
   }
@@ -239189,7 +236848,6 @@ static int sqlite3Fts5PoslistNext64(
   i64 *piOff                      /* IN/OUT: Current offset */
 ){
   int i = *pi;
-  assert( a!=0 || i==0 );
   if( i>=n ){
     /* EOF */
     *piOff = -1;
@@ -239197,7 +236855,6 @@ static int sqlite3Fts5PoslistNext64(
   }else{
     i64 iOff = *piOff;
     u32 iVal;
-    assert( a!=0 );
     fts5FastGetVarint32(a, i, iVal);
     if( iVal<=1 ){
       if( iVal==0 ){
@@ -239825,16 +237482,6 @@ static int fts5ConfigParseSpecial(
 
     if( (rc = fts5ConfigSetEnum(aDetail, zArg, &pConfig->eDetail)) ){
       *pzErr = sqlite3_mprintf("malformed detail=... directive");
-    }
-    return rc;
-  }
-
-  if( sqlite3_strnicmp("tokendata", zCmd, nCmd)==0 ){
-    if( (zArg[0]!='0' && zArg[0]!='1') || zArg[1]!='\0' ){
-      *pzErr = sqlite3_mprintf("malformed tokendata=... directive");
-      rc = SQLITE_ERROR;
-    }else{
-      pConfig->bTokendata = (zArg[0]=='1');
     }
     return rc;
   }
@@ -240572,9 +238219,7 @@ struct Fts5ExprNode {
 struct Fts5ExprTerm {
   u8 bPrefix;                     /* True for a prefix term */
   u8 bFirst;                      /* True if token must be first in column */
-  char *pTerm;                    /* Term data */
-  int nQueryTerm;                 /* Effective size of term in bytes */
-  int nFullTerm;                  /* Size of term in bytes incl. tokendata */
+  char *zTerm;                    /* nul-terminated term */
   Fts5IndexIter *pIter;           /* Iterator for this term */
   Fts5ExprTerm *pSynonym;         /* Pointer to first in list of synonyms */
 };
@@ -241441,7 +239086,7 @@ static int fts5ExprNearInitAll(
             p->pIter = 0;
           }
           rc = sqlite3Fts5IndexQuery(
-              pExpr->pIndex, p->pTerm, p->nQueryTerm,
+              pExpr->pIndex, p->zTerm, (int)strlen(p->zTerm),
               (pTerm->bPrefix ? FTS5INDEX_QUERY_PREFIX : 0) |
               (pExpr->bDesc ? FTS5INDEX_QUERY_DESC : 0),
               pNear->pColset,
@@ -242078,7 +239723,7 @@ static void fts5ExprPhraseFree(Fts5ExprPhrase *pPhrase){
       Fts5ExprTerm *pSyn;
       Fts5ExprTerm *pNext;
       Fts5ExprTerm *pTerm = &pPhrase->aTerm[i];
-      sqlite3_free(pTerm->pTerm);
+      sqlite3_free(pTerm->zTerm);
       sqlite3Fts5IterClose(pTerm->pIter);
       for(pSyn=pTerm->pSynonym; pSyn; pSyn=pNext){
         pNext = pSyn->pSynonym;
@@ -242176,7 +239821,6 @@ static Fts5ExprNearset *sqlite3Fts5ParseNearset(
 typedef struct TokenCtx TokenCtx;
 struct TokenCtx {
   Fts5ExprPhrase *pPhrase;
-  Fts5Config *pConfig;
   int rc;
 };
 
@@ -242210,12 +239854,8 @@ static int fts5ParseTokenize(
       rc = SQLITE_NOMEM;
     }else{
       memset(pSyn, 0, (size_t)nByte);
-      pSyn->pTerm = ((char*)pSyn) + sizeof(Fts5ExprTerm) + sizeof(Fts5Buffer);
-      pSyn->nFullTerm = pSyn->nQueryTerm = nToken;
-      if( pCtx->pConfig->bTokendata ){
-        pSyn->nQueryTerm = (int)strlen(pSyn->pTerm);
-      }
-      memcpy(pSyn->pTerm, pToken, nToken);
+      pSyn->zTerm = ((char*)pSyn) + sizeof(Fts5ExprTerm) + sizeof(Fts5Buffer);
+      memcpy(pSyn->zTerm, pToken, nToken);
       pSyn->pSynonym = pPhrase->aTerm[pPhrase->nTerm-1].pSynonym;
       pPhrase->aTerm[pPhrase->nTerm-1].pSynonym = pSyn;
     }
@@ -242240,11 +239880,7 @@ static int fts5ParseTokenize(
     if( rc==SQLITE_OK ){
       pTerm = &pPhrase->aTerm[pPhrase->nTerm++];
       memset(pTerm, 0, sizeof(Fts5ExprTerm));
-      pTerm->pTerm = sqlite3Fts5Strndup(&rc, pToken, nToken);
-      pTerm->nFullTerm = pTerm->nQueryTerm = nToken;
-      if( pCtx->pConfig->bTokendata && rc==SQLITE_OK ){
-        pTerm->nQueryTerm = (int)strlen(pTerm->pTerm);
-      }
+      pTerm->zTerm = sqlite3Fts5Strndup(&rc, pToken, nToken);
     }
   }
 
@@ -242311,7 +239947,6 @@ static Fts5ExprPhrase *sqlite3Fts5ParseTerm(
 
   memset(&sCtx, 0, sizeof(TokenCtx));
   sCtx.pPhrase = pAppend;
-  sCtx.pConfig = pConfig;
 
   rc = fts5ParseStringFromToken(pToken, &z);
   if( rc==SQLITE_OK ){
@@ -242359,15 +239994,12 @@ static int sqlite3Fts5ExprClonePhrase(
   Fts5Expr **ppNew
 ){
   int rc = SQLITE_OK;             /* Return code */
-  Fts5ExprPhrase *pOrig = 0;      /* The phrase extracted from pExpr */
+  Fts5ExprPhrase *pOrig;          /* The phrase extracted from pExpr */
   Fts5Expr *pNew = 0;             /* Expression to return via *ppNew */
-  TokenCtx sCtx = {0,0,0};        /* Context object for fts5ParseTokenize */
-  if( iPhrase<0 || iPhrase>=pExpr->nPhrase ){
-    rc = SQLITE_RANGE;
-  }else{
-    pOrig = pExpr->apExprPhrase[iPhrase];
-    pNew = (Fts5Expr*)sqlite3Fts5MallocZero(&rc, sizeof(Fts5Expr));
-  }
+  TokenCtx sCtx = {0,0};          /* Context object for fts5ParseTokenize */
+
+  pOrig = pExpr->apExprPhrase[iPhrase];
+  pNew = (Fts5Expr*)sqlite3Fts5MallocZero(&rc, sizeof(Fts5Expr));
   if( rc==SQLITE_OK ){
     pNew->apExprPhrase = (Fts5ExprPhrase**)sqlite3Fts5MallocZero(&rc,
         sizeof(Fts5ExprPhrase*));
@@ -242380,7 +240012,7 @@ static int sqlite3Fts5ExprClonePhrase(
     pNew->pRoot->pNear = (Fts5ExprNearset*)sqlite3Fts5MallocZero(&rc,
         sizeof(Fts5ExprNearset) + sizeof(Fts5ExprPhrase*));
   }
-  if( rc==SQLITE_OK && ALWAYS(pOrig!=0) ){
+  if( rc==SQLITE_OK ){
     Fts5Colset *pColsetOrig = pOrig->pNode->pNear->pColset;
     if( pColsetOrig ){
       sqlite3_int64 nByte;
@@ -242394,27 +240026,26 @@ static int sqlite3Fts5ExprClonePhrase(
     }
   }
 
-  if( rc==SQLITE_OK ){
-    if( pOrig->nTerm ){
-      int i;                          /* Used to iterate through phrase terms */
-      sCtx.pConfig = pExpr->pConfig;
-      for(i=0; rc==SQLITE_OK && i<pOrig->nTerm; i++){
-        int tflags = 0;
-        Fts5ExprTerm *p;
-        for(p=&pOrig->aTerm[i]; p && rc==SQLITE_OK; p=p->pSynonym){
-          rc = fts5ParseTokenize((void*)&sCtx,tflags,p->pTerm,p->nFullTerm,0,0);
-          tflags = FTS5_TOKEN_COLOCATED;
-        }
-        if( rc==SQLITE_OK ){
-          sCtx.pPhrase->aTerm[i].bPrefix = pOrig->aTerm[i].bPrefix;
-          sCtx.pPhrase->aTerm[i].bFirst = pOrig->aTerm[i].bFirst;
-        }
+  if( pOrig->nTerm ){
+    int i;                          /* Used to iterate through phrase terms */
+    for(i=0; rc==SQLITE_OK && i<pOrig->nTerm; i++){
+      int tflags = 0;
+      Fts5ExprTerm *p;
+      for(p=&pOrig->aTerm[i]; p && rc==SQLITE_OK; p=p->pSynonym){
+        const char *zTerm = p->zTerm;
+        rc = fts5ParseTokenize((void*)&sCtx, tflags, zTerm, (int)strlen(zTerm),
+            0, 0);
+        tflags = FTS5_TOKEN_COLOCATED;
       }
-    }else{
-      /* This happens when parsing a token or quoted phrase that contains
-      ** no token characters at all. (e.g ... MATCH '""'). */
-      sCtx.pPhrase = sqlite3Fts5MallocZero(&rc, sizeof(Fts5ExprPhrase));
+      if( rc==SQLITE_OK ){
+        sCtx.pPhrase->aTerm[i].bPrefix = pOrig->aTerm[i].bPrefix;
+        sCtx.pPhrase->aTerm[i].bFirst = pOrig->aTerm[i].bFirst;
+      }
     }
+  }else{
+    /* This happens when parsing a token or quoted phrase that contains
+    ** no token characters at all. (e.g ... MATCH '""'). */
+    sCtx.pPhrase = sqlite3Fts5MallocZero(&rc, sizeof(Fts5ExprPhrase));
   }
 
   if( rc==SQLITE_OK && ALWAYS(sCtx.pPhrase) ){
@@ -242784,13 +240415,11 @@ static Fts5ExprNode *fts5ParsePhraseToAnd(
         if( parseGrowPhraseArray(pParse) ){
           fts5ExprPhraseFree(pPhrase);
         }else{
-          Fts5ExprTerm *p = &pNear->apPhrase[0]->aTerm[ii];
-          Fts5ExprTerm *pTo = &pPhrase->aTerm[0];
           pParse->apPhrase[pParse->nPhrase++] = pPhrase;
           pPhrase->nTerm = 1;
-          pTo->pTerm = sqlite3Fts5Strndup(&pParse->rc, p->pTerm, p->nFullTerm);
-          pTo->nQueryTerm = p->nQueryTerm;
-          pTo->nFullTerm = p->nFullTerm;
+          pPhrase->aTerm[0].zTerm = sqlite3Fts5Strndup(
+              &pParse->rc, pNear->apPhrase[0]->aTerm[ii].zTerm, -1
+          );
           pRet->apChild[ii] = sqlite3Fts5ParseNode(pParse, FTS5_STRING,
               0, 0, sqlite3Fts5ParseNearset(pParse, 0, pPhrase)
           );
@@ -242975,17 +240604,16 @@ static char *fts5ExprTermPrint(Fts5ExprTerm *pTerm){
 
   /* Determine the maximum amount of space required. */
   for(p=pTerm; p; p=p->pSynonym){
-    nByte += pTerm->nQueryTerm * 2 + 3 + 2;
+    nByte += (int)strlen(pTerm->zTerm) * 2 + 3 + 2;
   }
   zQuoted = sqlite3_malloc64(nByte);
 
   if( zQuoted ){
     int i = 0;
     for(p=pTerm; p; p=p->pSynonym){
-      char *zIn = p->pTerm;
-      char *zEnd = &zIn[p->nQueryTerm];
+      char *zIn = p->zTerm;
       zQuoted[i++] = '"';
-      while( zIn<zEnd ){
+      while( *zIn ){
         if( *zIn=='"' ) zQuoted[i++] = '"';
         zQuoted[i++] = *zIn++;
       }
@@ -243063,10 +240691,8 @@ static char *fts5ExprPrintTcl(
 
       zRet = fts5PrintfAppend(zRet, " {");
       for(iTerm=0; zRet && iTerm<pPhrase->nTerm; iTerm++){
-        Fts5ExprTerm *p = &pPhrase->aTerm[iTerm];
-        zRet = fts5PrintfAppend(zRet, "%s%.*s", iTerm==0?"":" ",
-            p->nQueryTerm, p->pTerm
-        );
+        char *zTerm = pPhrase->aTerm[iTerm].zTerm;
+        zRet = fts5PrintfAppend(zRet, "%s%s", iTerm==0?"":" ", zTerm);
         if( pPhrase->aTerm[iTerm].bPrefix ){
           zRet = fts5PrintfAppend(zRet, "*");
         }
@@ -243467,17 +241093,6 @@ static int fts5ExprColsetTest(Fts5Colset *pColset, int iCol){
   return 0;
 }
 
-/*
-** pToken is a buffer nToken bytes in size that may or may not contain
-** an embedded 0x00 byte. If it does, return the number of bytes in
-** the buffer before the 0x00. If it does not, return nToken.
-*/
-static int fts5QueryTerm(const char *pToken, int nToken){
-  int ii;
-  for(ii=0; ii<nToken && pToken[ii]; ii++){}
-  return ii;
-}
-
 static int fts5ExprPopulatePoslistsCb(
   void *pCtx,                /* Copy of 2nd argument to xTokenize() */
   int tflags,                /* Mask of FTS5_TOKEN_* flags */
@@ -243489,33 +241104,22 @@ static int fts5ExprPopulatePoslistsCb(
   Fts5ExprCtx *p = (Fts5ExprCtx*)pCtx;
   Fts5Expr *pExpr = p->pExpr;
   int i;
-  int nQuery = nToken;
-  i64 iRowid = pExpr->pRoot->iRowid;
 
   UNUSED_PARAM2(iUnused1, iUnused2);
 
-  if( nQuery>FTS5_MAX_TOKEN_SIZE ) nQuery = FTS5_MAX_TOKEN_SIZE;
-  if( pExpr->pConfig->bTokendata ){
-    nQuery = fts5QueryTerm(pToken, nQuery);
-  }
+  if( nToken>FTS5_MAX_TOKEN_SIZE ) nToken = FTS5_MAX_TOKEN_SIZE;
   if( (tflags & FTS5_TOKEN_COLOCATED)==0 ) p->iOff++;
   for(i=0; i<pExpr->nPhrase; i++){
-    Fts5ExprTerm *pT;
+    Fts5ExprTerm *pTerm;
     if( p->aPopulator[i].bOk==0 ) continue;
-    for(pT=&pExpr->apExprPhrase[i]->aTerm[0]; pT; pT=pT->pSynonym){
-      if( (pT->nQueryTerm==nQuery || (pT->nQueryTerm<nQuery && pT->bPrefix))
-       && memcmp(pT->pTerm, pToken, pT->nQueryTerm)==0
+    for(pTerm=&pExpr->apExprPhrase[i]->aTerm[0]; pTerm; pTerm=pTerm->pSynonym){
+      int nTerm = (int)strlen(pTerm->zTerm);
+      if( (nTerm==nToken || (nTerm<nToken && pTerm->bPrefix))
+       && memcmp(pTerm->zTerm, pToken, nTerm)==0
       ){
         int rc = sqlite3Fts5PoslistWriterAppend(
             &pExpr->apExprPhrase[i]->poslist, &p->aPopulator[i].writer, p->iOff
         );
-        if( rc==SQLITE_OK && pExpr->pConfig->bTokendata && !pT->bPrefix ){
-          int iCol = p->iOff>>32;
-          int iTokOff = p->iOff & 0x7FFFFFFF;
-          rc = sqlite3Fts5IndexIterWriteTokendata(
-              pT->pIter, pToken, nToken, iRowid, iCol, iTokOff
-          );
-        }
         if( rc ) return rc;
         break;
       }
@@ -243652,83 +241256,6 @@ static int sqlite3Fts5ExprPhraseCollist(
 }
 
 /*
-** Does the work of the fts5_api.xQueryToken() API method.
-*/
-static int sqlite3Fts5ExprQueryToken(
-  Fts5Expr *pExpr,
-  int iPhrase,
-  int iToken,
-  const char **ppOut,
-  int *pnOut
-){
-  Fts5ExprPhrase *pPhrase = 0;
-
-  if( iPhrase<0 || iPhrase>=pExpr->nPhrase ){
-    return SQLITE_RANGE;
-  }
-  pPhrase = pExpr->apExprPhrase[iPhrase];
-  if( iToken<0 || iToken>=pPhrase->nTerm ){
-    return SQLITE_RANGE;
-  }
-
-  *ppOut = pPhrase->aTerm[iToken].pTerm;
-  *pnOut = pPhrase->aTerm[iToken].nFullTerm;
-  return SQLITE_OK;
-}
-
-/*
-** Does the work of the fts5_api.xInstToken() API method.
-*/
-static int sqlite3Fts5ExprInstToken(
-  Fts5Expr *pExpr,
-  i64 iRowid,
-  int iPhrase,
-  int iCol,
-  int iOff,
-  int iToken,
-  const char **ppOut,
-  int *pnOut
-){
-  Fts5ExprPhrase *pPhrase = 0;
-  Fts5ExprTerm *pTerm = 0;
-  int rc = SQLITE_OK;
-
-  if( iPhrase<0 || iPhrase>=pExpr->nPhrase ){
-    return SQLITE_RANGE;
-  }
-  pPhrase = pExpr->apExprPhrase[iPhrase];
-  if( iToken<0 || iToken>=pPhrase->nTerm ){
-    return SQLITE_RANGE;
-  }
-  pTerm = &pPhrase->aTerm[iToken];
-  if( pTerm->bPrefix==0 ){
-    if( pExpr->pConfig->bTokendata ){
-      rc = sqlite3Fts5IterToken(
-          pTerm->pIter, iRowid, iCol, iOff+iToken, ppOut, pnOut
-      );
-    }else{
-      *ppOut = pTerm->pTerm;
-      *pnOut = pTerm->nFullTerm;
-    }
-  }
-  return rc;
-}
-
-/*
-** Clear the token mappings for all Fts5IndexIter objects mannaged by
-** the expression passed as the only argument.
-*/
-static void sqlite3Fts5ExprClearTokens(Fts5Expr *pExpr){
-  int ii;
-  for(ii=0; ii<pExpr->nPhrase; ii++){
-    Fts5ExprTerm *pT;
-    for(pT=&pExpr->apExprPhrase[ii]->aTerm[0]; pT; pT=pT->pSynonym){
-      sqlite3Fts5IndexIterClearTokendata(pT->pIter);
-    }
-  }
-}
-
-/*
 ** 2014 August 11
 **
 ** The author disclaims copyright to this source code.  In place of
@@ -243766,15 +241293,10 @@ struct Fts5Hash {
 
 /*
 ** Each entry in the hash table is represented by an object of the
-** following type. Each object, its key, and its current data are stored
-** in a single memory allocation. The key immediately follows the object
-** in memory. The position list data immediately follows the key data
-** in memory.
-**
-** The key is Fts5HashEntry.nKey bytes in size. It consists of a single
-** byte identifying the index (either the main term index or a prefix-index),
-** followed by the term data. For example: "0token". There is no
-** nul-terminator - in this case nKey=6.
+** following type. Each object, its key (a nul-terminated string) and
+** its current data are stored in a single memory allocation. The
+** key immediately follows the object in memory. The position list
+** data immediately follows the key data in memory.
 **
 ** The data that follows the key is in a similar, but not identical format
 ** to the doclist data stored in the database. It is:
@@ -243909,7 +241431,8 @@ static int fts5HashResize(Fts5Hash *pHash){
       unsigned int iHash;
       Fts5HashEntry *p = apOld[i];
       apOld[i] = p->pHashNext;
-      iHash = fts5HashKey(nNew, (u8*)fts5EntryKey(p), p->nKey);
+      iHash = fts5HashKey(nNew, (u8*)fts5EntryKey(p),
+                          (int)strlen(fts5EntryKey(p)));
       p->pHashNext = apNew[iHash];
       apNew[iHash] = p;
     }
@@ -243993,7 +241516,7 @@ static int sqlite3Fts5HashWrite(
   for(p=pHash->aSlot[iHash]; p; p=p->pHashNext){
     char *zKey = fts5EntryKey(p);
     if( zKey[0]==bByte
-     && p->nKey==nToken+1
+     && p->nKey==nToken
      && memcmp(&zKey[1], pToken, nToken)==0
     ){
       break;
@@ -244023,9 +241546,9 @@ static int sqlite3Fts5HashWrite(
     zKey[0] = bByte;
     memcpy(&zKey[1], pToken, nToken);
     assert( iHash==fts5HashKey(pHash->nSlot, (u8*)zKey, nToken+1) );
-    p->nKey = nToken+1;
+    p->nKey = nToken;
     zKey[nToken+1] = '\0';
-    p->nData = nToken+1 + sizeof(Fts5HashEntry);
+    p->nData = nToken+1 + 1 + sizeof(Fts5HashEntry);
     p->pHashNext = pHash->aSlot[iHash];
     pHash->aSlot[iHash] = p;
     pHash->nEntry++;
@@ -244142,17 +241665,12 @@ static Fts5HashEntry *fts5HashEntryMerge(
       *ppOut = p1;
       p1 = 0;
     }else{
+      int i = 0;
       char *zKey1 = fts5EntryKey(p1);
       char *zKey2 = fts5EntryKey(p2);
-      int nMin = MIN(p1->nKey, p2->nKey);
+      while( zKey1[i]==zKey2[i] ) i++;
 
-      int cmp = memcmp(zKey1, zKey2, nMin);
-      if( cmp==0 ){
-        cmp = p1->nKey - p2->nKey;
-      }
-      assert( cmp!=0 );
-
-      if( cmp>0 ){
+      if( ((u8)zKey1[i])>((u8)zKey2[i]) ){
         /* p2 is smaller */
         *ppOut = p2;
         ppOut = &p2->pScanNext;
@@ -244194,7 +241712,7 @@ static int fts5HashEntrySort(
     Fts5HashEntry *pIter;
     for(pIter=pHash->aSlot[iSlot]; pIter; pIter=pIter->pHashNext){
       if( pTerm==0
-       || (pIter->nKey>=nTerm && 0==memcmp(fts5EntryKey(pIter), pTerm, nTerm))
+       || (pIter->nKey+1>=nTerm && 0==memcmp(fts5EntryKey(pIter), pTerm, nTerm))
       ){
         Fts5HashEntry *pEntry = pIter;
         pEntry->pScanNext = 0;
@@ -244233,11 +241751,12 @@ static int sqlite3Fts5HashQuery(
 
   for(p=pHash->aSlot[iHash]; p; p=p->pHashNext){
     zKey = fts5EntryKey(p);
-    if( nTerm==p->nKey && memcmp(zKey, pTerm, nTerm)==0 ) break;
+    assert( p->nKey+1==(int)strlen(zKey) );
+    if( nTerm==p->nKey+1 && memcmp(zKey, pTerm, nTerm)==0 ) break;
   }
 
   if( p ){
-    int nHashPre = sizeof(Fts5HashEntry) + nTerm;
+    int nHashPre = sizeof(Fts5HashEntry) + nTerm + 1;
     int nList = p->nData - nHashPre;
     u8 *pRet = (u8*)(*ppOut = sqlite3_malloc64(nPre + nList + 10));
     if( pRet ){
@@ -244298,22 +241817,19 @@ static int sqlite3Fts5HashScanEof(Fts5Hash *p){
 static void sqlite3Fts5HashScanEntry(
   Fts5Hash *pHash,
   const char **pzTerm,            /* OUT: term (nul-terminated) */
-  int *pnTerm,                    /* OUT: Size of term in bytes */
   const u8 **ppDoclist,           /* OUT: pointer to doclist */
   int *pnDoclist                  /* OUT: size of doclist in bytes */
 ){
   Fts5HashEntry *p;
   if( (p = pHash->pScan) ){
     char *zKey = fts5EntryKey(p);
-    int nTerm = p->nKey;
+    int nTerm = (int)strlen(zKey);
     fts5HashAddPoslistSize(pHash, p, 0);
     *pzTerm = zKey;
-    *pnTerm = nTerm;
-    *ppDoclist = (const u8*)&zKey[nTerm];
-    *pnDoclist = p->nData - (sizeof(Fts5HashEntry) + nTerm);
+    *ppDoclist = (const u8*)&zKey[nTerm+1];
+    *pnDoclist = p->nData - (sizeof(Fts5HashEntry) + nTerm + 1);
   }else{
     *pzTerm = 0;
-    *pnTerm = 0;
     *ppDoclist = 0;
     *pnDoclist = 0;
   }
@@ -244644,9 +242160,6 @@ typedef struct Fts5SegWriter Fts5SegWriter;
 typedef struct Fts5Structure Fts5Structure;
 typedef struct Fts5StructureLevel Fts5StructureLevel;
 typedef struct Fts5StructureSegment Fts5StructureSegment;
-typedef struct Fts5TokenDataIter Fts5TokenDataIter;
-typedef struct Fts5TokenDataMap Fts5TokenDataMap;
-typedef struct Fts5TombstoneArray Fts5TombstoneArray;
 
 struct Fts5Data {
   u8 *p;                          /* Pointer to buffer containing record */
@@ -244681,7 +242194,6 @@ struct Fts5Index {
 
   /* Error state. */
   int rc;                         /* Current error code */
-  int flushRc;
 
   /* State used by the fts5DataXXX() functions. */
   sqlite3_blob *pReader;          /* RO incr-blob open on %_data table */
@@ -244690,7 +242202,6 @@ struct Fts5Index {
   sqlite3_stmt *pIdxWriter;       /* "INSERT ... %_idx VALUES(?,?,?,?)" */
   sqlite3_stmt *pIdxDeleter;      /* "DELETE FROM %_idx WHERE segid=?" */
   sqlite3_stmt *pIdxSelect;
-  sqlite3_stmt *pIdxNextSelect;
   int nRead;                      /* Total number of blocks read */
 
   sqlite3_stmt *pDeleteFromIdx;
@@ -244844,7 +242355,8 @@ struct Fts5SegIter {
   Fts5Data *pLeaf;                /* Current leaf data */
   Fts5Data *pNextLeaf;            /* Leaf page (iLeafPgno+1) */
   i64 iLeafOffset;                /* Byte offset within current leaf */
-  Fts5TombstoneArray *pTombArray; /* Array of tombstone pages */
+  Fts5Data **apTombstone;         /* Array of tombstone pages */
+  int nTombstone;
 
   /* Next method */
   void (*xNext)(Fts5Index*, Fts5SegIter*, int*);
@@ -244869,15 +242381,6 @@ struct Fts5SegIter {
   i64 iRowid;                     /* Current rowid */
   int nPos;                       /* Number of bytes in current position list */
   u8 bDel;                        /* True if the delete flag is set */
-};
-
-/*
-** Array of tombstone pages. Reference counted.
-*/
-struct Fts5TombstoneArray {
-  int nRef;                       /* Number of pointers to this object */
-  int nTombstone;
-  Fts5Data *apTombstone[1];       /* Array of tombstone pages */
 };
 
 /*
@@ -244924,16 +242427,9 @@ struct Fts5TombstoneArray {
 ** poslist:
 **   Used by sqlite3Fts5IterPoslist() when the poslist needs to be buffered.
 **   There is no way to tell if this is populated or not.
-**
-** pColset:
-**   If not NULL, points to an object containing a set of column indices.
-**   Only matches that occur in one of these columns will be returned.
-**   The Fts5Iter does not own the Fts5Colset object, and so it is not
-**   freed when the iterator is closed - it is owned by the upper layer.
 */
 struct Fts5Iter {
   Fts5IndexIter base;             /* Base class containing output vars */
-  Fts5TokenDataIter *pTokenDataIter;
 
   Fts5Index *pIndex;              /* Index that owns this iterator */
   Fts5Buffer poslist;             /* Buffer containing current poslist */
@@ -244950,6 +242446,7 @@ struct Fts5Iter {
   Fts5CResult *aFirst;            /* Current merge state (see above) */
   Fts5SegIter aSeg[1];            /* Array of segment iterators */
 };
+
 
 /*
 ** An instance of the following type is used to iterate through the contents
@@ -245868,9 +243365,9 @@ static int fts5DlidxLvlNext(Fts5DlidxLvl *pLvl){
     }
 
     if( iOff<pData->nn ){
-      u64 iVal;
+      i64 iVal;
       pLvl->iLeafPgno += (iOff - pLvl->iOff) + 1;
-      iOff += fts5GetVarint(&pData->p[iOff], &iVal);
+      iOff += fts5GetVarint(&pData->p[iOff], (u64*)&iVal);
       pLvl->iRowid += iVal;
       pLvl->iOff = iOff;
     }else{
@@ -246249,20 +243746,18 @@ static void fts5SegIterSetNext(Fts5Index *p, Fts5SegIter *pIter){
 }
 
 /*
-** Allocate a tombstone hash page array object (pIter->pTombArray) for
-** the iterator passed as the second argument. If an OOM error occurs,
-** leave an error in the Fts5Index object.
+** Allocate a tombstone hash page array (pIter->apTombstone) for the
+** iterator passed as the second argument. If an OOM error occurs, leave
+** an error in the Fts5Index object.
 */
 static void fts5SegIterAllocTombstone(Fts5Index *p, Fts5SegIter *pIter){
   const int nTomb = pIter->pSeg->nPgTombstone;
   if( nTomb>0 ){
-    int nByte = nTomb * sizeof(Fts5Data*) + sizeof(Fts5TombstoneArray);
-    Fts5TombstoneArray *pNew;
-    pNew = (Fts5TombstoneArray*)sqlite3Fts5MallocZero(&p->rc, nByte);
-    if( pNew ){
-      pNew->nTombstone = nTomb;
-      pNew->nRef = 1;
-      pIter->pTombArray = pNew;
+    Fts5Data **apTomb = 0;
+    apTomb = (Fts5Data**)sqlite3Fts5MallocZero(&p->rc, sizeof(Fts5Data)*nTomb);
+    if( apTomb ){
+      pIter->apTombstone = apTomb;
+      pIter->nTombstone = nTomb;
     }
   }
 }
@@ -246519,16 +244014,15 @@ static void fts5SegIterNext_None(
     }else{
       const u8 *pList = 0;
       const char *zTerm = 0;
-      int nTerm = 0;
       int nList;
       sqlite3Fts5HashScanNext(p->pHash);
-      sqlite3Fts5HashScanEntry(p->pHash, &zTerm, &nTerm, &pList, &nList);
+      sqlite3Fts5HashScanEntry(p->pHash, &zTerm, &pList, &nList);
       if( pList==0 ) goto next_none_eof;
       pIter->pLeaf->p = (u8*)pList;
       pIter->pLeaf->nn = nList;
       pIter->pLeaf->szLeaf = nList;
       pIter->iEndofDoclist = nList;
-      sqlite3Fts5BufferSet(&p->rc,&pIter->term, nTerm, (u8*)zTerm);
+      sqlite3Fts5BufferSet(&p->rc,&pIter->term, (int)strlen(zTerm), (u8*)zTerm);
       pIter->iLeafOffset = fts5GetVarint(pList, (u64*)&pIter->iRowid);
     }
 
@@ -246594,12 +244088,11 @@ static void fts5SegIterNext(
   }else if( pIter->pSeg==0 ){
     const u8 *pList = 0;
     const char *zTerm = 0;
-    int nTerm = 0;
     int nList = 0;
     assert( (pIter->flags & FTS5_SEGITER_ONETERM) || pbNewTerm );
     if( 0==(pIter->flags & FTS5_SEGITER_ONETERM) ){
       sqlite3Fts5HashScanNext(p->pHash);
-      sqlite3Fts5HashScanEntry(p->pHash, &zTerm, &nTerm, &pList, &nList);
+      sqlite3Fts5HashScanEntry(p->pHash, &zTerm, &pList, &nList);
     }
     if( pList==0 ){
       fts5DataRelease(pIter->pLeaf);
@@ -246609,7 +244102,8 @@ static void fts5SegIterNext(
       pIter->pLeaf->nn = nList;
       pIter->pLeaf->szLeaf = nList;
       pIter->iEndofDoclist = nList+1;
-      sqlite3Fts5BufferSet(&p->rc, &pIter->term, nTerm, (u8*)zTerm);
+      sqlite3Fts5BufferSet(&p->rc, &pIter->term, (int)strlen(zTerm),
+          (u8*)zTerm);
       pIter->iLeafOffset = fts5GetVarint(pList, (u64*)&pIter->iRowid);
       *pbNewTerm = 1;
     }
@@ -246995,7 +244489,7 @@ static void fts5SegIterSeekInit(
     fts5LeafSeek(p, bGe, pIter, pTerm, nTerm);
   }
 
-  if( p->rc==SQLITE_OK && (bGe==0 || (flags & FTS5INDEX_QUERY_SCANONETERM)) ){
+  if( p->rc==SQLITE_OK && bGe==0 ){
     pIter->flags |= FTS5_SEGITER_ONETERM;
     if( pIter->pLeaf ){
       if( flags & FTS5INDEX_QUERY_DESC ){
@@ -247011,9 +244505,7 @@ static void fts5SegIterSeekInit(
   }
 
   fts5SegIterSetNext(p, pIter);
-  if( 0==(flags & FTS5INDEX_QUERY_SCANONETERM) ){
-    fts5SegIterAllocTombstone(p, pIter);
-  }
+  fts5SegIterAllocTombstone(p, pIter);
 
   /* Either:
   **
@@ -247028,79 +244520,6 @@ static void fts5SegIterSeekInit(
    || fts5BufferCompareBlob(&pIter->term, pTerm, nTerm)==0          /* 3 */
    || (bGe && fts5BufferCompareBlob(&pIter->term, pTerm, nTerm)>0)  /* 4 */
   );
-}
-
-
-/*
-** SQL used by fts5SegIterNextInit() to find the page to open.
-*/
-static sqlite3_stmt *fts5IdxNextStmt(Fts5Index *p){
-  if( p->pIdxNextSelect==0 ){
-    Fts5Config *pConfig = p->pConfig;
-    fts5IndexPrepareStmt(p, &p->pIdxNextSelect, sqlite3_mprintf(
-          "SELECT pgno FROM '%q'.'%q_idx' WHERE "
-          "segid=? AND term>? ORDER BY term ASC LIMIT 1",
-          pConfig->zDb, pConfig->zName
-    ));
-
-  }
-  return p->pIdxNextSelect;
-}
-
-/*
-** This is similar to fts5SegIterSeekInit(), except that it initializes
-** the segment iterator to point to the first term following the page
-** with pToken/nToken on it.
-*/
-static void fts5SegIterNextInit(
-  Fts5Index *p,
-  const char *pTerm, int nTerm,
-  Fts5StructureSegment *pSeg,     /* Description of segment */
-  Fts5SegIter *pIter              /* Object to populate */
-){
-  int iPg = -1;                   /* Page of segment to open */
-  int bDlidx = 0;
-  sqlite3_stmt *pSel = 0;         /* SELECT to find iPg */
-
-  pSel = fts5IdxNextStmt(p);
-  if( pSel ){
-    assert( p->rc==SQLITE_OK );
-    sqlite3_bind_int(pSel, 1, pSeg->iSegid);
-    sqlite3_bind_blob(pSel, 2, pTerm, nTerm, SQLITE_STATIC);
-
-    if( sqlite3_step(pSel)==SQLITE_ROW ){
-      i64 val = sqlite3_column_int64(pSel, 0);
-      iPg = (int)(val>>1);
-      bDlidx = (val & 0x0001);
-    }
-    p->rc = sqlite3_reset(pSel);
-    sqlite3_bind_null(pSel, 2);
-    if( p->rc ) return;
-  }
-
-  memset(pIter, 0, sizeof(*pIter));
-  pIter->pSeg = pSeg;
-  pIter->flags |= FTS5_SEGITER_ONETERM;
-  if( iPg>=0 ){
-    pIter->iLeafPgno = iPg - 1;
-    fts5SegIterNextPage(p, pIter);
-    fts5SegIterSetNext(p, pIter);
-  }
-  if( pIter->pLeaf ){
-    const u8 *a = pIter->pLeaf->p;
-    int iTermOff = 0;
-
-    pIter->iPgidxOff = pIter->pLeaf->szLeaf;
-    pIter->iPgidxOff += fts5GetVarint32(&a[pIter->iPgidxOff], iTermOff);
-    pIter->iLeafOffset = iTermOff;
-    fts5SegIterLoadTerm(p, pIter, 0);
-    fts5SegIterLoadNPos(p, pIter);
-    if( bDlidx ) fts5SegIterLoadDlidx(p, pIter);
-
-    assert( p->rc!=SQLITE_OK ||
-        fts5BufferCompareBlob(&pIter->term, (const u8*)pTerm, nTerm)>0
-    );
-  }
 }
 
 /*
@@ -247129,7 +244548,8 @@ static void fts5SegIterHashInit(
     const u8 *pList = 0;
 
     p->rc = sqlite3Fts5HashScanInit(p->pHash, (const char*)pTerm, nTerm);
-    sqlite3Fts5HashScanEntry(p->pHash, (const char**)&z, &n, &pList, &nList);
+    sqlite3Fts5HashScanEntry(p->pHash, (const char**)&z, &pList, &nList);
+    n = (z ? (int)strlen((const char*)z) : 0);
     if( pList ){
       pLeaf = fts5IdxMalloc(p, sizeof(Fts5Data));
       if( pLeaf ){
@@ -247189,30 +244609,13 @@ static void fts5IndexFreeArray(Fts5Data **ap, int n){
 }
 
 /*
-** Decrement the ref-count of the object passed as the only argument. If it
-** reaches 0, free it and its contents.
-*/
-static void fts5TombstoneArrayDelete(Fts5TombstoneArray *p){
-  if( p ){
-    p->nRef--;
-    if( p->nRef<=0 ){
-      int ii;
-      for(ii=0; ii<p->nTombstone; ii++){
-        fts5DataRelease(p->apTombstone[ii]);
-      }
-      sqlite3_free(p);
-    }
-  }
-}
-
-/*
 ** Zero the iterator passed as the only argument.
 */
 static void fts5SegIterClear(Fts5SegIter *pIter){
   fts5BufferFree(&pIter->term);
   fts5DataRelease(pIter->pLeaf);
   fts5DataRelease(pIter->pNextLeaf);
-  fts5TombstoneArrayDelete(pIter->pTombArray);
+  fts5IndexFreeArray(pIter->apTombstone, pIter->nTombstone);
   fts5DlidxIterFree(pIter->pDlidx);
   sqlite3_free(pIter->aRowidOffset);
   memset(pIter, 0, sizeof(Fts5SegIter));
@@ -247457,6 +244860,7 @@ static void fts5SegIterNextFrom(
   }while( p->rc==SQLITE_OK );
 }
 
+
 /*
 ** Free the iterator object passed as the second argument.
 */
@@ -247601,25 +245005,24 @@ static int fts5IndexTombstoneQuery(
 static int fts5MultiIterIsDeleted(Fts5Iter *pIter){
   int iFirst = pIter->aFirst[1].iFirst;
   Fts5SegIter *pSeg = &pIter->aSeg[iFirst];
-  Fts5TombstoneArray *pArray = pSeg->pTombArray;
 
-  if( pSeg->pLeaf && pArray ){
+  if( pSeg->pLeaf && pSeg->nTombstone ){
     /* Figure out which page the rowid might be present on. */
-    int iPg = ((u64)pSeg->iRowid) % pArray->nTombstone;
+    int iPg = ((u64)pSeg->iRowid) % pSeg->nTombstone;
     assert( iPg>=0 );
 
     /* If tombstone hash page iPg has not yet been loaded from the
     ** database, load it now. */
-    if( pArray->apTombstone[iPg]==0 ){
-      pArray->apTombstone[iPg] = fts5DataRead(pIter->pIndex,
+    if( pSeg->apTombstone[iPg]==0 ){
+      pSeg->apTombstone[iPg] = fts5DataRead(pIter->pIndex,
           FTS5_TOMBSTONE_ROWID(pSeg->pSeg->iSegid, iPg)
       );
-      if( pArray->apTombstone[iPg]==0 ) return 0;
+      if( pSeg->apTombstone[iPg]==0 ) return 0;
     }
 
     return fts5IndexTombstoneQuery(
-        pArray->apTombstone[iPg],
-        pArray->nTombstone,
+        pSeg->apTombstone[iPg],
+        pSeg->nTombstone,
         pSeg->iRowid
     );
   }
@@ -248158,32 +245561,6 @@ static void fts5IterSetOutputCb(int *pRc, Fts5Iter *pIter){
   }
 }
 
-/*
-** All the component segment-iterators of pIter have been set up. This
-** functions finishes setup for iterator pIter itself.
-*/
-static void fts5MultiIterFinishSetup(Fts5Index *p, Fts5Iter *pIter){
-  int iIter;
-  for(iIter=pIter->nSeg-1; iIter>0; iIter--){
-    int iEq;
-    if( (iEq = fts5MultiIterDoCompare(pIter, iIter)) ){
-      Fts5SegIter *pSeg = &pIter->aSeg[iEq];
-      if( p->rc==SQLITE_OK ) pSeg->xNext(p, pSeg, 0);
-      fts5MultiIterAdvanced(p, pIter, iEq, iIter);
-    }
-  }
-  fts5MultiIterSetEof(pIter);
-  fts5AssertMultiIterSetup(p, pIter);
-
-  if( (pIter->bSkipEmpty && fts5MultiIterIsEmpty(p, pIter))
-   || fts5MultiIterIsDeleted(pIter)
-  ){
-    fts5MultiIterNext(p, pIter, 0, 0);
-  }else if( pIter->base.bEof==0 ){
-    Fts5SegIter *pSeg = &pIter->aSeg[pIter->aFirst[1].iFirst];
-    pIter->xSetOutputs(pIter, pSeg);
-  }
-}
 
 /*
 ** Allocate a new Fts5Iter object.
@@ -248265,12 +245642,31 @@ static void fts5MultiIterNew(
     assert( iIter==nSeg );
   }
 
-  /* If the above was successful, each component iterator now points
+  /* If the above was successful, each component iterators now points
   ** to the first entry in its segment. In this case initialize the
   ** aFirst[] array. Or, if an error has occurred, free the iterator
   ** object and set the output variable to NULL.  */
   if( p->rc==SQLITE_OK ){
-    fts5MultiIterFinishSetup(p, pNew);
+    for(iIter=pNew->nSeg-1; iIter>0; iIter--){
+      int iEq;
+      if( (iEq = fts5MultiIterDoCompare(pNew, iIter)) ){
+        Fts5SegIter *pSeg = &pNew->aSeg[iEq];
+        if( p->rc==SQLITE_OK ) pSeg->xNext(p, pSeg, 0);
+        fts5MultiIterAdvanced(p, pNew, iEq, iIter);
+      }
+    }
+    fts5MultiIterSetEof(pNew);
+    fts5AssertMultiIterSetup(p, pNew);
+
+    if( (pNew->bSkipEmpty && fts5MultiIterIsEmpty(p, pNew))
+     || fts5MultiIterIsDeleted(pNew)
+    ){
+      fts5MultiIterNext(p, pNew, 0, 0);
+    }else if( pNew->base.bEof==0 ){
+      Fts5SegIter *pSeg = &pNew->aSeg[pNew->aFirst[1].iFirst];
+      pNew->xSetOutputs(pNew, pSeg);
+    }
+
   }else{
     fts5MultiIterFree(pNew);
     *ppOut = 0;
@@ -248295,6 +245691,7 @@ static void fts5MultiIterNew2(
   pNew = fts5MultiIterAlloc(p, 2);
   if( pNew ){
     Fts5SegIter *pIter = &pNew->aSeg[1];
+
     pIter->flags = FTS5_SEGITER_ONETERM;
     if( pData->szLeaf>0 ){
       pIter->pLeaf = pData;
@@ -248442,7 +245839,6 @@ static void fts5IndexDiscardData(Fts5Index *p){
     sqlite3Fts5HashClear(p->pHash);
     p->nPendingData = 0;
     p->nPendingRow = 0;
-    p->flushRc = SQLITE_OK;
   }
   p->nContentlessDelete = 0;
 }
@@ -248658,7 +246054,7 @@ static void fts5WriteDlidxAppend(
     }
 
     if( pDlidx->bPrevValid ){
-      iVal = (u64)iRowid - (u64)pDlidx->iPrev;
+      iVal = iRowid - pDlidx->iPrev;
     }else{
       i64 iPgno = (i==0 ? pWriter->writer.pgno : pDlidx[-1].pgno);
       assert( pDlidx->buf.n==0 );
@@ -249781,10 +247177,10 @@ static void fts5FlushSecureDelete(
   Fts5Index *p,
   Fts5Structure *pStruct,
   const char *zTerm,
-  int nTerm,
   i64 iRowid
 ){
   const int f = FTS5INDEX_QUERY_SKIPHASH;
+  int nTerm = (int)strlen(zTerm);
   Fts5Iter *pIter = 0;            /* Used to find term instance */
 
   fts5MultiIterNew(p, pStruct, f, 0, (const u8*)zTerm, nTerm, -1, 0, &pIter);
@@ -249858,7 +247254,8 @@ static void fts5FlushOneHash(Fts5Index *p){
         int nDoclist;             /* Size of doclist in bytes */
 
         /* Get the term and doclist for this entry. */
-        sqlite3Fts5HashScanEntry(pHash, &zTerm, &nTerm, &pDoclist, &nDoclist);
+        sqlite3Fts5HashScanEntry(pHash, &zTerm, &pDoclist, &nDoclist);
+        nTerm = (int)strlen(zTerm);
         if( bSecureDelete==0 ){
           fts5WriteAppendTerm(p, &writer, nTerm, (const u8*)zTerm);
           if( p->rc!=SQLITE_OK ) break;
@@ -249888,7 +247285,7 @@ static void fts5FlushOneHash(Fts5Index *p){
             if( bSecureDelete ){
               if( eDetail==FTS5_DETAIL_NONE ){
                 if( iOff<nDoclist && pDoclist[iOff]==0x00 ){
-                  fts5FlushSecureDelete(p, pStruct, zTerm, nTerm, iRowid);
+                  fts5FlushSecureDelete(p, pStruct, zTerm, iRowid);
                   iOff++;
                   if( iOff<nDoclist && pDoclist[iOff]==0x00 ){
                     iOff++;
@@ -249898,7 +247295,7 @@ static void fts5FlushOneHash(Fts5Index *p){
                   }
                 }
               }else if( (pDoclist[iOff] & 0x01) ){
-                fts5FlushSecureDelete(p, pStruct, zTerm, nTerm, iRowid);
+                fts5FlushSecureDelete(p, pStruct, zTerm, iRowid);
                 if( p->rc!=SQLITE_OK || pDoclist[iOff]==0x01 ){
                   iOff++;
                   continue;
@@ -250024,10 +247421,6 @@ static void fts5FlushOneHash(Fts5Index *p){
 */
 static void fts5IndexFlush(Fts5Index *p){
   /* Unless it is empty, flush the hash table to disk */
-  if( p->flushRc ){
-    p->rc = p->flushRc;
-    return;
-  }
   if( p->nPendingData || p->nContentlessDelete ){
     assert( p->pHash );
     fts5FlushOneHash(p);
@@ -250036,8 +247429,6 @@ static void fts5IndexFlush(Fts5Index *p){
       p->nPendingData = 0;
       p->nPendingRow = 0;
       p->nContentlessDelete = 0;
-    }else if( p->nPendingData || p->nContentlessDelete ){
-      p->flushRc = p->rc;
     }
   }
 }
@@ -250524,7 +247915,7 @@ static void fts5SetupPrefixIter(
   u8 *pToken,                     /* Buffer containing prefix to match */
   int nToken,                     /* Size of buffer pToken in bytes */
   Fts5Colset *pColset,            /* Restrict matches to these columns */
-  Fts5Iter **ppIter               /* OUT: New iterator */
+  Fts5Iter **ppIter          /* OUT: New iterator */
 ){
   Fts5Structure *pStruct;
   Fts5Buffer *aBuf;
@@ -250545,9 +247936,8 @@ static void fts5SetupPrefixIter(
 
   aBuf = (Fts5Buffer*)fts5IdxMalloc(p, sizeof(Fts5Buffer)*nBuf);
   pStruct = fts5StructureRead(p);
-  assert( p->rc!=SQLITE_OK || (aBuf && pStruct) );
 
-  if( p->rc==SQLITE_OK ){
+  if( aBuf && pStruct ){
     const int flags = FTS5INDEX_QUERY_SCAN
                     | FTS5INDEX_QUERY_SKIPEMPTY
                     | FTS5INDEX_QUERY_NOOUTPUT;
@@ -250559,12 +247949,6 @@ static void fts5SetupPrefixIter(
     int bNewTerm = 1;
 
     memset(&doclist, 0, sizeof(doclist));
-
-    /* If iIdx is non-zero, then it is the number of a prefix-index for
-    ** prefixes 1 character longer than the prefix being queried for. That
-    ** index contains all the doclists required, except for the one
-    ** corresponding to the prefix itself. That one is extracted from the
-    ** main term index here.  */
     if( iIdx!=0 ){
       int dummy = 0;
       const int f2 = FTS5INDEX_QUERY_SKIPEMPTY|FTS5INDEX_QUERY_NOOUTPUT;
@@ -250588,7 +247972,6 @@ static void fts5SetupPrefixIter(
     pToken[0] = FTS5_MAIN_PREFIX + iIdx;
     fts5MultiIterNew(p, pStruct, flags, pColset, pToken, nToken, -1, 0, &p1);
     fts5IterSetOutputCb(&p->rc, p1);
-
     for( /* no-op */ ;
         fts5MultiIterEof(p, p1)==0;
         fts5MultiIterNext2(p, p1, &bNewTerm)
@@ -250604,6 +247987,7 @@ static void fts5SetupPrefixIter(
       }
 
       if( p1->base.nData==0 ) continue;
+
       if( p1->base.iRowid<=iLastRowid && doclist.n>0 ){
         for(i=0; p->rc==SQLITE_OK && doclist.n; i++){
           int i1 = i*nMerge;
@@ -250642,7 +248026,7 @@ static void fts5SetupPrefixIter(
     }
     fts5MultiIterFree(p1);
 
-    pData = fts5IdxMalloc(p, sizeof(*pData)+doclist.n+FTS5_DATA_ZERO_PADDING);
+    pData = fts5IdxMalloc(p, sizeof(Fts5Data)+doclist.n+FTS5_DATA_ZERO_PADDING);
     if( pData ){
       pData->p = (u8*)&pData[1];
       pData->nn = pData->szLeaf = doclist.n;
@@ -250785,7 +248169,6 @@ static int sqlite3Fts5IndexClose(Fts5Index *p){
     sqlite3_finalize(p->pIdxWriter);
     sqlite3_finalize(p->pIdxDeleter);
     sqlite3_finalize(p->pIdxSelect);
-    sqlite3_finalize(p->pIdxNextSelect);
     sqlite3_finalize(p->pDataVersion);
     sqlite3_finalize(p->pDeleteFromIdx);
     sqlite3Fts5HashFree(p->pHash);
@@ -250882,457 +248265,6 @@ static int sqlite3Fts5IndexWrite(
 }
 
 /*
-** pToken points to a buffer of size nToken bytes containing a search
-** term, including the index number at the start, used on a tokendata=1
-** table. This function returns true if the term in buffer pBuf matches
-** token pToken/nToken.
-*/
-static int fts5IsTokendataPrefix(
-  Fts5Buffer *pBuf,
-  const u8 *pToken,
-  int nToken
-){
-  return (
-      pBuf->n>=nToken
-   && 0==memcmp(pBuf->p, pToken, nToken)
-   && (pBuf->n==nToken || pBuf->p[nToken]==0x00)
-  );
-}
-
-/*
-** Ensure the segment-iterator passed as the only argument points to EOF.
-*/
-static void fts5SegIterSetEOF(Fts5SegIter *pSeg){
-  fts5DataRelease(pSeg->pLeaf);
-  pSeg->pLeaf = 0;
-}
-
-/*
-** Usually, a tokendata=1 iterator (struct Fts5TokenDataIter) accumulates an
-** array of these for each row it visits. Or, for an iterator used by an
-** "ORDER BY rank" query, it accumulates an array of these for the entire
-** query.
-**
-** Each instance in the array indicates the iterator (and therefore term)
-** associated with position iPos of rowid iRowid. This is used by the
-** xInstToken() API.
-*/
-struct Fts5TokenDataMap {
-  i64 iRowid;                     /* Row this token is located in */
-  i64 iPos;                       /* Position of token */
-  int iIter;                      /* Iterator token was read from */
-};
-
-/*
-** An object used to supplement Fts5Iter for tokendata=1 iterators.
-*/
-struct Fts5TokenDataIter {
-  int nIter;
-  int nIterAlloc;
-
-  int nMap;
-  int nMapAlloc;
-  Fts5TokenDataMap *aMap;
-
-  Fts5PoslistReader *aPoslistReader;
-  int *aPoslistToIter;
-  Fts5Iter *apIter[1];
-};
-
-/*
-** This function appends iterator pAppend to Fts5TokenDataIter pIn and
-** returns the result.
-*/
-static Fts5TokenDataIter *fts5AppendTokendataIter(
-  Fts5Index *p,                   /* Index object (for error code) */
-  Fts5TokenDataIter *pIn,         /* Current Fts5TokenDataIter struct */
-  Fts5Iter *pAppend               /* Append this iterator */
-){
-  Fts5TokenDataIter *pRet = pIn;
-
-  if( p->rc==SQLITE_OK ){
-    if( pIn==0 || pIn->nIter==pIn->nIterAlloc ){
-      int nAlloc = pIn ? pIn->nIterAlloc*2 : 16;
-      int nByte = nAlloc * sizeof(Fts5Iter*) + sizeof(Fts5TokenDataIter);
-      Fts5TokenDataIter *pNew = (Fts5TokenDataIter*)sqlite3_realloc(pIn, nByte);
-
-      if( pNew==0 ){
-        p->rc = SQLITE_NOMEM;
-      }else{
-        if( pIn==0 ) memset(pNew, 0, nByte);
-        pRet = pNew;
-        pNew->nIterAlloc = nAlloc;
-      }
-    }
-  }
-  if( p->rc ){
-    sqlite3Fts5IterClose((Fts5IndexIter*)pAppend);
-  }else{
-    pRet->apIter[pRet->nIter++] = pAppend;
-  }
-  assert( pRet==0 || pRet->nIter<=pRet->nIterAlloc );
-
-  return pRet;
-}
-
-/*
-** Delete an Fts5TokenDataIter structure and its contents.
-*/
-static void fts5TokendataIterDelete(Fts5TokenDataIter *pSet){
-  if( pSet ){
-    int ii;
-    for(ii=0; ii<pSet->nIter; ii++){
-      fts5MultiIterFree(pSet->apIter[ii]);
-    }
-    sqlite3_free(pSet->aPoslistReader);
-    sqlite3_free(pSet->aMap);
-    sqlite3_free(pSet);
-  }
-}
-
-/*
-** Append a mapping to the token-map belonging to object pT.
-*/
-static void fts5TokendataIterAppendMap(
-  Fts5Index *p,
-  Fts5TokenDataIter *pT,
-  int iIter,
-  i64 iRowid,
-  i64 iPos
-){
-  if( p->rc==SQLITE_OK ){
-    if( pT->nMap==pT->nMapAlloc ){
-      int nNew = pT->nMapAlloc ? pT->nMapAlloc*2 : 64;
-      int nByte = nNew * sizeof(Fts5TokenDataMap);
-      Fts5TokenDataMap *aNew;
-
-      aNew = (Fts5TokenDataMap*)sqlite3_realloc(pT->aMap, nByte);
-      if( aNew==0 ){
-        p->rc = SQLITE_NOMEM;
-        return;
-      }
-
-      pT->aMap = aNew;
-      pT->nMapAlloc = nNew;
-    }
-
-    pT->aMap[pT->nMap].iRowid = iRowid;
-    pT->aMap[pT->nMap].iPos = iPos;
-    pT->aMap[pT->nMap].iIter = iIter;
-    pT->nMap++;
-  }
-}
-
-/*
-** The iterator passed as the only argument must be a tokendata=1 iterator
-** (pIter->pTokenDataIter!=0). This function sets the iterator output
-** variables (pIter->base.*) according to the contents of the current
-** row.
-*/
-static void fts5IterSetOutputsTokendata(Fts5Iter *pIter){
-  int ii;
-  int nHit = 0;
-  i64 iRowid = SMALLEST_INT64;
-  int iMin = 0;
-
-  Fts5TokenDataIter *pT = pIter->pTokenDataIter;
-
-  pIter->base.nData = 0;
-  pIter->base.pData = 0;
-
-  for(ii=0; ii<pT->nIter; ii++){
-    Fts5Iter *p = pT->apIter[ii];
-    if( p->base.bEof==0 ){
-      if( nHit==0 || p->base.iRowid<iRowid ){
-        iRowid = p->base.iRowid;
-        nHit = 1;
-        pIter->base.pData = p->base.pData;
-        pIter->base.nData = p->base.nData;
-        iMin = ii;
-      }else if( p->base.iRowid==iRowid ){
-        nHit++;
-      }
-    }
-  }
-
-  if( nHit==0 ){
-    pIter->base.bEof = 1;
-  }else{
-    int eDetail = pIter->pIndex->pConfig->eDetail;
-    pIter->base.bEof = 0;
-    pIter->base.iRowid = iRowid;
-
-    if( nHit==1 && eDetail==FTS5_DETAIL_FULL ){
-      fts5TokendataIterAppendMap(pIter->pIndex, pT, iMin, iRowid, -1);
-    }else
-    if( nHit>1 && eDetail!=FTS5_DETAIL_NONE ){
-      int nReader = 0;
-      int nByte = 0;
-      i64 iPrev = 0;
-
-      /* Allocate array of iterators if they are not already allocated. */
-      if( pT->aPoslistReader==0 ){
-        pT->aPoslistReader = (Fts5PoslistReader*)sqlite3Fts5MallocZero(
-            &pIter->pIndex->rc,
-            pT->nIter * (sizeof(Fts5PoslistReader) + sizeof(int))
-        );
-        if( pT->aPoslistReader==0 ) return;
-        pT->aPoslistToIter = (int*)&pT->aPoslistReader[pT->nIter];
-      }
-
-      /* Populate an iterator for each poslist that will be merged */
-      for(ii=0; ii<pT->nIter; ii++){
-        Fts5Iter *p = pT->apIter[ii];
-        if( iRowid==p->base.iRowid ){
-          pT->aPoslistToIter[nReader] = ii;
-          sqlite3Fts5PoslistReaderInit(
-              p->base.pData, p->base.nData, &pT->aPoslistReader[nReader++]
-          );
-          nByte += p->base.nData;
-        }
-      }
-
-      /* Ensure the output buffer is large enough */
-      if( fts5BufferGrow(&pIter->pIndex->rc, &pIter->poslist, nByte+nHit*10) ){
-        return;
-      }
-
-      /* Ensure the token-mapping is large enough */
-      if( eDetail==FTS5_DETAIL_FULL && pT->nMapAlloc<(pT->nMap + nByte) ){
-        int nNew = (pT->nMapAlloc + nByte) * 2;
-        Fts5TokenDataMap *aNew = (Fts5TokenDataMap*)sqlite3_realloc(
-            pT->aMap, nNew*sizeof(Fts5TokenDataMap)
-        );
-        if( aNew==0 ){
-          pIter->pIndex->rc = SQLITE_NOMEM;
-          return;
-        }
-        pT->aMap = aNew;
-        pT->nMapAlloc = nNew;
-      }
-
-      pIter->poslist.n = 0;
-
-      while( 1 ){
-        i64 iMinPos = LARGEST_INT64;
-
-        /* Find smallest position */
-        iMin = 0;
-        for(ii=0; ii<nReader; ii++){
-          Fts5PoslistReader *pReader = &pT->aPoslistReader[ii];
-          if( pReader->bEof==0 ){
-            if( pReader->iPos<iMinPos ){
-              iMinPos = pReader->iPos;
-              iMin = ii;
-            }
-          }
-        }
-
-        /* If all readers were at EOF, break out of the loop. */
-        if( iMinPos==LARGEST_INT64 ) break;
-
-        sqlite3Fts5PoslistSafeAppend(&pIter->poslist, &iPrev, iMinPos);
-        sqlite3Fts5PoslistReaderNext(&pT->aPoslistReader[iMin]);
-
-        if( eDetail==FTS5_DETAIL_FULL ){
-          pT->aMap[pT->nMap].iPos = iMinPos;
-          pT->aMap[pT->nMap].iIter = pT->aPoslistToIter[iMin];
-          pT->aMap[pT->nMap].iRowid = iRowid;
-          pT->nMap++;
-        }
-      }
-
-      pIter->base.pData = pIter->poslist.p;
-      pIter->base.nData = pIter->poslist.n;
-    }
-  }
-}
-
-/*
-** The iterator passed as the only argument must be a tokendata=1 iterator
-** (pIter->pTokenDataIter!=0). This function advances the iterator. If
-** argument bFrom is false, then the iterator is advanced to the next
-** entry. Or, if bFrom is true, it is advanced to the first entry with
-** a rowid of iFrom or greater.
-*/
-static void fts5TokendataIterNext(Fts5Iter *pIter, int bFrom, i64 iFrom){
-  int ii;
-  Fts5TokenDataIter *pT = pIter->pTokenDataIter;
-  Fts5Index *pIndex = pIter->pIndex;
-
-  for(ii=0; ii<pT->nIter; ii++){
-    Fts5Iter *p = pT->apIter[ii];
-    if( p->base.bEof==0
-     && (p->base.iRowid==pIter->base.iRowid || (bFrom && p->base.iRowid<iFrom))
-    ){
-      fts5MultiIterNext(pIndex, p, bFrom, iFrom);
-      while( bFrom && p->base.bEof==0
-          && p->base.iRowid<iFrom
-          && pIndex->rc==SQLITE_OK
-      ){
-        fts5MultiIterNext(pIndex, p, 0, 0);
-      }
-    }
-  }
-
-  if( pIndex->rc==SQLITE_OK ){
-    fts5IterSetOutputsTokendata(pIter);
-  }
-}
-
-/*
-** If the segment-iterator passed as the first argument is at EOF, then
-** set pIter->term to a copy of buffer pTerm.
-*/
-static void fts5TokendataSetTermIfEof(Fts5Iter *pIter, Fts5Buffer *pTerm){
-  if( pIter && pIter->aSeg[0].pLeaf==0 ){
-    fts5BufferSet(&pIter->pIndex->rc, &pIter->aSeg[0].term, pTerm->n, pTerm->p);
-  }
-}
-
-/*
-** This function sets up an iterator to use for a non-prefix query on a
-** tokendata=1 table.
-*/
-static Fts5Iter *fts5SetupTokendataIter(
-  Fts5Index *p,                   /* FTS index to query */
-  const u8 *pToken,               /* Buffer containing query term */
-  int nToken,                     /* Size of buffer pToken in bytes */
-  Fts5Colset *pColset             /* Colset to filter on */
-){
-  Fts5Iter *pRet = 0;
-  Fts5TokenDataIter *pSet = 0;
-  Fts5Structure *pStruct = 0;
-  const int flags = FTS5INDEX_QUERY_SCANONETERM | FTS5INDEX_QUERY_SCAN;
-
-  Fts5Buffer bSeek = {0, 0, 0};
-  Fts5Buffer *pSmall = 0;
-
-  fts5IndexFlush(p);
-  pStruct = fts5StructureRead(p);
-
-  while( p->rc==SQLITE_OK ){
-    Fts5Iter *pPrev = pSet ? pSet->apIter[pSet->nIter-1] : 0;
-    Fts5Iter *pNew = 0;
-    Fts5SegIter *pNewIter = 0;
-    Fts5SegIter *pPrevIter = 0;
-
-    int iLvl, iSeg, ii;
-
-    pNew = fts5MultiIterAlloc(p, pStruct->nSegment);
-    if( pSmall ){
-      fts5BufferSet(&p->rc, &bSeek, pSmall->n, pSmall->p);
-      fts5BufferAppendBlob(&p->rc, &bSeek, 1, (const u8*)"\0");
-    }else{
-      fts5BufferSet(&p->rc, &bSeek, nToken, pToken);
-    }
-    if( p->rc ){
-      sqlite3Fts5IterClose((Fts5IndexIter*)pNew);
-      break;
-    }
-
-    pNewIter = &pNew->aSeg[0];
-    pPrevIter = (pPrev ? &pPrev->aSeg[0] : 0);
-    for(iLvl=0; iLvl<pStruct->nLevel; iLvl++){
-      for(iSeg=pStruct->aLevel[iLvl].nSeg-1; iSeg>=0; iSeg--){
-        Fts5StructureSegment *pSeg = &pStruct->aLevel[iLvl].aSeg[iSeg];
-        int bDone = 0;
-
-        if( pPrevIter ){
-          if( fts5BufferCompare(pSmall, &pPrevIter->term) ){
-            memcpy(pNewIter, pPrevIter, sizeof(Fts5SegIter));
-            memset(pPrevIter, 0, sizeof(Fts5SegIter));
-            bDone = 1;
-          }else if( pPrevIter->iEndofDoclist>pPrevIter->pLeaf->szLeaf ){
-            fts5SegIterNextInit(p,(const char*)bSeek.p,bSeek.n-1,pSeg,pNewIter);
-            bDone = 1;
-          }
-        }
-
-        if( bDone==0 ){
-          fts5SegIterSeekInit(p, bSeek.p, bSeek.n, flags, pSeg, pNewIter);
-        }
-
-        if( pPrevIter ){
-          if( pPrevIter->pTombArray ){
-            pNewIter->pTombArray = pPrevIter->pTombArray;
-            pNewIter->pTombArray->nRef++;
-          }
-        }else{
-          fts5SegIterAllocTombstone(p, pNewIter);
-        }
-
-        pNewIter++;
-        if( pPrevIter ) pPrevIter++;
-        if( p->rc ) break;
-      }
-    }
-    fts5TokendataSetTermIfEof(pPrev, pSmall);
-
-    pNew->bSkipEmpty = 1;
-    pNew->pColset = pColset;
-    fts5IterSetOutputCb(&p->rc, pNew);
-
-    /* Loop through all segments in the new iterator. Find the smallest
-    ** term that any segment-iterator points to. Iterator pNew will be
-    ** used for this term. Also, set any iterator that points to a term that
-    ** does not match pToken/nToken to point to EOF */
-    pSmall = 0;
-    for(ii=0; ii<pNew->nSeg; ii++){
-      Fts5SegIter *pII = &pNew->aSeg[ii];
-      if( 0==fts5IsTokendataPrefix(&pII->term, pToken, nToken) ){
-        fts5SegIterSetEOF(pII);
-      }
-      if( pII->pLeaf && (!pSmall || fts5BufferCompare(pSmall, &pII->term)>0) ){
-        pSmall = &pII->term;
-      }
-    }
-
-    /* If pSmall is still NULL at this point, then the new iterator does
-    ** not point to any terms that match the query. So delete it and break
-    ** out of the loop - all required iterators have been collected.  */
-    if( pSmall==0 ){
-      sqlite3Fts5IterClose((Fts5IndexIter*)pNew);
-      break;
-    }
-
-    /* Append this iterator to the set and continue. */
-    pSet = fts5AppendTokendataIter(p, pSet, pNew);
-  }
-
-  if( p->rc==SQLITE_OK && pSet ){
-    int ii;
-    for(ii=0; ii<pSet->nIter; ii++){
-      Fts5Iter *pIter = pSet->apIter[ii];
-      int iSeg;
-      for(iSeg=0; iSeg<pIter->nSeg; iSeg++){
-        pIter->aSeg[iSeg].flags |= FTS5_SEGITER_ONETERM;
-      }
-      fts5MultiIterFinishSetup(p, pIter);
-    }
-  }
-
-  if( p->rc==SQLITE_OK ){
-    pRet = fts5MultiIterAlloc(p, 0);
-  }
-  if( pRet ){
-    pRet->pTokenDataIter = pSet;
-    if( pSet ){
-      fts5IterSetOutputsTokendata(pRet);
-    }else{
-      pRet->base.bEof = 1;
-    }
-  }else{
-    fts5TokendataIterDelete(pSet);
-  }
-
-  fts5StructureRelease(pStruct);
-  fts5BufferFree(&bSeek);
-  return pRet;
-}
-
-
-/*
 ** Open a new iterator to iterate though all rowid that match the
 ** specified token or token prefix.
 */
@@ -251353,12 +248285,7 @@ static int sqlite3Fts5IndexQuery(
   if( sqlite3Fts5BufferSize(&p->rc, &buf, nToken+1)==0 ){
     int iIdx = 0;                 /* Index to search */
     int iPrefixIdx = 0;           /* +1 prefix index */
-    int bTokendata = pConfig->bTokendata;
     if( nToken>0 ) memcpy(&buf.p[1], pToken, nToken);
-
-    if( flags & (FTS5INDEX_QUERY_NOTOKENDATA|FTS5INDEX_QUERY_SCAN) ){
-      bTokendata = 0;
-    }
 
     /* Figure out which index to search and set iIdx accordingly. If this
     ** is a prefix query for which there is no prefix index, set iIdx to
@@ -251385,10 +248312,7 @@ static int sqlite3Fts5IndexQuery(
       }
     }
 
-    if( bTokendata && iIdx==0 ){
-      buf.p[0] = '0';
-      pRet = fts5SetupTokendataIter(p, buf.p, nToken+1, pColset);
-    }else if( iIdx<=pConfig->nPrefix ){
+    if( iIdx<=pConfig->nPrefix ){
       /* Straight index lookup */
       Fts5Structure *pStruct = fts5StructureRead(p);
       buf.p[0] = (u8)(FTS5_MAIN_PREFIX + iIdx);
@@ -251435,11 +248359,7 @@ static int sqlite3Fts5IndexQuery(
 static int sqlite3Fts5IterNext(Fts5IndexIter *pIndexIter){
   Fts5Iter *pIter = (Fts5Iter*)pIndexIter;
   assert( pIter->pIndex->rc==SQLITE_OK );
-  if( pIter->pTokenDataIter ){
-    fts5TokendataIterNext(pIter, 0, 0);
-  }else{
-    fts5MultiIterNext(pIter->pIndex, pIter, 0, 0);
-  }
+  fts5MultiIterNext(pIter->pIndex, pIter, 0, 0);
   return fts5IndexReturn(pIter->pIndex);
 }
 
@@ -251472,11 +248392,7 @@ static int sqlite3Fts5IterNextScan(Fts5IndexIter *pIndexIter){
 */
 static int sqlite3Fts5IterNextFrom(Fts5IndexIter *pIndexIter, i64 iMatch){
   Fts5Iter *pIter = (Fts5Iter*)pIndexIter;
-  if( pIter->pTokenDataIter ){
-    fts5TokendataIterNext(pIter, 1, iMatch);
-  }else{
-    fts5MultiIterNextFrom(pIter->pIndex, pIter, iMatch);
-  }
+  fts5MultiIterNextFrom(pIter->pIndex, pIter, iMatch);
   return fts5IndexReturn(pIter->pIndex);
 }
 
@@ -251492,106 +248408,12 @@ static const char *sqlite3Fts5IterTerm(Fts5IndexIter *pIndexIter, int *pn){
 }
 
 /*
-** This is used by xInstToken() to access the token at offset iOff, column
-** iCol of row iRowid. The token is returned via output variables *ppOut
-** and *pnOut. The iterator passed as the first argument must be a tokendata=1
-** iterator (pIter->pTokenDataIter!=0).
-*/
-static int sqlite3Fts5IterToken(
-  Fts5IndexIter *pIndexIter,
-  i64 iRowid,
-  int iCol,
-  int iOff,
-  const char **ppOut, int *pnOut
-){
-  Fts5Iter *pIter = (Fts5Iter*)pIndexIter;
-  Fts5TokenDataIter *pT = pIter->pTokenDataIter;
-  Fts5TokenDataMap *aMap = pT->aMap;
-  i64 iPos = (((i64)iCol)<<32) + iOff;
-
-  int i1 = 0;
-  int i2 = pT->nMap;
-  int iTest = 0;
-
-  while( i2>i1 ){
-    iTest = (i1 + i2) / 2;
-
-    if( aMap[iTest].iRowid<iRowid ){
-      i1 = iTest+1;
-    }else if( aMap[iTest].iRowid>iRowid ){
-      i2 = iTest;
-    }else{
-      if( aMap[iTest].iPos<iPos ){
-        if( aMap[iTest].iPos<0 ){
-          break;
-        }
-        i1 = iTest+1;
-      }else if( aMap[iTest].iPos>iPos ){
-        i2 = iTest;
-      }else{
-        break;
-      }
-    }
-  }
-
-  if( i2>i1 ){
-    Fts5Iter *pMap = pT->apIter[aMap[iTest].iIter];
-    *ppOut = (const char*)pMap->aSeg[0].term.p+1;
-    *pnOut = pMap->aSeg[0].term.n-1;
-  }
-
-  return SQLITE_OK;
-}
-
-/*
-** Clear any existing entries from the token-map associated with the
-** iterator passed as the only argument.
-*/
-static void sqlite3Fts5IndexIterClearTokendata(Fts5IndexIter *pIndexIter){
-  Fts5Iter *pIter = (Fts5Iter*)pIndexIter;
-  if( pIter && pIter->pTokenDataIter ){
-    pIter->pTokenDataIter->nMap = 0;
-  }
-}
-
-/*
-** Set a token-mapping for the iterator passed as the first argument. This
-** is used in detail=column or detail=none mode when a token is requested
-** using the xInstToken() API. In this case the caller tokenizers the
-** current row and configures the token-mapping via multiple calls to this
-** function.
-*/
-static int sqlite3Fts5IndexIterWriteTokendata(
-  Fts5IndexIter *pIndexIter,
-  const char *pToken, int nToken,
-  i64 iRowid, int iCol, int iOff
-){
-  Fts5Iter *pIter = (Fts5Iter*)pIndexIter;
-  Fts5TokenDataIter *pT = pIter->pTokenDataIter;
-  Fts5Index *p = pIter->pIndex;
-  int ii;
-
-  assert( p->pConfig->eDetail!=FTS5_DETAIL_FULL );
-  assert( pIter->pTokenDataIter );
-
-  for(ii=0; ii<pT->nIter; ii++){
-    Fts5Buffer *pTerm = &pT->apIter[ii]->aSeg[0].term;
-    if( nToken==pTerm->n-1 && memcmp(pToken, pTerm->p+1, nToken)==0 ) break;
-  }
-  if( ii<pT->nIter ){
-    fts5TokendataIterAppendMap(p, pT, ii, iRowid, (((i64)iCol)<<32) + iOff);
-  }
-  return fts5IndexReturn(p);
-}
-
-/*
 ** Close an iterator opened by an earlier call to sqlite3Fts5IndexQuery().
 */
 static void sqlite3Fts5IterClose(Fts5IndexIter *pIndexIter){
   if( pIndexIter ){
     Fts5Iter *pIter = (Fts5Iter*)pIndexIter;
     Fts5Index *pIndex = pIter->pIndex;
-    fts5TokendataIterDelete(pIter->pTokenDataIter);
     fts5MultiIterFree(pIter);
     sqlite3Fts5IndexCloseReader(pIndex);
   }
@@ -252099,9 +248921,7 @@ static int fts5QueryCksum(
   int eDetail = p->pConfig->eDetail;
   u64 cksum = *pCksum;
   Fts5IndexIter *pIter = 0;
-  int rc = sqlite3Fts5IndexQuery(
-      p, z, n, (flags | FTS5INDEX_QUERY_NOTOKENDATA), 0, &pIter
-  );
+  int rc = sqlite3Fts5IndexQuery(p, z, n, flags, 0, &pIter);
 
   while( rc==SQLITE_OK && ALWAYS(pIter!=0) && 0==sqlite3Fts5IterEof(pIter) ){
     i64 rowid = pIter->iRowid;
@@ -252268,7 +249088,7 @@ static void fts5IndexIntegrityCheckEmpty(
 }
 
 static void fts5IntegrityCheckPgidx(Fts5Index *p, Fts5Data *pLeaf){
-  i64 iTermOff = 0;
+  int iTermOff = 0;
   int ii;
 
   Fts5Buffer buf1 = {0,0,0};
@@ -252277,7 +249097,7 @@ static void fts5IntegrityCheckPgidx(Fts5Index *p, Fts5Data *pLeaf){
   ii = pLeaf->szLeaf;
   while( ii<pLeaf->nn && p->rc==SQLITE_OK ){
     int res;
-    i64 iOff;
+    int iOff;
     int nIncr;
 
     ii += fts5GetVarint32(&pLeaf->p[ii], nIncr);
@@ -252800,24 +249620,6 @@ static void fts5DecodeRowidList(
 #endif /* SQLITE_TEST || SQLITE_FTS5_DEBUG */
 
 #if defined(SQLITE_TEST) || defined(SQLITE_FTS5_DEBUG)
-static void fts5BufferAppendTerm(int *pRc, Fts5Buffer *pBuf, Fts5Buffer *pTerm){
-  int ii;
-  fts5BufferGrow(pRc, pBuf, pTerm->n*2 + 1);
-  if( *pRc==SQLITE_OK ){
-    for(ii=0; ii<pTerm->n; ii++){
-      if( pTerm->p[ii]==0x00 ){
-        pBuf->p[pBuf->n++] = '\\';
-        pBuf->p[pBuf->n++] = '0';
-      }else{
-        pBuf->p[pBuf->n++] = pTerm->p[ii];
-      }
-    }
-    pBuf->p[pBuf->n] = 0x00;
-  }
-}
-#endif /* SQLITE_TEST || SQLITE_FTS5_DEBUG */
-
-#if defined(SQLITE_TEST) || defined(SQLITE_FTS5_DEBUG)
 /*
 ** The implementation of user-defined scalar function fts5_decode().
 */
@@ -252924,8 +249726,9 @@ static void fts5DecodeFunction(
       iOff += fts5GetVarint32(&a[iOff], nAppend);
       term.n = nKeep;
       fts5BufferAppendBlob(&rc, &term, nAppend, &a[iOff]);
-      sqlite3Fts5BufferAppendPrintf(&rc, &s, " term=");
-      fts5BufferAppendTerm(&rc, &s, &term);
+      sqlite3Fts5BufferAppendPrintf(
+          &rc, &s, " term=%.*s", term.n, (const char*)term.p
+      );
       iOff += nAppend;
 
       /* Figure out where the doclist for this term ends */
@@ -253033,8 +249836,9 @@ static void fts5DecodeFunction(
       fts5BufferAppendBlob(&rc, &term, nByte, &a[iOff]);
       iOff += nByte;
 
-      sqlite3Fts5BufferAppendPrintf(&rc, &s, " term=");
-      fts5BufferAppendTerm(&rc, &s, &term);
+      sqlite3Fts5BufferAppendPrintf(
+          &rc, &s, " term=%.*s", term.n, (const char*)term.p
+      );
       iOff += fts5DecodeDoclist(&rc, &s, &a[iOff], iEnd-iOff);
     }
 
@@ -253509,7 +250313,7 @@ struct Fts5FullTable {
   Fts5Global *pGlobal;            /* Global (connection wide) data */
   Fts5Cursor *pSortCsr;           /* Sort data from this cursor */
   int iSavepoint;                 /* Successful xSavepoint()+1 */
-
+  int bInSavepoint;
 #ifdef SQLITE_DEBUG
   struct Fts5TransactionState ts;
 #endif
@@ -254047,15 +250851,12 @@ static int fts5BestIndexMethod(sqlite3_vtab *pVTab, sqlite3_index_info *pInfo){
   }
   idxStr[iIdxStr] = '\0';
 
-  /* Set idxFlags flags for the ORDER BY clause
-  **
-  ** Note that tokendata=1 tables cannot currently handle "ORDER BY rowid DESC".
-  */
+  /* Set idxFlags flags for the ORDER BY clause */
   if( pInfo->nOrderBy==1 ){
     int iSort = pInfo->aOrderBy[0].iColumn;
     if( iSort==(pConfig->nCol+1) && bSeenMatch ){
       idxFlags |= FTS5_BI_ORDER_RANK;
-    }else if( iSort==-1 && (!pInfo->aOrderBy[0].desc || !pConfig->bTokendata) ){
+    }else if( iSort==-1 ){
       idxFlags |= FTS5_BI_ORDER_ROWID;
     }
     if( BitFlagTest(idxFlags, FTS5_BI_ORDER_RANK|FTS5_BI_ORDER_ROWID) ){
@@ -254306,16 +251107,6 @@ static int fts5NextMethod(sqlite3_vtab_cursor *pCursor){
           (pCsr->ePlan==FTS5_PLAN_MATCH || pCsr->ePlan==FTS5_PLAN_SOURCE)
   );
   assert( !CsrFlagTest(pCsr, FTS5CSR_EOF) );
-
-  /* If this cursor uses FTS5_PLAN_MATCH and this is a tokendata=1 table,
-  ** clear any token mappings accumulated at the fts5_index.c level. In
-  ** other cases, specifically FTS5_PLAN_SOURCE and FTS5_PLAN_SORTED_MATCH,
-  ** we need to retain the mappings for the entire query.  */
-  if( pCsr->ePlan==FTS5_PLAN_MATCH
-   && ((Fts5Table*)pCursor->pVtab)->pConfig->bTokendata
-  ){
-    sqlite3Fts5ExprClearTokens(pCsr->pExpr);
-  }
 
   if( pCsr->ePlan<3 ){
     int bSkip = 0;
@@ -254977,10 +251768,7 @@ static int fts5SpecialInsert(
   }else if( 0==sqlite3_stricmp("flush", zCmd) ){
     rc = sqlite3Fts5FlushToDisk(&pTab->p);
   }else{
-    rc = sqlite3Fts5FlushToDisk(&pTab->p);
-    if( rc==SQLITE_OK ){
-      rc = sqlite3Fts5IndexLoadConfig(pTab->p.pIndex);
-    }
+    rc = sqlite3Fts5IndexLoadConfig(pTab->p.pIndex);
     if( rc==SQLITE_OK ){
       rc = sqlite3Fts5ConfigSetValue(pTab->p.pConfig, zCmd, pVal, &bError);
     }
@@ -255305,10 +252093,7 @@ static int fts5ApiColumnText(
 ){
   int rc = SQLITE_OK;
   Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
-  Fts5Table *pTab = (Fts5Table*)(pCsr->base.pVtab);
-  if( iCol<0 || iCol>=pTab->pConfig->nCol ){
-    rc = SQLITE_RANGE;
-  }else if( fts5IsContentless((Fts5FullTable*)(pCsr->base.pVtab))
+  if( fts5IsContentless((Fts5FullTable*)(pCsr->base.pVtab))
    || pCsr->ePlan==FTS5_PLAN_SPECIAL
   ){
     *pz = 0;
@@ -255333,9 +252118,8 @@ static int fts5CsrPoslist(
   int rc = SQLITE_OK;
   int bLive = (pCsr->pSorter==0);
 
-  if( iPhrase<0 || iPhrase>=sqlite3Fts5ExprPhraseCount(pCsr->pExpr) ){
-    rc = SQLITE_RANGE;
-  }else if( CsrFlagTest(pCsr, FTS5CSR_REQUIRE_POSLIST) ){
+  if( CsrFlagTest(pCsr, FTS5CSR_REQUIRE_POSLIST) ){
+
     if( pConfig->eDetail!=FTS5_DETAIL_FULL ){
       Fts5PoslistPopulator *aPopulator;
       int i;
@@ -255359,20 +252143,14 @@ static int fts5CsrPoslist(
     CsrFlagClear(pCsr, FTS5CSR_REQUIRE_POSLIST);
   }
 
-  if( rc==SQLITE_OK ){
-    if( pCsr->pSorter && pConfig->eDetail==FTS5_DETAIL_FULL ){
-      Fts5Sorter *pSorter = pCsr->pSorter;
-      int i1 = (iPhrase==0 ? 0 : pSorter->aIdx[iPhrase-1]);
-      *pn = pSorter->aIdx[iPhrase] - i1;
-      *pa = &pSorter->aPoslist[i1];
-    }else{
-      *pn = sqlite3Fts5ExprPoslist(pCsr->pExpr, iPhrase, pa);
-    }
+  if( pCsr->pSorter && pConfig->eDetail==FTS5_DETAIL_FULL ){
+    Fts5Sorter *pSorter = pCsr->pSorter;
+    int i1 = (iPhrase==0 ? 0 : pSorter->aIdx[iPhrase-1]);
+    *pn = pSorter->aIdx[iPhrase] - i1;
+    *pa = &pSorter->aPoslist[i1];
   }else{
-    *pa = 0;
-    *pn = 0;
+    *pn = sqlite3Fts5ExprPoslist(pCsr->pExpr, iPhrase, pa);
   }
-
 
   return rc;
 }
@@ -255480,6 +252258,12 @@ static int fts5ApiInst(
   ){
     if( iIdx<0 || iIdx>=pCsr->nInstCount ){
       rc = SQLITE_RANGE;
+#if 0
+    }else if( fts5IsOffsetless((Fts5Table*)pCsr->base.pVtab) ){
+      *piPhrase = pCsr->aInst[iIdx*3];
+      *piCol = pCsr->aInst[iIdx*3 + 2];
+      *piOff = -1;
+#endif
     }else{
       *piPhrase = pCsr->aInst[iIdx*3];
       *piCol = pCsr->aInst[iIdx*3 + 1];
@@ -255734,56 +252518,13 @@ static int fts5ApiPhraseFirstColumn(
   return rc;
 }
 
-/*
-** xQueryToken() API implemenetation.
-*/
-static int fts5ApiQueryToken(
-  Fts5Context* pCtx,
-  int iPhrase,
-  int iToken,
-  const char **ppOut,
-  int *pnOut
-){
-  Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
-  return sqlite3Fts5ExprQueryToken(pCsr->pExpr, iPhrase, iToken, ppOut, pnOut);
-}
-
-/*
-** xInstToken() API implemenetation.
-*/
-static int fts5ApiInstToken(
-  Fts5Context *pCtx,
-  int iIdx,
-  int iToken,
-  const char **ppOut, int *pnOut
-){
-  Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
-  int rc = SQLITE_OK;
-  if( CsrFlagTest(pCsr, FTS5CSR_REQUIRE_INST)==0
-   || SQLITE_OK==(rc = fts5CacheInstArray(pCsr))
-  ){
-    if( iIdx<0 || iIdx>=pCsr->nInstCount ){
-      rc = SQLITE_RANGE;
-    }else{
-      int iPhrase = pCsr->aInst[iIdx*3];
-      int iCol = pCsr->aInst[iIdx*3 + 1];
-      int iOff = pCsr->aInst[iIdx*3 + 2];
-      i64 iRowid = fts5CursorRowid(pCsr);
-      rc = sqlite3Fts5ExprInstToken(
-          pCsr->pExpr, iRowid, iPhrase, iCol, iOff, iToken, ppOut, pnOut
-      );
-    }
-  }
-  return rc;
-}
-
 
 static int fts5ApiQueryPhrase(Fts5Context*, int, void*,
     int(*)(const Fts5ExtensionApi*, Fts5Context*, void*)
 );
 
 static const Fts5ExtensionApi sFts5Api = {
-  3,                            /* iVersion */
+  2,                            /* iVersion */
   fts5ApiUserData,
   fts5ApiColumnCount,
   fts5ApiRowCount,
@@ -255803,8 +252544,6 @@ static const Fts5ExtensionApi sFts5Api = {
   fts5ApiPhraseNext,
   fts5ApiPhraseFirstColumn,
   fts5ApiPhraseNextColumn,
-  fts5ApiQueryToken,
-  fts5ApiInstToken
 };
 
 /*
@@ -256071,7 +252810,9 @@ static int fts5RenameMethod(
 ){
   int rc;
   Fts5FullTable *pTab = (Fts5FullTable*)pVtab;
+  pTab->bInSavepoint = 1;
   rc = sqlite3Fts5StorageRename(pTab->pStorage, zName);
+  pTab->bInSavepoint = 0;
   return rc;
 }
 
@@ -256088,12 +252829,26 @@ static int sqlite3Fts5FlushToDisk(Fts5Table *pTab){
 static int fts5SavepointMethod(sqlite3_vtab *pVtab, int iSavepoint){
   Fts5FullTable *pTab = (Fts5FullTable*)pVtab;
   int rc = SQLITE_OK;
-
+  char *zSql = 0;
   fts5CheckTransactionState(pTab, FTS5_SAVEPOINT, iSavepoint);
-  rc = sqlite3Fts5FlushToDisk((Fts5Table*)pVtab);
-  if( rc==SQLITE_OK ){
-    pTab->iSavepoint = iSavepoint+1;
+
+  if( pTab->bInSavepoint==0 ){
+    zSql = sqlite3_mprintf("INSERT INTO %Q.%Q(%Q) VALUES('flush')",
+        pTab->p.pConfig->zDb, pTab->p.pConfig->zName, pTab->p.pConfig->zName
+    );
+    if( zSql ){
+      pTab->bInSavepoint = 1;
+      rc = sqlite3_exec(pTab->p.pConfig->db, zSql, 0, 0, 0);
+      pTab->bInSavepoint = 0;
+      sqlite3_free(zSql);
+    }else{
+      rc = SQLITE_NOMEM;
+    }
+    if( rc==SQLITE_OK ){
+      pTab->iSavepoint = iSavepoint+1;
+    }
   }
+
   return rc;
 }
 
@@ -256125,8 +252880,8 @@ static int fts5RollbackToMethod(sqlite3_vtab *pVtab, int iSavepoint){
   int rc = SQLITE_OK;
   fts5CheckTransactionState(pTab, FTS5_ROLLBACKTO, iSavepoint);
   fts5TripCursors(pTab);
+  pTab->p.pConfig->pgsz = 0;
   if( (iSavepoint+1)<=pTab->iSavepoint ){
-    pTab->p.pConfig->pgsz = 0;
     rc = sqlite3Fts5StorageRollback(pTab->pStorage);
   }
   return rc;
@@ -256331,7 +253086,7 @@ static void fts5SourceIdFunc(
 ){
   assert( nArg==0 );
   UNUSED_PARAM2(nArg, apUnused);
-  sqlite3_result_text(pCtx, "fts5: 2024-04-15 13:34:05 8653b758870e6ef0c98d46b3ace27849054af85da891eb121e9aaa537f1e8355", -1, SQLITE_TRANSIENT);
+  sqlite3_result_text(pCtx, "fts5: 2023-11-24 11:41:44 ebead0e7230cd33bcec9f95d2183069565b9e709bf745c9b5db65cc0cbf92c0f", -1, SQLITE_TRANSIENT);
 }
 
 /*
@@ -256354,7 +253109,7 @@ static int fts5ShadowName(const char *zName){
 ** if anything is found amiss.  Return a NULL pointer if everything is
 ** OK.
 */
-static int fts5IntegrityMethod(
+static int fts5Integrity(
   sqlite3_vtab *pVtab,    /* the FTS5 virtual table to check */
   const char *zSchema,    /* Name of schema in which this table lives */
   const char *zTabname,   /* Name of the table itself */
@@ -256362,21 +253117,27 @@ static int fts5IntegrityMethod(
   char **pzErr            /* Write error message here */
 ){
   Fts5FullTable *pTab = (Fts5FullTable*)pVtab;
+  Fts5Config *pConfig = pTab->p.pConfig;
+  char *zSql;
+  char *zErr = 0;
   int rc;
-
   assert( pzErr!=0 && *pzErr==0 );
   UNUSED_PARAM(isQuick);
-  rc = sqlite3Fts5StorageIntegrity(pTab->pStorage, 0);
+  zSql = sqlite3_mprintf(
+            "INSERT INTO \"%w\".\"%w\"(\"%w\") VALUES('integrity-check');",
+            zSchema, zTabname, pConfig->zName);
+  if( zSql==0 ) return SQLITE_NOMEM;
+  rc = sqlite3_exec(pConfig->db, zSql, 0, 0, &zErr);
+  sqlite3_free(zSql);
   if( (rc&0xff)==SQLITE_CORRUPT ){
     *pzErr = sqlite3_mprintf("malformed inverted index for FTS5 table %s.%s",
                 zSchema, zTabname);
   }else if( rc!=SQLITE_OK ){
     *pzErr = sqlite3_mprintf("unable to validate the inverted index for"
                              " FTS5 table %s.%s: %s",
-                zSchema, zTabname, sqlite3_errstr(rc));
+                zSchema, zTabname, zErr);
   }
-  sqlite3Fts5IndexCloseReader(pTab->p.pIndex);
-
+  sqlite3_free(zErr);
   return SQLITE_OK;
 }
 
@@ -256406,7 +253167,7 @@ static int fts5Init(sqlite3 *db){
     /* xRelease      */ fts5ReleaseMethod,
     /* xRollbackTo   */ fts5RollbackToMethod,
     /* xShadowName   */ fts5ShadowName,
-    /* xIntegrity    */ fts5IntegrityMethod
+    /* xIntegrity    */ fts5Integrity
   };
 
   int rc;
@@ -257172,7 +253933,7 @@ static int sqlite3Fts5StorageRebuild(Fts5Storage *p){
   }
 
   if( rc==SQLITE_OK ){
-    rc = fts5StorageGetStmt(p, FTS5_STMT_SCAN, &pScan, pConfig->pzErrmsg);
+    rc = fts5StorageGetStmt(p, FTS5_STMT_SCAN, &pScan, 0);
   }
 
   while( rc==SQLITE_OK && SQLITE_ROW==sqlite3_step(pScan) ){
@@ -257958,12 +254719,6 @@ static const unsigned char sqlite3Utf8Trans1[] = {
 }
 
 #endif /* ifndef SQLITE_AMALGAMATION */
-
-#define FTS5_SKIP_UTF8(zIn) {                               \
-  if( ((unsigned char)(*(zIn++)))>=0xc0 ){                              \
-    while( (((unsigned char)*zIn) & 0xc0)==0x80 ){ zIn++; }             \
-  }                                                    \
-}
 
 typedef struct Unicode61Tokenizer Unicode61Tokenizer;
 struct Unicode61Tokenizer {
@@ -259000,7 +255755,6 @@ static int fts5PorterTokenize(
 typedef struct TrigramTokenizer TrigramTokenizer;
 struct TrigramTokenizer {
   int bFold;                      /* True to fold to lower-case */
-  int iFoldParam;                 /* Parameter to pass to Fts5UnicodeFold() */
 };
 
 /*
@@ -259027,7 +255781,6 @@ static int fts5TriCreate(
   }else{
     int i;
     pNew->bFold = 1;
-    pNew->iFoldParam = 0;
     for(i=0; rc==SQLITE_OK && i<nArg; i+=2){
       const char *zArg = azArg[i+1];
       if( 0==sqlite3_stricmp(azArg[i], "case_sensitive") ){
@@ -259036,21 +255789,10 @@ static int fts5TriCreate(
         }else{
           pNew->bFold = (zArg[0]=='0');
         }
-      }else if( 0==sqlite3_stricmp(azArg[i], "remove_diacritics") ){
-        if( (zArg[0]!='0' && zArg[0]!='1' && zArg[0]!='2') || zArg[1] ){
-          rc = SQLITE_ERROR;
-        }else{
-          pNew->iFoldParam = (zArg[0]!='0') ? 2 : 0;
-        }
       }else{
         rc = SQLITE_ERROR;
       }
     }
-
-    if( pNew->iFoldParam!=0 && pNew->bFold==0 ){
-      rc = SQLITE_ERROR;
-    }
-
     if( rc!=SQLITE_OK ){
       fts5TriDelete((Fts5Tokenizer*)pNew);
       pNew = 0;
@@ -259073,62 +255815,40 @@ static int fts5TriTokenize(
   TrigramTokenizer *p = (TrigramTokenizer*)pTok;
   int rc = SQLITE_OK;
   char aBuf[32];
-  char *zOut = aBuf;
-  int ii;
   const unsigned char *zIn = (const unsigned char*)pText;
   const unsigned char *zEof = &zIn[nText];
   u32 iCode;
-  int aStart[3];                  /* Input offset of each character in aBuf[] */
 
   UNUSED_PARAM(unusedFlags);
-
-  /* Populate aBuf[] with the characters for the first trigram. */
-  for(ii=0; ii<3; ii++){
-    do {
-      aStart[ii] = zIn - (const unsigned char*)pText;
-      READ_UTF8(zIn, zEof, iCode);
-      if( iCode==0 ) return SQLITE_OK;
-      if( p->bFold ) iCode = sqlite3Fts5UnicodeFold(iCode, p->iFoldParam);
-    }while( iCode==0 );
-    WRITE_UTF8(zOut, iCode);
-  }
-
-  /* At the start of each iteration of this loop:
-  **
-  **  aBuf:      Contains 3 characters. The 3 characters of the next trigram.
-  **  zOut:      Points to the byte following the last character in aBuf.
-  **  aStart[3]: Contains the byte offset in the input text corresponding
-  **             to the start of each of the three characters in the buffer.
-  */
-  assert( zIn<=zEof );
   while( 1 ){
-    int iNext;                    /* Start of character following current tri */
-    const char *z1;
+    char *zOut = aBuf;
+    int iStart = zIn - (const unsigned char*)pText;
+    const unsigned char *zNext;
 
-    /* Read characters from the input up until the first non-diacritic */
-    do {
-      iNext = zIn - (const unsigned char*)pText;
+    READ_UTF8(zIn, zEof, iCode);
+    if( iCode==0 ) break;
+    zNext = zIn;
+    if( zIn<zEof ){
+      if( p->bFold ) iCode = sqlite3Fts5UnicodeFold(iCode, 0);
+      WRITE_UTF8(zOut, iCode);
       READ_UTF8(zIn, zEof, iCode);
       if( iCode==0 ) break;
-      if( p->bFold ) iCode = sqlite3Fts5UnicodeFold(iCode, p->iFoldParam);
-    }while( iCode==0 );
-
-    /* Pass the current trigram back to fts5 */
-    rc = xToken(pCtx, 0, aBuf, zOut-aBuf, aStart[0], iNext);
-    if( iCode==0 || rc!=SQLITE_OK ) break;
-
-    /* Remove the first character from buffer aBuf[]. Append the character
-    ** with codepoint iCode.  */
-    z1 = aBuf;
-    FTS5_SKIP_UTF8(z1);
-    memmove(aBuf, z1, zOut - z1);
-    zOut -= (z1 - aBuf);
-    WRITE_UTF8(zOut, iCode);
-
-    /* Update the aStart[] array */
-    aStart[0] = aStart[1];
-    aStart[1] = aStart[2];
-    aStart[2] = iNext;
+    }else{
+      break;
+    }
+    if( zIn<zEof ){
+      if( p->bFold ) iCode = sqlite3Fts5UnicodeFold(iCode, 0);
+      WRITE_UTF8(zOut, iCode);
+      READ_UTF8(zIn, zEof, iCode);
+      if( iCode==0 ) break;
+      if( p->bFold ) iCode = sqlite3Fts5UnicodeFold(iCode, 0);
+      WRITE_UTF8(zOut, iCode);
+    }else{
+      break;
+    }
+    rc = xToken(pCtx, 0, aBuf, zOut-aBuf, iStart, iStart + zOut-aBuf);
+    if( rc!=SQLITE_OK ) break;
+    zIn = zNext;
   }
 
   return rc;
@@ -259151,9 +255871,7 @@ static int sqlite3Fts5TokenizerPattern(
 ){
   if( xCreate==fts5TriCreate ){
     TrigramTokenizer *p = (TrigramTokenizer*)pTok;
-    if( p->iFoldParam==0 ){
-      return p->bFold ? FTS5_PATTERN_LIKE : FTS5_PATTERN_GLOB;
-    }
+    return p->bFold ? FTS5_PATTERN_LIKE : FTS5_PATTERN_GLOB;
   }
   return FTS5_PATTERN_NONE;
 }
@@ -260942,7 +257660,7 @@ static int fts5VocabFilterMethod(
   if( pEq ){
     zTerm = (const char *)sqlite3_value_text(pEq);
     nTerm = sqlite3_value_bytes(pEq);
-    f = FTS5INDEX_QUERY_NOTOKENDATA;
+    f = 0;
   }else{
     if( pGe ){
       zTerm = (const char *)sqlite3_value_text(pGe);

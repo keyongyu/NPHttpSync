@@ -223,8 +223,11 @@ function App(): React.JSX.Element {
   }
 
   async function createTxn(){
-    const db = await SQLite.openDatabaseAsync('databaseName');
 
+    console.log("createtxn");
+    const db = await SQLite.openDatabaseAsync('databaseName');
+    console.log("password");
+    await db.execAsync(`PRAGMA key = 'password'`);
     // `execAsync()` is useful for bulk queries when you want to execute altogether.
     // Please note that `execAsync()` does not escape parameters and may lead to SQL injection.
     await db.execAsync(`
